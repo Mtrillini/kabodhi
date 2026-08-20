@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=31">
+  <link rel="stylesheet" href="css/style.css?v=32">
 </head>
 <body>
 
@@ -216,10 +216,10 @@
   </a>
 
   <!-- Scripts -->
-  <script src="js/config.js?v=31"></script>
-  <script src="js/main.js?v=31"></script>
-  <script src="js/carrito.js?v=31"></script>
-  <script src="js/productos.js?v=31"></script>
+  <script src="js/config.js?v=32"></script>
+  <script src="js/main.js?v=32"></script>
+  <script src="js/carrito.js?v=32"></script>
+  <script src="js/productos.js?v=32"></script>
   <script>
     function handleNewsletter(e) {
       e.preventDefault();
@@ -247,7 +247,7 @@
         'shiitake':       'fa-shield-halved',
         'chaga':          'fa-leaf',
       };
-      const _base = (typeof APP_BASE !== 'undefined' ? APP_BASE : '') + '/frontend/images/';
+      const _base = 'images/';
       const ICON_IMG = {
         'melena de leon': _base + 'icon-hongo-enfoque.png',
         'reishi':         _base + 'icon-hongo-equilibrio.png',
@@ -258,8 +258,7 @@
         .normalize('NFD').replace(new RegExp('[\\u0300-\\u036f]', 'g'), '');
 
       try {
-        const res  = await fetch(API_URL + '/hongos');
-        const json = await res.json();
+        const json = await loadHongosData();
         if (!json.success || !json.data || !json.data.length) { cont.innerHTML = ''; return; }
 
         cont.innerHTML = json.data.map((h, i) => {

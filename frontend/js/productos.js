@@ -69,8 +69,7 @@ document.addEventListener('click', e => {
 // ---- Fetch all products ----
 async function fetchAllProductos() {
   try {
-    const res  = await fetch(API_URL + '/productos');
-    const json = await res.json();
+    const json = await loadProductosData();
     if (!json.success) throw new Error(json.message);
     PRODUCTOS = (json.data || []).map(mapProducto);
   } catch (e) {
@@ -274,11 +273,12 @@ window.loadFeaturedProductos = async function () {
   if (!section) return;
 
   try {
-    const res  = await fetch(API_URL + '/productos?destacado=1');
-    const json = await res.json();
-    if (!json.success || !json.data || !json.data.length) return;
+    const json = await loadProductosData();
+    if (!json.success || !json.data) return;
+    const destacados = json.data.filter(p => parseInt(p.destacado) === 1);
+    if (!destacados.length) return;
 
-    const lista = json.data.map((p, i) => ({ ...mapProducto(p), rank: i + 1 }));
+    const lista = destacados.map((p, i) => ({ ...mapProducto(p), rank: i + 1 }));
 
     // Merge into PRODUCTOS so modal works on homepage
     lista.forEach(p => {

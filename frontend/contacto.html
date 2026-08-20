@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=26">
+  <link rel="stylesheet" href="css/style.css?v=32">
 </head>
 <body>
 
@@ -110,9 +110,9 @@
 
   <div id="footer"></div>
 
-  <script src="js/config.js"></script>
-  <script src="js/main.js"></script>
-  <script src="js/carrito.js"></script>
+  <script src="js/config.js?v=32"></script>
+  <script src="js/main.js?v=32"></script>
+  <script src="js/carrito.js?v=32"></script>
   <script>
     async function handleContact(e) {
       e.preventDefault();
@@ -129,6 +129,17 @@
       const emailRgx = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRgx.test(email)) {
         showToast('Ingresá un email válido.', 'error');
+        return;
+      }
+
+      // Modo estatico (sin PHP): abrir el cliente de mail
+      if (typeof IS_STATIC !== 'undefined' && IS_STATIC) {
+        const cuerpo = `Nombre: ${nombre}\nEmail: ${email}\n\n${mensaje}`;
+        window.location.href = 'mailto:' + CONTACTO_EMAIL +
+          '?subject=' + encodeURIComponent('Contacto web: ' + asunto) +
+          '&body=' + encodeURIComponent(cuerpo);
+        showToast('Abrimos tu correo para enviar el mensaje.', 'success');
+        e.target.reset();
         return;
       }
 

@@ -225,10 +225,13 @@ function renderSummary(carrito) {
         <span>${fmt(total)}</span>
       </div>
       <div class="order-summary__actions">
-        <a href="${PAGES_BASE}/checkout"
-           class="order-summary__btn-primary${isEmpty ? ' disabled' : ''}">
-          PROCEDER AL PAGO
-        </a>
+        ${IS_STATIC
+          ? `<button onclick="pedirPorWhatsApp()" class="order-summary__btn-primary${isEmpty ? ' disabled' : ''}">
+               PEDIR POR WHATSAPP
+             </button>`
+          : `<a href="${PAGES_BASE}/checkout" class="order-summary__btn-primary${isEmpty ? ' disabled' : ''}">
+               PROCEDER AL PAGO
+             </a>`}
         <a href="${PAGES_BASE}/productos" class="order-summary__btn-secondary">
           SEGUIR COMPRANDO
         </a>
@@ -245,6 +248,11 @@ function renderSummary(carrito) {
 async function calcularEnvioCarrito() {
   const cp  = (document.getElementById('cp-envio-input')?.value || '').trim();
   const msg = document.getElementById('envio-msg');
+
+  if (IS_STATIC) {
+    if (msg) msg.textContent = 'El costo de envío lo coordinamos por WhatsApp al confirmar tu pedido.';
+    return;
+  }
 
   if (!cp || !/^\d{4,}$/.test(cp)) {
     if (msg) msg.textContent = 'Ingresá un código postal válido (mínimo 4 dígitos).';
@@ -279,6 +287,19 @@ function limpiarEnvioCarrito() {
   renderSummary(getCarrito());
 }
 window.limpiarEnvioCarrito = limpiarEnvioCarrito;
+
+// ---- Pedido por WhatsApp (modo estatico) ----
+window.pedirPorWhatsApp = function () {
+  const carrito = getCarrito();
+  if (!carrito || !carrito.items.length) return;
+  const fmt = window.formatMoney || (v => '$' + v);
+  const lineas = carrito.items.map(it => `• ${it.cantidad} x ${it.nombre} — ${fmt(it.precio * it.cantidad)}`);
+  const texto =
+    '¡Hola KABODHI! Quiero hacer este pedido:\n\n' +
+    lineas.join('\n') +
+    `\n\nTotal: ${fmt(getTotal())}\n\n¿Me pasan cómo seguir? ¡Gracias!`;
+  window.open('https://wa.me/' + WHATSAPP_NUMERO + '?text=' + encodeURIComponent(texto), '_blank');
+};
 
 // ---- Event handlers ----
 function handleQtyChange(id, delta) {

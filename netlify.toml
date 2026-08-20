@@ -1,0 +1,6 @@
+# Deploy estatico en Netlify.
+# Publica SOLO la carpeta frontend (el resto —api/ y admin/, que necesitan PHP—
+# queda fuera del sitio estatico y se usa solo en local).
+# Netlify sirve URLs limpias automaticamente (/productos -> productos.html).
+[build]
+  publish = "frontend"

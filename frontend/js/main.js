@@ -18,8 +18,8 @@ function getNavbarHTML() {
 
       <div class="navbar__logo-wrap">
         <a href="${PAGES_BASE}/" class="navbar__logo-link" aria-label="KABODHI — Inicio">
-          <img src="${APP_BASE}/frontend/images/logo-circulo.png" alt="" class="navbar__logo-circle" aria-hidden="true">
-          <img src="${APP_BASE}/frontend/images/logo-nombre.png" alt="KABODHI" class="navbar__logo-name">
+          <img src="images/logo-circulo.png" alt="" class="navbar__logo-circle" aria-hidden="true">
+          <img src="images/logo-nombre.png" alt="KABODHI" class="navbar__logo-name">
         </a>
       </div>
 
