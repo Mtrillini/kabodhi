@@ -1,0 +1,110 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pedidos — KABODHI Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar__header">
+      <span class="sidebar__logo">KABODHI</span>
+      <span class="sidebar__subtitle">Admin Panel</span>
+    </div>
+
+    <nav class="sidebar__nav">
+      <div class="sidebar__nav-label">Principal</div>
+      <a href="dashboard.html" class="sidebar__link">
+        <span class="sidebar__link-icon">◈</span> Dashboard
+      </a>
+      <a href="productos.html" class="sidebar__link">
+        <span class="sidebar__link-icon">◆</span> Productos
+      </a>
+      <a href="pedidos.html" class="sidebar__link active">
+        <span class="sidebar__link-icon">◇</span> Pedidos
+      </a>
+
+      <a href="envios.html" class="sidebar__link">
+        <span class="sidebar__link-icon">◎</span> Envíos
+      </a>
+      <div class="sidebar__nav-label" style="margin-top:1.5rem;">Tienda</div>
+      <a href="../frontend/index.html" target="_blank" class="sidebar__link">
+        <span class="sidebar__link-icon">↗</span> Ver tienda
+      </a>
+    </nav>
+
+    <div class="sidebar__footer">
+      <div class="sidebar__user">Bienvenido, <span id="admin-username">Admin</span></div>
+      <button class="sidebar__logout" id="btn-logout">
+        <span>↩</span> Cerrar sesión
+      </button>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <div class="main">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:1rem;">
+        <button class="hamburger-admin" id="hamburger-admin" aria-label="Menú">
+          <span></span><span></span><span></span>
+        </button>
+        <span class="topbar__title">Pedidos</span>
+      </div>
+      <div class="topbar__actions">
+        <button onclick="fetchPedidos(document.getElementById('filter-estado').value)" class="btn btn-secondary btn-sm">
+          ↺ Actualizar
+        </button>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="panel">
+        <div class="panel__header">
+          <div class="admin-search">
+            <select id="filter-estado" class="filter-select">
+              <option value="">Todos los estados</option>
+              <option value="pendiente">Pendiente</option>
+              <option value="aprobado">Aprobado</option>
+              <option value="rechazado">Rechazado</option>
+              <option value="cancelado">Cancelado</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Cliente</th>
+                <th>Email</th>
+                <th>Total</th>
+                <th>Estado</th>
+                <th>Fecha</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="pedidos-tbody">
+              <tr><td colspan="7" class="loading">Cargando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div style="padding:1rem 1.5rem;font-size:0.72rem;color:var(--taupe);">
+          Hacé clic en una fila para ver el detalle del pedido.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/pedidos.js"></script>
+</body>
+</html>

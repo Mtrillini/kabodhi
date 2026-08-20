@@ -1,0 +1,139 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Envíos — KABODHI Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar__header">
+      <span class="sidebar__logo">KABODHI</span>
+      <span class="sidebar__subtitle">Admin Panel</span>
+    </div>
+    <nav class="sidebar__nav">
+      <div class="sidebar__nav-label">Principal</div>
+      <a href="dashboard.html" class="sidebar__link">
+        <span class="sidebar__link-icon">◈</span> Dashboard
+      </a>
+      <a href="productos.html" class="sidebar__link">
+        <span class="sidebar__link-icon">◆</span> Productos
+      </a>
+      <a href="pedidos.html" class="sidebar__link">
+        <span class="sidebar__link-icon">◇</span> Pedidos
+      </a>
+      <a href="envios.html" class="sidebar__link active">
+        <span class="sidebar__link-icon">◎</span> Envíos
+      </a>
+      <div class="sidebar__nav-label" style="margin-top:1.5rem;">Tienda</div>
+      <a href="../frontend/index.html" target="_blank" class="sidebar__link">
+        <span class="sidebar__link-icon">↗</span> Ver tienda
+      </a>
+    </nav>
+    <div class="sidebar__footer">
+      <div class="sidebar__user">Bienvenido, <span id="admin-username">Admin</span></div>
+      <button class="sidebar__logout" id="btn-logout">
+        <span>↩</span> Cerrar sesión
+      </button>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <div class="main">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:1rem;">
+        <button class="hamburger-admin" id="hamburger-admin" aria-label="Menú">
+          <span></span><span></span><span></span>
+        </button>
+        <span class="topbar__title">Tarifas de Envío</span>
+      </div>
+      <div class="topbar__actions">
+        <button id="btn-nueva-tarifa" class="btn btn-primary">+ Nueva Tarifa</button>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="panel">
+        <div class="panel__header" style="padding:1rem 1.5rem;border-bottom:1px solid var(--champagne);">
+          <p style="font-size:0.78rem;color:var(--taupe);">
+            Definí rangos de códigos postales y su costo de envío. El cliente ingresa su CP y se le calcula el costo automáticamente.
+          </p>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Descripción</th>
+                <th>CP Desde</th>
+                <th>CP Hasta</th>
+                <th>Precio</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="envios-tbody">
+              <tr><td colspan="6" class="loading">Cargando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal-overlay" id="modal-overlay">
+    <div class="modal">
+      <div class="modal__header">
+        <span class="modal__title" id="modal-title">Nueva Tarifa</span>
+        <button class="modal__close" id="btn-close-modal">✕</button>
+      </div>
+      <div class="modal__body">
+        <form id="envio-form" onsubmit="event.preventDefault();">
+          <div class="form-grid-2">
+
+            <div class="form-group" style="grid-column:1/-1;">
+              <label class="form-label" for="f-descripcion">Descripción *</label>
+              <input type="text" id="f-descripcion" class="form-input" required placeholder="Ej: CABA, GBA Norte, Interior">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="f-cp-desde">CP Desde *</label>
+              <input type="number" id="f-cp-desde" class="form-input" required min="1000" max="9999" placeholder="1000">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="f-cp-hasta">CP Hasta *</label>
+              <input type="number" id="f-cp-hasta" class="form-input" required min="1000" max="9999" placeholder="1499">
+            </div>
+
+            <div class="form-group" style="grid-column:1/-1;">
+              <label class="form-label" for="f-precio">Precio (ARS) *</label>
+              <input type="number" id="f-precio" class="form-input" required min="0" step="0.01" placeholder="1500">
+            </div>
+
+            <div class="form-group" style="display:flex;flex-direction:row;align-items:center;gap:0.5rem;grid-column:1/-1;">
+              <input type="checkbox" id="f-activo" style="width:16px;height:16px;accent-color:var(--negro);" checked>
+              <label class="form-label" for="f-activo" style="margin:0;">Activa</label>
+            </div>
+
+          </div>
+        </form>
+      </div>
+      <div class="modal__footer">
+        <button class="btn btn-secondary" id="btn-cancel-modal">Cancelar</button>
+        <button class="btn btn-primary" id="btn-save" onclick="saveTarifa()">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/envios.js"></script>
+</body>
+</html>

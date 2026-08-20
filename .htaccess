@@ -1,0 +1,20 @@
+DirectoryIndex frontend/index.html
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /hongos/
+
+  # No reescribir archivos o carpetas existentes
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+
+  # Redirigir URLs con .html a URL limpia (preserva query string)
+  RewriteRule ^([a-z][a-z0-9-]*)\.html$ /hongos/$1 [R=301,L,QSA]
+
+  # Recursos estáticos del frontend
+  RewriteRule ^(css|js|images)/(.*)$ frontend/$1/$2 [L]
+
+  # URLs limpias: /productos → frontend/productos.html
+  RewriteRule ^([a-z][a-z0-9-]*)/?$ frontend/$1.html [L]
+</IfModule>

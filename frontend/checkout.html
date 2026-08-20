@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="KABODHI — Finalizar compra.">
+  <title>Checkout — KABODHI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css?v=17">
+</head>
+<body class="page-checkout">
+
+  <div id="navbar"></div>
+
+  <!-- Banner promocional -->
+  <div class="promo-bar">
+    <div class="promo-bar__track">
+      <div class="promo-bar__items">
+        <span class="promo-bar__item"><i class="fa-solid fa-credit-card"></i> 3 cuotas sin interés</span>
+        <span class="promo-bar__sep">✦</span>
+        <span class="promo-bar__item"><i class="fa-solid fa-money-bill-wave"></i> 10% desc. abonando en efectivo</span>
+        <span class="promo-bar__sep">✦</span>
+        <span class="promo-bar__item"><i class="fa-solid fa-truck"></i> Envíos a domicilio</span>
+        <span class="promo-bar__sep">✦</span>
+      </div>
+      <div class="promo-bar__items" aria-hidden="true">
+        <span class="promo-bar__item"><i class="fa-solid fa-credit-card"></i> 3 cuotas sin interés</span>
+        <span class="promo-bar__sep">✦</span>
+        <span class="promo-bar__item"><i class="fa-solid fa-money-bill-wave"></i> 10% desc. abonando en efectivo</span>
+        <span class="promo-bar__sep">✦</span>
+        <span class="promo-bar__item"><i class="fa-solid fa-truck"></i> Envíos a domicilio</span>
+        <span class="promo-bar__sep">✦</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Título de página -->
+  <div class="cart-page-header">
+    <h1 class="cart-page-title">Finalizar Compra</h1>
+  </div>
+
+  <div class="checkout-layout">
+
+    <!-- Formulario -->
+    <div>
+
+      <!-- Progress -->
+      <div class="checkout-progress">
+        <div class="progress-step done">
+          <span class="progress-step__num">✓</span>
+          <span>Carrito</span>
+        </div>
+        <div class="progress-divider"></div>
+        <div class="progress-step active">
+          <span class="progress-step__num">2</span>
+          <span>Datos</span>
+        </div>
+        <div class="progress-divider"></div>
+        <div class="progress-step">
+          <span class="progress-step__num">3</span>
+          <span>Pago</span>
+        </div>
+      </div>
+
+      <h2 class="checkout-form__title">Tus datos</h2>
+
+      <form id="checkout-form" novalidate>
+        <div class="form-grid">
+
+          <div class="form-group">
+            <label class="form-label" for="nombre">Nombre</label>
+            <input type="text" id="nombre" class="form-input" required autocomplete="given-name" placeholder="Juan">
+            <span class="form-error"></span>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="apellido">Apellido</label>
+            <input type="text" id="apellido" class="form-input" required autocomplete="family-name" placeholder="Pérez">
+            <span class="form-error"></span>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="email">Email</label>
+            <input type="email" id="email" class="form-input" required autocomplete="email" placeholder="juan@email.com">
+            <span class="form-error"></span>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="telefono">Teléfono</label>
+            <input type="tel" id="telefono" class="form-input" required autocomplete="tel" placeholder="+54 11 5555-0000">
+            <span class="form-error"></span>
+          </div>
+
+          <div class="form-group form-group--full">
+            <label class="form-label" for="direccion">Dirección</label>
+            <input type="text" id="direccion" class="form-input" required autocomplete="street-address" placeholder="Av. Santa Fe 1234, Piso 3, Depto A">
+            <span class="form-error"></span>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="ciudad">Ciudad</label>
+            <input type="text" id="ciudad" class="form-input" required autocomplete="address-level2" placeholder="Buenos Aires">
+            <span class="form-error"></span>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="provincia">Provincia</label>
+            <input type="text" id="provincia" class="form-input" required autocomplete="address-level1" placeholder="Buenos Aires">
+            <span class="form-error"></span>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="cp">Código Postal</label>
+            <input type="text" id="cp" class="form-input" required autocomplete="postal-code" placeholder="1425">
+            <span class="form-error"></span>
+          </div>
+
+        </div>
+
+        <div class="checkout-submit">
+          <button type="submit" id="btn-pagar" class="checkout-submit__btn">
+            PAGAR CON MERCADOPAGO
+          </button>
+          <a href="${PAGES_BASE}/carrito" class="checkout-submit__back">← Volver al carrito</a>
+        </div>
+
+      </form>
+    </div>
+
+    <!-- Resumen del pedido -->
+    <div id="checkout-summary"></div>
+
+  </div>
+
+  <!-- WhatsApp flotante -->
+  <a href="https://wa.me/541139225427" class="whatsapp-btn" target="_blank" aria-label="WhatsApp">
+    <i class="fa-brands fa-whatsapp"></i>
+  </a>
+
+  <div id="footer"></div>
+
+  <script src="js/config.js?v=6"></script>
+  <script src="js/main.js?v=6"></script>
+  <script src="js/carrito.js?v=6"></script>
+  <script src="js/checkout.js?v=6"></script>
+</body>
+</html>

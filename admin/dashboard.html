@@ -1,0 +1,149 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard — KABODHI Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar__header">
+      <span class="sidebar__logo">KABODHI</span>
+      <span class="sidebar__subtitle">Admin Panel</span>
+    </div>
+
+    <nav class="sidebar__nav">
+      <div class="sidebar__nav-label">Principal</div>
+      <a href="dashboard.html" class="sidebar__link active">
+        <span class="sidebar__link-icon">◈</span> Dashboard
+      </a>
+      <a href="productos.html" class="sidebar__link">
+        <span class="sidebar__link-icon">◆</span> Productos
+      </a>
+      <a href="pedidos.html" class="sidebar__link">
+        <span class="sidebar__link-icon">◇</span> Pedidos
+      </a>
+
+      <a href="envios.html" class="sidebar__link">
+        <span class="sidebar__link-icon">◎</span> Envíos
+      </a>
+      <div class="sidebar__nav-label" style="margin-top:1.5rem;">Tienda</div>
+      <a href="../frontend/index.html" target="_blank" class="sidebar__link">
+        <span class="sidebar__link-icon">↗</span> Ver tienda
+      </a>
+    </nav>
+
+    <div class="sidebar__footer">
+      <div class="sidebar__user">Bienvenido, <span id="admin-username">Admin</span></div>
+      <button class="sidebar__logout" id="btn-logout">
+        <span>↩</span> Cerrar sesión
+      </button>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <div class="main">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:1rem;">
+        <button class="hamburger-admin" id="hamburger-admin" aria-label="Menú">
+          <span></span><span></span><span></span>
+        </button>
+        <span class="topbar__title">Dashboard</span>
+      </div>
+      <div class="topbar__actions">
+        <a href="productos.html" class="btn btn-primary btn-sm">+ Nuevo Producto</a>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- Stats -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-card__label">Total Productos</div>
+          <div class="stat-card__value" id="stat-total-productos">—</div>
+          <div class="stat-card__sub">en catálogo</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card__label">Stock Bajo</div>
+          <div class="stat-card__value" id="stat-stock-bajo">—</div>
+          <div class="stat-card__sub">menos de 5 unidades</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card__label">Pedidos Hoy</div>
+          <div class="stat-card__value" id="stat-pedidos-hoy">—</div>
+          <div class="stat-card__sub">nuevos pedidos</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card__label">Ingresos del Mes</div>
+          <div class="stat-card__value" id="stat-ingresos-mes" style="font-size:1.4rem;">—</div>
+          <div class="stat-card__sub">pedidos aprobados</div>
+        </div>
+      </div>
+
+      <!-- Two column grid -->
+      <div style="display:grid;grid-template-columns:1.5fr 1fr;gap:1.5rem;">
+
+        <!-- Recent orders -->
+        <div class="panel">
+          <div class="panel__header">
+            <span class="panel__title">Pedidos Recientes</span>
+            <a href="pedidos.html" class="btn btn-secondary btn-sm">Ver todos</a>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Cliente</th>
+                  <th>Email</th>
+                  <th>Total</th>
+                  <th>Estado</th>
+                  <th>Fecha</th>
+                </tr>
+              </thead>
+              <tbody id="recent-orders-tbody">
+                <tr><td colspan="6" class="loading">Cargando...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Low stock -->
+        <div class="panel">
+          <div class="panel__header">
+            <span class="panel__title">Stock Bajo</span>
+            <a href="productos.html" class="btn btn-secondary btn-sm">Gestionar</a>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Img</th>
+                  <th>Nombre</th>
+                  <th>Stock</th>
+                  <th>Tipo</th>
+                </tr>
+              </thead>
+              <tbody id="low-stock-tbody">
+                <tr><td colspan="4" class="loading">Cargando...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/dashboard.js"></script>
+</body>
+</html>

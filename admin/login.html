@@ -1,0 +1,100 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login — KABODHI Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+
+  <div class="login-page">
+    <div class="login-card">
+      <div class="login-logo">KABODHI</div>
+      <div class="login-subtitle">Panel de Administración</div>
+
+      <form id="login-form" onsubmit="handleLogin(event)" novalidate>
+        <div class="form-group">
+          <label class="form-label" for="username">Usuario</label>
+          <input
+            type="text"
+            id="username"
+            class="form-input"
+            required
+            autocomplete="username"
+            placeholder="admin"
+            autofocus
+          >
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="password">Contraseña</label>
+          <input
+            type="password"
+            id="password"
+            class="form-input"
+            required
+            autocomplete="current-password"
+            placeholder="••••••••"
+          >
+        </div>
+
+        <div id="login-error" style="color:#c07b7b;font-size:0.75rem;margin-bottom:1rem;display:none;text-align:center;"></div>
+
+        <button type="submit" id="btn-login" class="btn btn-primary" style="width:100%;justify-content:center;padding:0.85rem;">
+          Ingresar
+        </button>
+      </form>
+
+      <p style="text-align:center;margin-top:2rem;font-size:0.68rem;color:var(--taupe);">
+        &larr; <a href="../frontend/index.html" style="color:var(--taupe);">Volver a la tienda</a>
+      </p>
+    </div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/auth.js"></script>
+  <script>
+    // If already logged in, redirect
+    (async () => {
+      try {
+        const res  = await fetch(API_URL + '/auth/check', { credentials: 'include' });
+        const json = await res.json();
+        if (json.success && json.authenticated) {
+          window.location.href = PAGES_BASE + '/admin/dashboard.html';
+        }
+      } catch { /* not logged in */ }
+    })();
+
+    async function handleLogin(e) {
+      e.preventDefault();
+
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value;
+      const errorEl  = document.getElementById('login-error');
+      const btn      = document.getElementById('btn-login');
+
+      if (!username || !password) {
+        errorEl.textContent = 'Completá todos los campos.';
+        errorEl.style.display = 'block';
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Ingresando...';
+      errorEl.style.display = 'none';
+
+      const result = await login(username, password);
+      if (result && !result.success) {
+        errorEl.textContent = result.message;
+        errorEl.style.display = 'block';
+        btn.disabled = false;
+        btn.textContent = 'Ingresar';
+      }
+    }
+  </script>
+</body>
+</html>

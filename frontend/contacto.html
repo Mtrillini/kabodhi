@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="KABODHI — Contactanos. Estamos para acompanar tu bienestar.">
+  <title>Contacto — KABODHI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css?v=17">
+</head>
+<body>
+
+  <div id="navbar"></div>
+
+  <!-- Contact Layout -->
+  <div class="contact-layout">
+
+    <!-- Form -->
+    <div>
+      <h2 class="contact-form__title">Envianos un mensaje</h2>
+      <form id="contact-form" onsubmit="handleContact(event)" novalidate>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label" for="c-nombre">Nombre</label>
+            <input type="text" id="c-nombre" class="form-input" required autocomplete="given-name">
+            <span class="form-error"></span>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="c-email">Email</label>
+            <input type="email" id="c-email" class="form-input" required autocomplete="email">
+            <span class="form-error"></span>
+          </div>
+
+          <div class="form-group form-group--full">
+            <label class="form-label" for="c-asunto">Asunto</label>
+            <input type="text" id="c-asunto" class="form-input" required>
+            <span class="form-error"></span>
+          </div>
+
+          <div class="form-group form-group--full">
+            <label class="form-label" for="c-mensaje">Mensaje</label>
+            <textarea
+              id="c-mensaje"
+              class="form-input"
+              rows="6"
+              required
+              style="resize:vertical;"
+              placeholder="Contanos en qué podemos ayudarte..."
+            ></textarea>
+            <span class="form-error"></span>
+          </div>
+        </div>
+
+        <div style="margin-top:2rem;">
+          <button type="submit" class="btn btn-primary">Enviar mensaje</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Info -->
+    <div>
+      <h3 class="contact-info__title">Información de contacto</h3>
+
+      <div class="contact-info__item">
+        <div class="contact-info__label">Email</div>
+        <div class="contact-info__value">
+          <a href="mailto:hola@kabodhi.com">hola@kabodhi.com</a>
+        </div>
+      </div>
+
+      <div class="contact-info__item">
+        <div class="contact-info__label">WhatsApp</div>
+        <div class="contact-info__value">
+          <a href="https://wa.me/5491100000000" target="_blank" rel="noopener">+54 11 0000-0000</a>
+        </div>
+      </div>
+
+      <!--<div class="contact-info__item">-->
+      <!--  <div class="contact-info__label">Instagram</div>-->
+      <!--  <div class="contact-info__value">-->
+      <!--    <a href="https://instagram.com/nuve.perfumeria" target="_blank" rel="noopener">@nuve.perfumeria</a>-->
+      <!--  </div>-->
+      <!--</div>-->
+
+      <div class="contact-info__item">
+        <div class="contact-info__label">Ubicación</div>
+        <div class="contact-info__value">Buenos Aires, Argentina</div>
+      </div>
+
+      <!--<div class="contact-info__item">-->
+      <!--  <div class="contact-info__label">Horario de atención</div>-->
+      <!--  <div class="contact-info__value">Lunes a Viernes: 9 a 18hs</div>-->
+      <!--</div>-->
+
+      <div style="margin-top:2.5rem;padding:1.5rem;background-color:var(--crema);">
+        <p style="font-family:var(--font-primary);font-size:1.2rem;font-weight:300;color:var(--negro);margin-bottom:0.5rem;">
+          Asesoramiento personalizado
+        </p>
+        <p style="font-family:var(--font-secondary);font-size:0.78rem;font-weight:300;color:var(--taupe);line-height:1.6;">
+          ¿No sabés qué adaptógeno elegir? Te ayudamos a encontrar el hongo o
+          blend ideal para tu objetivo. Escribinos y te asesoramos sin compromiso.
+        </p>
+      </div>
+    </div>
+
+  </div>
+
+  <div id="footer"></div>
+
+  <script src="js/config.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/carrito.js"></script>
+  <script>
+    async function handleContact(e) {
+      e.preventDefault();
+      const nombre  = document.getElementById('c-nombre').value.trim();
+      const email   = document.getElementById('c-email').value.trim();
+      const asunto  = document.getElementById('c-asunto').value.trim();
+      const mensaje = document.getElementById('c-mensaje').value.trim();
+
+      if (!nombre || !email || !asunto || !mensaje) {
+        showToast('Por favor, completá todos los campos.', 'error');
+        return;
+      }
+
+      const emailRgx = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRgx.test(email)) {
+        showToast('Ingresá un email válido.', 'error');
+        return;
+      }
+
+      const btn = e.target.querySelector('button[type="submit"]');
+      const txtOriginal = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = 'Enviando...';
+
+      try {
+        const res = await fetch(API_URL + '/contacto', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ nombre, email, asunto, mensaje }),
+        });
+        const json = await res.json();
+
+        if (json.success) {
+          showToast('¡Mensaje enviado! Te responderemos a la brevedad.', 'success');
+          e.target.reset();
+        } else {
+          showToast(json.message || 'No se pudo enviar el mensaje.', 'error');
+        }
+      } catch (err) {
+        showToast('Error de conexión. Intentá nuevamente más tarde.', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = txtOriginal;
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="KABODHI — Adaptogenos y blends naturales de doble extraccion.">
+  <title>Productos — KABODHI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css?v=17">
+</head>
+<body class="page-productos">
+
+  <div id="navbar"></div>
+
+  <!-- Banner promocional -->
+  <div class="promo-bar">
+    <div class="promo-bar__track">
+      <div class="promo-bar__items">
+        <span class="promo-bar__item"><i class="fa-solid fa-credit-card"></i> 3 cuotas sin interés</span>
+        <span class="promo-bar__sep">✦</span>
+        <span class="promo-bar__item"><i class="fa-solid fa-money-bill-wave"></i> 10% desc. abonando en efectivo</span>
+        <span class="promo-bar__sep">✦</span>
+        <span class="promo-bar__item"><i class="fa-solid fa-truck"></i> Envíos a domicilio</span>
+        <span class="promo-bar__sep">✦</span>
+      </div>
+      <div class="promo-bar__items" aria-hidden="true">
+        <span class="promo-bar__item"><i class="fa-solid fa-credit-card"></i> 3 cuotas sin interés</span>
+        <span class="promo-bar__sep">✦</span>
+        <span class="promo-bar__item"><i class="fa-solid fa-money-bill-wave"></i> 10% desc. abonando en efectivo</span>
+        <span class="promo-bar__sep">✦</span>
+        <span class="promo-bar__item"><i class="fa-solid fa-truck"></i> Envíos a domicilio</span>
+        <span class="promo-bar__sep">✦</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <section class="section" style="padding-bottom:0;">
+    <div class="filter-bar">
+      <input
+        type="search"
+        id="search-input"
+        class="filter-bar__search"
+        placeholder="Buscar hongo o beneficio..."
+        autocomplete="off"
+      >
+      <div class="filter-genero">
+        <button class="filter-genero__btn active" data-genero="">TODOS</button>
+        <button class="filter-genero__btn" data-genero="enfoque">ENFOQUE</button>
+        <button class="filter-genero__btn" data-genero="energia">ENERGÍA</button>
+        <button class="filter-genero__btn" data-genero="equilibrio">EQUILIBRIO</button>
+        <button class="filter-genero__btn" data-genero="defensas">DEFENSAS</button>
+        <button class="filter-genero__btn" data-categoria="blends">BLENDS</button>
+      </div>
+      <select id="sort-select" class="filter-bar__select">
+        <option value="recent">Más recientes</option>
+        <option value="price-asc">Precio: menor a mayor</option>
+        <option value="price-desc">Precio: mayor a menor</option>
+        <option value="name">Nombre A-Z</option>
+      </select>
+      <span class="filter-bar__results" id="result-count"></span>
+    </div>
+  </section>
+
+  <!-- Products Grid -->
+  <section class="section" style="padding-top:1.5rem; background:#fff;">
+    <div id="productos-grid" class="productos-grid-nuve"></div>
+  </section>
+
+  <!-- Modal detalle producto -->
+  <div id="producto-modal" class="prod-modal" style="display:none;">
+    <div class="prod-modal__overlay" onclick="cerrarModal()"></div>
+    <div class="prod-modal__box">
+      <button class="prod-modal__close" onclick="cerrarModal()">✕</button>
+      <div class="prod-modal__img-wrap">
+        <img id="modal-img" src="" alt="">
+      </div>
+      <div id="modal-thumbs" style="display:none;flex-direction:row;gap:0.4rem;padding:0.5rem 1.5rem 0;flex-wrap:wrap;"></div>
+      <div class="prod-modal__info">
+        <p id="modal-marca" class="prod-modal__marca"></p>
+        <h2 id="modal-nombre" class="prod-modal__nombre"></h2>
+        <p id="modal-tipo" class="prod-modal__tipo"></p>
+        <p id="modal-desc" class="prod-modal__desc"></p>
+        <div class="prod-modal__precio-wrap">
+          <span id="modal-precio" class="prod-modal__precio"></span>
+        </div>
+        <div class="prod-modal__qty-wrap">
+          <button onclick="cambiarQty(-1)">−</button>
+          <span id="modal-qty">1</span>
+          <button onclick="cambiarQty(1)">+</button>
+        </div>
+        <button class="prod-modal__btn" onclick="agregarDesdeModal()">AGREGAR AL CARRITO</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- WhatsApp flotante -->
+  <a href="https://wa.me/541139225427" class="whatsapp-btn" target="_blank" aria-label="WhatsApp">
+    <i class="fa-brands fa-whatsapp"></i>
+  </a>
+
+  <div id="footer"></div>
+
+  <script src="js/config.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/carrito.js"></script>
+  <script src="js/productos.js"></script>
+</body>
+</html>

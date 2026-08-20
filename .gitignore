@@ -1,0 +1,7 @@
+.env
+uploads/
+vendor/
+*.log
+
+# Backups locales
+*.bak
