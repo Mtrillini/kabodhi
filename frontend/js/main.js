@@ -250,35 +250,29 @@ function setupHamburger() {
 }
 
 // ---- Scroll reveal (animaciones de entrada) ----
-let _revealObserver = null;
-
+// Chequeo por posicion (scroll + rect): robusto y sin depender de IntersectionObserver.
 function setupReveal() {
-  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-  if (reduce || !('IntersectionObserver' in window)) {
-    // Sin animacion: mostrar todo directamente
-    window.observeReveals = function (root = document) {
-      (root.querySelectorAll ? root : document).querySelectorAll('.reveal').forEach(el => el.classList.add('is-visible'));
-    };
-    window.observeReveals();
-    return;
-  }
-
-  _revealObserver = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        entry.target.classList.add('is-visible');
-        _revealObserver.unobserve(entry.target);
+  const revealInView = () => {
+    const vh = window.innerHeight || document.documentElement.clientHeight;
+    document.querySelectorAll('.reveal:not(.is-visible)').forEach(el => {
+      const r = el.getBoundingClientRect();
+      // Se muestra cuando su borde superior entra ~12% desde abajo de la pantalla.
+      // (No exige bottom>0, asi los que ya pasaron nunca quedan ocultos.)
+      if (r.top < vh * 0.88) {
+        el.classList.add('is-visible');
       }
     });
-  }, { threshold: 0.12, rootMargin: '0px 0px -8% 0px' });
-
-  // Observa los .reveal que todavia no se mostraron (sirve para contenido dinamico)
-  window.observeReveals = function (root = document) {
-    const scope = (root && root.querySelectorAll) ? root : document;
-    scope.querySelectorAll('.reveal:not(.is-visible)').forEach(el => _revealObserver.observe(el));
   };
-  window.observeReveals();
+
+  // Expuesto para que el contenido dinamico (hongos, mas vendidos) lo dispare tras renderizar
+  window.observeReveals = revealInView;
+
+  window.addEventListener('scroll', revealInView, { passive: true });
+  window.addEventListener('resize', revealInView, { passive: true });
+
+  // Primera pasada (elementos ya visibles al cargar) + una de respaldo
+  revealInView();
+  setTimeout(revealInView, 300);
 }
 
 // ---- Search toggle ----

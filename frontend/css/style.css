@@ -4060,8 +4060,10 @@ body { padding-top: calc(var(--nav-h) + var(--nav-arch)); }
 
 /* ============================================================
    KABODHI — ANIMACIONES (entrada al cargar + reveal al scrollear)
+   Se aplican siempre (por pedido). Para respetar accesibilidad,
+   cambiar "@media all" por "@media (prefers-reduced-motion: no-preference)".
    ============================================================ */
-@media (prefers-reduced-motion: no-preference) {
+@media all {
   /* Base: solo opacidad (no toca transform, asi no rompe elementos posicionados) */
   .reveal {
     opacity: 0;
