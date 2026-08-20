@@ -3932,7 +3932,7 @@ body { padding-top: calc(var(--nav-h) + var(--nav-arch)); }
    KABODHI — HONGOS PRINCIPALES (seccion alternada)
    ============================================================ */
 .hongos {
-  background: var(--crema);
+  background: #ffffff;
   padding: 5rem 2rem 4rem;
 }
 .hongos__list {

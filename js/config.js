@@ -1,7 +1,24 @@
 const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-const APP_BASE   = isLocal ? '/hongos' : '';
-const PAGES_BASE = isLocal ? '/hongos' : '';
-const API_URL    = APP_BASE + '/api/index.php';
+const isGitHubPages = window.location.hostname.endsWith('github.io');
+
+// Base del sitio segun el entorno:
+//  - Local (XAMPP):             /hongos
+//  - GitHub Pages:              /<repo> (ej: /kabodhi) — se detecta de la URL
+//  - Netlify / dominio propio:  '' (raiz)
+let APP_BASE, PAGES_BASE;
+if (isLocal) {
+  APP_BASE = '/hongos';
+  PAGES_BASE = '/hongos';
+} else if (isGitHubPages) {
+  const seg = window.location.pathname.split('/').filter(Boolean)[0] || '';
+  const base = seg ? '/' + seg : '';
+  APP_BASE = base;
+  PAGES_BASE = base;
+} else {
+  APP_BASE = '';
+  PAGES_BASE = '';
+}
+const API_URL = APP_BASE + '/api/index.php';
 
 // En hosting estatico (Netlify/GitHub Pages) no corre PHP: se usan datos horneados
 // y las acciones (checkout/contacto) van por WhatsApp / mail.

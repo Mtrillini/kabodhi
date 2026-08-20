@@ -145,7 +145,7 @@ INSERT INTO `productos` (`categoria_id`, `marca`, `nombre`, `descripcion`, `nota
 
 -- Melena de Leon se destaca arriba en el circulo de beneficios; aca van los otros 3.
 INSERT INTO `hongos_principales` (`nombre`, `subtitulo`, `descripcion`, `imagen_url`, `orden`, `activo`) VALUES
-('Reishi', 'Equilibrio & calma', 'Tradicionalmente utilizado dentro de rutinas de bienestar orientadas al descanso, la calma y el equilibrio cotidiano.', 'images/banner1.png', 1, 1),
+('Reishi', 'Equilibrio & calma', 'Tradicionalmente utilizado dentro de rutinas de bienestar orientadas al descanso, la calma y el equilibrio cotidiano.', 'images/hongo-reishi.png', 1, 1),
 ('Cordyceps', 'Energia & vitalidad', 'Una opcion pensada para acompanar rutinas activas y momentos donde buscamos energia y rendimiento.', 'images/banner2.png', 2, 1),
 ('Shiitake', 'Bienestar diario', 'Un hongo valorado por su perfil nutricional y su integracion sencilla en habitos de bienestar cotidiano.', 'images/hongo-shiitake.png', 3, 1);
 

@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=32">
+  <link rel="stylesheet" href="css/style.css?v=33">
 </head>
 <body>
 
@@ -216,10 +216,10 @@
   </a>
 
   <!-- Scripts -->
-  <script src="js/config.js?v=32"></script>
-  <script src="js/main.js?v=32"></script>
-  <script src="js/carrito.js?v=32"></script>
-  <script src="js/productos.js?v=32"></script>
+  <script src="js/config.js?v=33"></script>
+  <script src="js/main.js?v=33"></script>
+  <script src="js/carrito.js?v=33"></script>
+  <script src="js/productos.js?v=33"></script>
   <script>
     function handleNewsletter(e) {
       e.preventDefault();
@@ -267,8 +267,8 @@
           const iconHtml = iconImg
             ? `<img src="${iconImg}" alt="" class="hongo-row__iconimg">`
             : `<i class="fa-solid ${ICONOS[key] || 'fa-seedling'}"></i>`;
-          const side = i % 2 === 0 ? 'hongo-row--img-left' : 'hongo-row--img-right';
-          const dir  = i % 2 === 0 ? 'reveal--left' : 'reveal--right';
+          const side = i % 2 === 0 ? 'hongo-row--img-right' : 'hongo-row--img-left';
+          const dir  = i % 2 === 0 ? 'reveal--right' : 'reveal--left';
           const link = (typeof PAGES_BASE !== 'undefined' ? PAGES_BASE : '') +
                        '/productos?search=' + encodeURIComponent(h.nombre);
           const img  = h.imagen_url || '';
