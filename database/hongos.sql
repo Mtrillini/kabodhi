@@ -11,6 +11,7 @@ DROP TABLE IF EXISTS `pedidos`;
 DROP TABLE IF EXISTS `productos`;
 DROP TABLE IF EXISTS `categorias`;
 DROP TABLE IF EXISTS `tarifas_envio`;
+DROP TABLE IF EXISTS `hongos_principales`;
 DROP TABLE IF EXISTS `admin_users`;
 SET FOREIGN_KEY_CHECKS = 1;
 
@@ -97,6 +98,19 @@ CREATE TABLE `tarifas_envio` (
     PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Hongos principales (seccion destacada del home, gestionada desde admin)
+CREATE TABLE `hongos_principales` (
+    `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    `nombre` VARCHAR(200) NOT NULL,
+    `subtitulo` VARCHAR(200) DEFAULT NULL,
+    `descripcion` TEXT,
+    `imagen_url` VARCHAR(500),
+    `orden` INT UNSIGNED NOT NULL DEFAULT 0,
+    `activo` TINYINT(1) NOT NULL DEFAULT 1,
+    `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- Usuarios admin
 CREATE TABLE `admin_users` (
     `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -128,6 +142,12 @@ INSERT INTO `productos` (`categoria_id`, `marca`, `nombre`, `descripcion`, `nota
 (1, 'Bienestar', 'Shiitake', 'Lentinula edodes de doble extraccion. Nutritivo y funcional, apoya la inmunidad y el bienestar cotidiano.', 'Bienestar & inmunidad · 60 capsulas', 28900.00, 26, 'images/prod-shiitake.svg', 'bienestar', 1, 0),
 (2, 'Enfoque', 'Blend Focus', 'Mezcla funcional de Melena de Leon y Cordyceps. Claridad mental y energia sostenida en una sola toma diaria.', 'Melena + Cordyceps · 50g polvo', 31900.00, 22, 'images/prod-blend-focus.svg', 'enfoque', 1, 1),
 (2, 'Equilibrio', 'Blend Calm', 'Mezcla funcional de Reishi y Chaga. Calma, defensas y equilibrio para cerrar el dia.', 'Reishi + Chaga · 50g polvo', 31900.00, 20, 'images/prod-blend-calm.svg', 'equilibrio', 1, 0);
+
+-- Melena de Leon se destaca arriba en el circulo de beneficios; aca van los otros 3.
+INSERT INTO `hongos_principales` (`nombre`, `subtitulo`, `descripcion`, `imagen_url`, `orden`, `activo`) VALUES
+('Reishi', 'Equilibrio & calma', 'Tradicionalmente utilizado dentro de rutinas de bienestar orientadas al descanso, la calma y el equilibrio cotidiano.', 'images/banner1.png', 1, 1),
+('Cordyceps', 'Energia & vitalidad', 'Una opcion pensada para acompanar rutinas activas y momentos donde buscamos energia y rendimiento.', 'images/banner2.png', 2, 1),
+('Shiitake', 'Bienestar diario', 'Un hongo valorado por su perfil nutricional y su integracion sencilla en habitos de bienestar cotidiano.', 'images/hongo-shiitake.png', 3, 1);
 
 INSERT INTO `tarifas_envio` (`descripcion`, `cp_desde`, `cp_hasta`, `precio`, `activo`) VALUES
 ('Envio CABA', 1000, 1499, 3500.00, 1),

@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Lato:wght@300;400;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Cormorant+Garamond:wght@400;500;600&family=Lato:wght@300;400;700&display=swap");
 
 /* ============================================================
    CSS RESET & ROOT VARIABLES
@@ -3647,12 +3647,13 @@ body { padding-top: calc(var(--nav-h) + var(--nav-arch)); }
   content: "";
   position: absolute;
   bottom: 0; left: 0; right: 0;
-  height: 50%;
+  height: 68%;
   background: linear-gradient(to top,
-    #235163 0%,
-    rgba(35, 81, 99, 0.7) 16%,
-    rgba(35, 81, 99, 0.25) 38%,
-    rgba(35, 81, 99, 0) 62%);
+    rgb(35, 81, 99) 0%,
+    rgba(35, 81, 99, 0.78) 20%,
+    rgba(35, 81, 99, 0.4) 44%,
+    rgba(35, 81, 99, 0.12) 70%,
+    rgba(35, 81, 99, 0) 100%);
   z-index: 2;
   pointer-events: none;
 }
@@ -3752,20 +3753,20 @@ body { padding-top: calc(var(--nav-h) + var(--nav-arch)); }
   /* Usa SOLO el fragmento superior de la imagen azul (donde estan los hongos);
      debajo queda el azul solido. Cuando no exista la imagen, cae al gradiente. */
   background:
-    linear-gradient(180deg, rgba(60, 96, 110, 0.30) 0%, rgba(22, 62, 79, 0.6) 100%),
-    url(../images/bg-beneficios.jpg) center top / cover no-repeat,
-    linear-gradient(180deg, #2b5666 0%, #163e4f 100%);
+    linear-gradient(180deg, rgba(35, 81, 99, 0.5) 0%, rgba(22, 62, 79, 0.6) 100%),
+    url(../images/bg-beneficios.png) center top / cover no-repeat,
+    linear-gradient(180deg, #235163 0%, #163e4f 100%);
   color: var(--crema);
   padding: 5.5rem 2rem 6rem;
   overflow: hidden;
 }
-/* Empalme continuo con el difuminado del banner (mismo azul) */
+/* Empalme continuo con el difuminado del banner (mismo azul, sin linea) */
 .beneficios::before {
   content: "";
   position: absolute;
   top: 0; left: 0; right: 0;
-  height: 90px;
-  background: linear-gradient(to bottom, #235163 0%, rgba(35, 81, 99, 0) 100%);
+  height: 220px;
+  background: linear-gradient(to bottom, rgb(35, 81, 99) 0%, rgba(35, 81, 99, 0) 100%);
   pointer-events: none;
   z-index: 1;
 }
@@ -3796,25 +3797,26 @@ body { padding-top: calc(var(--nav-h) + var(--nav-arch)); }
   transform: translate(-50%, -50%);
   width: 430px;
   height: 430px;
-  border: 1px solid rgba(231, 222, 205, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.28);
   border-radius: 50%;
   z-index: 0;
 }
 .ring-dot {
   position: absolute;
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
-  background: var(--terracota);
-  box-shadow: 0 0 0 3px rgba(166,107,61,0.18);
+  background: rgba(255, 255, 255, 0.7);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.12);
   transform: translate(-50%, -50%);
 }
-.ring-dot--1 { left: 15%; top: 15%; }
-.ring-dot--2 { left: 1%;  top: 50%; }
-.ring-dot--3 { left: 15%; top: 85%; }
-.ring-dot--4 { left: 85%; top: 15%; }
-.ring-dot--5 { left: 99%; top: 50%; }
-.ring-dot--6 { left: 85%; top: 85%; }
+/* Posiciones exactas sobre la circunferencia (centro del punto sobre la linea) */
+.ring-dot--1 { left: 14.6%; top: 14.6%; }  /* sup izq  (315°) */
+.ring-dot--2 { left: 0%;    top: 50%; }    /* izq      (270°) */
+.ring-dot--3 { left: 14.6%; top: 85.4%; }  /* inf izq  (225°) */
+.ring-dot--4 { left: 85.4%; top: 14.6%; }  /* sup der  (45°)  */
+.ring-dot--5 { left: 100%;  top: 50%; }    /* der      (90°)  */
+.ring-dot--6 { left: 85.4%; top: 85.4%; }  /* inf der  (135°) */
 
 .beneficios__mush {
   position: relative;
@@ -3829,11 +3831,12 @@ body { padding-top: calc(var(--nav-h) + var(--nav-arch)); }
 .beneficios__title {
   position: relative;
   z-index: 2;
-  font-family: var(--font-primary);
-  font-size: 2.1rem;
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 2.5rem;
   font-weight: 500;
-  letter-spacing: 0.05em;
-  line-height: 1.1;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  line-height: 1.12;
   color: var(--crema);
   margin: 0.2rem 0 0.7rem;
 }
@@ -3861,13 +3864,20 @@ body { padding-top: calc(var(--nav-h) + var(--nav-arch)); }
   margin-bottom: 0.65rem;
   opacity: 0.95;
 }
+.benef__icon-img {
+  width: 42px;
+  height: 42px;
+  object-fit: contain;
+  display: inline-block;
+}
 .benef__title {
-  font-family: var(--font-primary);
-  font-size: 1.18rem;
-  font-weight: 500;
+  font-family: var(--font-secondary);   /* Lato */
+  font-size: 1.05rem;
+  font-weight: 700;
   color: var(--crema);
   line-height: 1.2;
   margin-bottom: 0.4rem;
+  letter-spacing: 0.01em;
 }
 .benef__desc {
   font-family: var(--font-secondary);
@@ -3916,4 +3926,173 @@ body { padding-top: calc(var(--nav-h) + var(--nav-arch)); }
 @media (max-width: 480px) {
   .benef { flex-basis: 100%; }
   .beneficios__title { font-size: 1.8rem; }
+}
+
+/* ============================================================
+   KABODHI — HONGOS PRINCIPALES (seccion alternada)
+   ============================================================ */
+.hongos {
+  background: var(--crema);
+  padding: 5rem 2rem 4rem;
+}
+.hongos__list {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4rem;
+}
+.hongo-row {
+  display: grid;
+  grid-template-columns: 1.05fr 1fr;
+  align-items: center;
+  gap: 3.5rem;
+}
+/* Las fotos ya vienen compuestas con el fondo (blob) — se muestran directas */
+.hongo-row__media { position: relative; }
+.hongo-row__media img {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 6px;
+}
+.hongo-row--img-right .hongo-row__media { order: 2; }
+
+.hongo-row--img-left  .hongo-row__body { text-align: right; }
+.hongo-row--img-right .hongo-row__body { text-align: left; }
+
+.hongo-row__icon {
+  font-size: 1.6rem;
+  color: var(--terracota);
+  margin-bottom: 0.9rem;
+}
+.hongo-row__iconimg {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  display: inline-block;
+}
+.hongo-row__title {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: clamp(2.1rem, 3.4vw, 2.9rem);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--bosque);
+  line-height: 1.05;
+  margin-bottom: 0.5rem;
+}
+.hongo-row__sub {
+  font-family: var(--font-secondary);
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: var(--terracota);
+  margin-bottom: 1.2rem;
+}
+.hongo-row__desc {
+  font-family: var(--font-secondary);
+  font-size: 0.9rem;
+  font-weight: 300;
+  line-height: 1.8;
+  color: var(--tierra);
+  max-width: 420px;
+  margin-bottom: 1.5rem;
+}
+.hongo-row--img-left  .hongo-row__desc { margin-left: auto; }
+.hongo-row--img-right .hongo-row__desc { margin-right: auto; }
+.hongo-row__cta {
+  font-family: var(--font-secondary);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--terracota);
+  text-decoration: none;
+  border-bottom: 1px solid var(--terracota);
+  padding-bottom: 3px;
+  transition: opacity var(--transition);
+}
+.hongo-row__cta:hover { opacity: 0.6; }
+
+/* Footer de la seccion */
+.hongos__footer {
+  text-align: center;
+  margin-top: 5rem;
+}
+.hongos__footer-text {
+  font-family: var(--font-primary);
+  font-size: clamp(1.1rem, 2vw, 1.45rem);
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--bosque);
+  margin-bottom: 1.4rem;
+}
+.hongos__footer-btn {
+  display: inline-block;
+  font-family: var(--font-secondary);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--bosque);
+  border: 1px solid var(--bosque);
+  padding: 0.95rem 2.6rem;
+  text-decoration: none;
+  transition: background var(--transition), color var(--transition);
+}
+.hongos__footer-btn:hover { background: var(--bosque); color: var(--crema); }
+
+@media (max-width: 760px) {
+  .hongos { padding: 3.5rem 1.25rem; }
+  .hongo-row { grid-template-columns: 1fr; gap: 1.5rem; }
+  .hongo-row--img-right .hongo-row__media { order: 0; }
+  .hongo-row__body,
+  .hongo-row--img-left .hongo-row__body,
+  .hongo-row--img-right .hongo-row__body { text-align: center; }
+  .hongo-row__desc,
+  .hongo-row--img-left .hongo-row__desc,
+  .hongo-row--img-right .hongo-row__desc { margin-left: auto; margin-right: auto; }
+  .hongo-row__media { max-width: 340px; margin: 0 auto; width: 100%; }
+}
+
+/* ============================================================
+   KABODHI — ANIMACIONES (entrada al cargar + reveal al scrollear)
+   ============================================================ */
+@media (prefers-reduced-motion: no-preference) {
+  /* Base: solo opacidad (no toca transform, asi no rompe elementos posicionados) */
+  .reveal {
+    opacity: 0;
+    transition: opacity 0.9s cubic-bezier(0.22, 0.61, 0.36, 1),
+                transform 0.9s cubic-bezier(0.22, 0.61, 0.36, 1);
+    will-change: opacity, transform;
+  }
+  .reveal.is-visible { opacity: 1; }
+  /* Modificadores de movimiento (solo para elementos en flujo normal) */
+  .reveal--up    { transform: translateY(32px); }
+  .reveal--left  { transform: translateX(-52px); }
+  .reveal--right { transform: translateX(52px); }
+  .reveal--scale { transform: scale(0.9); }
+  .reveal--up.is-visible,
+  .reveal--left.is-visible,
+  .reveal--right.is-visible,
+  .reveal--scale.is-visible { transform: none; }
+
+  /* Escalonado */
+  .reveal--d1 { transition-delay: 0.08s; }
+  .reveal--d2 { transition-delay: 0.16s; }
+  .reveal--d3 { transition-delay: 0.24s; }
+  .reveal--d4 { transition-delay: 0.32s; }
+  .reveal--d5 { transition-delay: 0.40s; }
+  .reveal--d6 { transition-delay: 0.48s; }
+
+  /* Carga inicial: navbar baja, hero aparece */
+  @keyframes navDrop { from { opacity: 0; transform: translateY(-14px); } to { opacity: 1; transform: none; } }
+  @keyframes heroIn  { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes zoomSlow { from { transform: scale(1.06); } to { transform: scale(1); } }
+  .navbar { animation: navDrop 0.9s ease both; }
+  .hero   { animation: heroIn 1.3s ease both; }
+  .hero__img { animation: zoomSlow 6s ease-out both; }
 }

@@ -316,10 +316,11 @@ function renderMasVendidos(section, lista) {
   const grid = document.createElement('div');
   grid.className = 'productos-grid-nuve';
 
-  grid.innerHTML = lista.map(p => {
+  grid.innerHTML = lista.map((p, i) => {
     const imgs = (p.imagenes && p.imagenes.length) ? p.imagenes : (p.img ? [p.img] : []);
+    const delay = 'reveal--d' + Math.min(i + 1, 6);
     return `
-    <div class="nuve-card" onclick="${p.stock > 0 ? `abrirModal(${p.id})` : ''}">
+    <div class="nuve-card reveal reveal--up ${delay}" onclick="${p.stock > 0 ? `abrirModal(${p.id})` : ''}">
       <span class="nuve-card__badge">#${p.rank}</span>
       <div class="nuve-card__img-wrap">
         ${cardSliderHTML(imgs, p.nombre, p.img)}
@@ -339,6 +340,7 @@ function renderMasVendidos(section, lista) {
   }).join('');
 
   section.appendChild(grid);
+  if (window.observeReveals) window.observeReveals(section);
 }
 
 // ---- Init ----

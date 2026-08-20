@@ -249,6 +249,38 @@ function setupHamburger() {
   });
 }
 
+// ---- Scroll reveal (animaciones de entrada) ----
+let _revealObserver = null;
+
+function setupReveal() {
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  if (reduce || !('IntersectionObserver' in window)) {
+    // Sin animacion: mostrar todo directamente
+    window.observeReveals = function (root = document) {
+      (root.querySelectorAll ? root : document).querySelectorAll('.reveal').forEach(el => el.classList.add('is-visible'));
+    };
+    window.observeReveals();
+    return;
+  }
+
+  _revealObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('is-visible');
+        _revealObserver.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.12, rootMargin: '0px 0px -8% 0px' });
+
+  // Observa los .reveal que todavia no se mostraron (sirve para contenido dinamico)
+  window.observeReveals = function (root = document) {
+    const scope = (root && root.querySelectorAll) ? root : document;
+    scope.querySelectorAll('.reveal:not(.is-visible)').forEach(el => _revealObserver.observe(el));
+  };
+  window.observeReveals();
+}
+
 // ---- Search toggle ----
 function setupSearch() {
   const toggle = document.getElementById('search-toggle');
@@ -356,6 +388,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setupNavbarScroll();
   setupSmoothScroll();
   setupDropdowns();
+  setupReveal();
 
   // Listen for cart changes from other scripts
   window.addEventListener('carrito-updated', updateCartBadge);

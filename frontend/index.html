@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=17">
+  <link rel="stylesheet" href="css/style.css?v=27">
 </head>
 <body>
 
@@ -39,12 +39,6 @@
         </picture>
       </div>
     </div>
-    <a href="productos" class="hero__cta">COMPRAR</a>
-    <div class="hero__dots" id="hero-dots">
-      <button class="hero__dot active" data-i="0" aria-label="Banner 1"></button>
-      <button class="hero__dot" data-i="1" aria-label="Banner 2"></button>
-      <button class="hero__dot" data-i="2" aria-label="Banner 3"></button>
-    </div>
   </section>
 
   <!-- ============================================================
@@ -54,41 +48,41 @@
     <div class="beneficios__inner">
 
       <!-- Columna izquierda -->
-      <div class="benef benef--tl">
-        <div class="benef__icon"><i class="fa-solid fa-leaf"></i></div>
+      <div class="benef benef--tl reveal reveal--d1">
+        <div class="benef__icon"><img src="images/icon-natural.png" alt="" class="benef__icon-img"></div>
         <h3 class="benef__title">100% Natural</h3>
         <p class="benef__desc">Sin aditivos ni conservantes</p>
       </div>
-      <div class="benef benef--ml">
-        <div class="benef__icon"><i class="fa-solid fa-shield-halved"></i></div>
+      <div class="benef benef--ml reveal reveal--d2">
+        <div class="benef__icon"><img src="images/icon-inmune.png" alt="" class="benef__icon-img"></div>
         <h3 class="benef__title">Sistema inmunológico</h3>
         <p class="benef__desc">Fortalece tus defensas</p>
       </div>
-      <div class="benef benef--bl">
-        <div class="benef__icon"><i class="fa-solid fa-apple-whole"></i></div>
+      <div class="benef benef--bl reveal reveal--d3">
+        <div class="benef__icon"><img src="images/icon-digestiva.png" alt="" class="benef__icon-img"></div>
         <h3 class="benef__title">Salud digestiva</h3>
         <p class="benef__desc">Favorece el equilibrio intestinal</p>
       </div>
 
       <!-- Columna derecha -->
-      <div class="benef benef--tr">
-        <div class="benef__icon"><i class="fa-solid fa-brain"></i></div>
+      <div class="benef benef--tr reveal reveal--d1">
+        <div class="benef__icon"><img src="images/icon-enfoque.png" alt="" class="benef__icon-img"></div>
         <h3 class="benef__title">Enfoque y memoria</h3>
         <p class="benef__desc">Apoya la función cognitiva</p>
       </div>
-      <div class="benef benef--mr">
-        <div class="benef__icon"><i class="fa-solid fa-bolt"></i></div>
+      <div class="benef benef--mr reveal reveal--d2">
+        <div class="benef__icon"><img src="images/icon-energia.png" alt="" class="benef__icon-img"></div>
         <h3 class="benef__title">Energía sostenida</h3>
         <p class="benef__desc">Vitalidad sin altibajos</p>
       </div>
-      <div class="benef benef--br">
-        <div class="benef__icon"><i class="fa-solid fa-spa"></i></div>
+      <div class="benef benef--br reveal reveal--d3">
+        <div class="benef__icon"><img src="images/icon-bienestar.png" alt="" class="benef__icon-img"></div>
         <h3 class="benef__title">Bienestar natural</h3>
         <p class="benef__desc">Cuerpo y mente en armonía</p>
       </div>
 
       <!-- Centro: anillo + melena + texto -->
-      <div class="beneficios__center">
+      <div class="beneficios__center reveal reveal--d2">
         <span class="beneficios__ring" aria-hidden="true">
           <span class="ring-dot ring-dot--1"></span>
           <span class="ring-dot ring-dot--2"></span>
@@ -102,6 +96,17 @@
         <p class="beneficios__desc">Conocido por sus beneficios para la concentración, la memoria y la claridad mental. Apoya tu enfoque y bienestar cognitivo de forma natural.</p>
       </div>
 
+    </div>
+  </section>
+
+  <!-- ============================================================
+       HONGOS PRINCIPALES (gestionados desde el admin)
+       ============================================================ -->
+  <section class="hongos">
+    <div class="hongos__list" id="hongos-list"></div>
+    <div class="hongos__footer reveal reveal--up">
+      <p class="hongos__footer-text">Descubrí todos nuestros adaptógenos</p>
+      <a href="productos" class="hongos__footer-btn">VER PRODUCTOS →</a>
     </div>
   </section>
 
@@ -137,7 +142,7 @@
        ============================================================ -->
   <section class="colecciones-panels">
 
-    <a href="productos?categoria=adaptogenos" class="colecciones-panel colecciones-panel--dark">
+    <a href="productos?categoria=adaptogenos" class="colecciones-panel colecciones-panel--dark reveal reveal--up">
       <div class="colecciones-panel__content">
         <p class="colecciones-panel__label">HONGOS FUNCIONALES</p>
         <h2 class="colecciones-panel__title">ADAPTÓGENOS</h2>
@@ -145,7 +150,7 @@
       </div>
     </a>
 
-    <a href="productos?categoria=blends" class="colecciones-panel colecciones-panel--light">
+    <a href="productos?categoria=blends" class="colecciones-panel colecciones-panel--light reveal reveal--up reveal--d2">
       <div class="colecciones-panel__content">
         <p class="colecciones-panel__label">MEZCLAS FUNCIONALES</p>
         <h2 class="colecciones-panel__title">BLENDS</h2>
@@ -211,10 +216,10 @@
   </a>
 
   <!-- Scripts -->
-  <script src="js/config.js"></script>
-  <script src="js/main.js"></script>
-  <script src="js/carrito.js"></script>
-  <script src="js/productos.js"></script>
+  <script src="js/config.js?v=27"></script>
+  <script src="js/main.js?v=27"></script>
+  <script src="js/carrito.js?v=27"></script>
+  <script src="js/productos.js?v=27"></script>
   <script>
     function handleNewsletter(e) {
       e.preventDefault();
@@ -227,7 +232,67 @@
 
     document.addEventListener('DOMContentLoaded', () => {
       loadFeaturedProductos();
+      loadHongosPrincipales();
     });
+
+    // ---- Hongos principales (seccion alternada) ----
+    async function loadHongosPrincipales() {
+      const cont = document.getElementById('hongos-list');
+      if (!cont) return;
+
+      const ICONOS = {
+        'melena de leon': 'fa-brain',
+        'reishi':         'fa-spa',
+        'cordyceps':      'fa-bolt',
+        'shiitake':       'fa-shield-halved',
+        'chaga':          'fa-leaf',
+      };
+      const _base = (typeof APP_BASE !== 'undefined' ? APP_BASE : '') + '/frontend/images/';
+      const ICON_IMG = {
+        'melena de leon': _base + 'icon-hongo-enfoque.png',
+        'reishi':         _base + 'icon-hongo-equilibrio.png',
+        'cordyceps':      _base + 'icon-hongo-energia.png',
+        'shiitake':       _base + 'icon-hongo-bienestar.png',
+      };
+      const norm = s => (s || '').toLowerCase()
+        .normalize('NFD').replace(new RegExp('[\\u0300-\\u036f]', 'g'), '');
+
+      try {
+        const res  = await fetch(API_URL + '/hongos');
+        const json = await res.json();
+        if (!json.success || !json.data || !json.data.length) { cont.innerHTML = ''; return; }
+
+        cont.innerHTML = json.data.map((h, i) => {
+          const key      = norm(h.nombre);
+          const iconImg  = ICON_IMG[key];
+          const iconHtml = iconImg
+            ? `<img src="${iconImg}" alt="" class="hongo-row__iconimg">`
+            : `<i class="fa-solid ${ICONOS[key] || 'fa-seedling'}"></i>`;
+          const side = i % 2 === 0 ? 'hongo-row--img-left' : 'hongo-row--img-right';
+          const dir  = i % 2 === 0 ? 'reveal--left' : 'reveal--right';
+          const link = (typeof PAGES_BASE !== 'undefined' ? PAGES_BASE : '') +
+                       '/productos?search=' + encodeURIComponent(h.nombre);
+          const img  = h.imagen_url || '';
+          return `
+            <article class="hongo-row ${side} reveal ${dir}">
+              <div class="hongo-row__media">
+                <img src="${img}" alt="${h.nombre}" loading="lazy">
+              </div>
+              <div class="hongo-row__body">
+                <div class="hongo-row__icon">${iconHtml}</div>
+                <h2 class="hongo-row__title">${h.nombre}</h2>
+                ${h.subtitulo ? `<p class="hongo-row__sub">${h.subtitulo}</p>` : ''}
+                ${h.descripcion ? `<p class="hongo-row__desc">${h.descripcion}</p>` : ''}
+                <a href="${link}" class="hongo-row__cta">AGREGAR &rarr;</a>
+              </div>
+            </article>`;
+        }).join('');
+        if (window.observeReveals) window.observeReveals(cont);
+      } catch (e) {
+        console.error('Error cargando hongos principales:', e);
+        cont.innerHTML = '';
+      }
+    }
 
     // ---- Hero slider ----
     (function () {
