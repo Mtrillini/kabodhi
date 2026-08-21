@@ -3422,7 +3422,7 @@ body.page-productos .section {
    ============================================================ */
 :root {
   --nav-h: 94px;      /* alto de la barra */
-  --nav-arch: 46px;   /* profundidad del domo curvo (mas ovalado) */
+  --nav-arch: 34px;   /* profundidad del domo curvo */
 }
 
 /* ---- Barra ---- */
