@@ -3421,7 +3421,7 @@ body.page-productos .section {
    KABODHI — HEADER CON DOMO CURVO + HERO
    ============================================================ */
 :root {
-  --nav-h: 94px;      /* alto de la barra */
+  --nav-h: 74px;      /* alto de la barra (mas angosta) */
   --nav-arch: 34px;   /* profundidad del domo curvo */
 }
 
