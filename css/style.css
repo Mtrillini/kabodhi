@@ -3635,19 +3635,17 @@ body { padding-top: calc(var(--nav-h) + var(--nav-arch)); }
 .hero {
   position: relative;
   width: 100%;
-  height: 94vh;
-  min-height: 580px;
-  margin-top: calc(-1 * (var(--nav-h) + var(--nav-arch)));
+  aspect-ratio: 35 / 10;   /* franja ancha: calza con el banner (3.5:1) */
+  margin-top: 0;
   background: var(--crema);
   overflow: hidden;
 }
-/* Difuminado: el banner se disuelve hacia el azul de la seccion de abajo
-   (y de paso da contraste al boton COMPRAR) */
+/* Difuminado: el banner se disuelve hacia el azul de la seccion de abajo */
 .hero::after {
   content: "";
   position: absolute;
   bottom: 0; left: 0; right: 0;
-  height: 68%;
+  height: 38%;
   background: linear-gradient(to top,
     rgb(35, 81, 99) 0%,
     rgba(35, 81, 99, 0.78) 20%,
@@ -3669,10 +3667,10 @@ body { padding-top: calc(var(--nav-h) + var(--nav-arch)); }
 .hero__img {
   width: 100%;
   height: 100%;
-  object-fit: contain;          /* muestra la imagen completa (mas alejada) */
-  object-position: 72% center;  /* corrida hacia la derecha */
+  object-fit: cover;            /* la franja calza con la imagen: sin recorte */
+  object-position: center;
   display: block;
-  opacity: 0.9;
+  opacity: 0.95;
 }
 /* Puntos del slider */
 .hero__dots {
