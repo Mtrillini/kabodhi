@@ -3645,10 +3645,12 @@ body { padding-top: calc(var(--nav-h) + var(--nav-arch)); }
   content: "";
   position: absolute;
   bottom: 0; left: 0; right: 0;
-  height: 14%;
+  height: 38%;
   background: linear-gradient(to top,
-    rgba(35, 81, 99, 0.45) 0%,
-    rgba(35, 81, 99, 0.12) 55%,
+    rgb(35, 81, 99) 0%,
+    rgba(35, 81, 99, 0.78) 20%,
+    rgba(35, 81, 99, 0.4) 44%,
+    rgba(35, 81, 99, 0.12) 70%,
     rgba(35, 81, 99, 0) 100%);
   z-index: 2;
   pointer-events: none;
