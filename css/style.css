@@ -3422,7 +3422,7 @@ body.page-productos .section {
    ============================================================ */
 :root {
   --nav-h: 94px;      /* alto de la barra */
-  --nav-arch: 22px;   /* profundidad del domo curvo (sutil) */
+  --nav-arch: 46px;   /* profundidad del domo curvo (mas ovalado) */
 }
 
 /* ---- Barra ---- */
@@ -3730,7 +3730,7 @@ body { padding-top: calc(var(--nav-h) + var(--nav-arch)); }
   .navbar__hamburger { display: flex; }
 }
 @media (max-width: 768px) {
-  :root { --nav-h: 60px; --nav-arch: 14px; }
+  :root { --nav-h: 60px; --nav-arch: 26px; }
   .navbar { padding: 0 1rem; }
   .navbar__logo-circle { height: 38px; }
   .navbar__logo-name { height: 22px; }
