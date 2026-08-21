@@ -4091,8 +4091,12 @@ body { padding-top: calc(var(--nav-h) + var(--nav-arch)); }
   /* Carga inicial: navbar baja, hero aparece */
   @keyframes navDrop { from { opacity: 0; transform: translateY(-14px); } to { opacity: 1; transform: none; } }
   @keyframes heroIn  { from { opacity: 0; } to { opacity: 1; } }
-  @keyframes zoomSlow { from { transform: scale(1.06); } to { transform: scale(1); } }
+  /* Zoom-in muy lento y prolijo: arranca en tamano normal y se acerca de a poco */
+  @keyframes heroZoomIn { from { transform: scale(1); } to { transform: scale(1.14); } }
   .navbar { animation: navDrop 0.9s ease both; }
   .hero   { animation: heroIn 1.3s ease both; }
-  .hero__img { animation: zoomSlow 6s ease-out both; }
+  .hero__img {
+    transform-origin: center center;
+    animation: heroZoomIn 28s ease-in-out infinite alternate;
+  }
 }
