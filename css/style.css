@@ -3793,20 +3793,14 @@ body { padding-top: calc(var(--nav-h) + var(--nav-arch)); }
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 430px;
-  height: 430px;
-  border: 1px solid rgba(255, 255, 255, 0.28);
-  border-radius: 50%;
+  width: 500px;
+  height: 500px;
+  background: url(../images/circulo-beneficios.png) center / contain no-repeat;
   z-index: 0;
 }
+/* Las perlas ya vienen en la imagen del circulo: ocultamos los puntos CSS */
 .ring-dot {
-  position: absolute;
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.7);
-  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.12);
-  transform: translate(-50%, -50%);
+  display: none;
 }
 /* Posiciones exactas sobre la circunferencia (centro del punto sobre la linea) */
 .ring-dot--1 { left: 14.6%; top: 14.6%; }  /* sup izq  (315°) */
@@ -3885,12 +3879,13 @@ body { padding-top: calc(var(--nav-h) + var(--nav-arch)); }
   color: rgba(245, 241, 232, 0.8);
 }
 /* Posiciones radiales (centro de cada bloque) */
-.benef--tl { left: 21%; top: 17%; }
-.benef--ml { left: 12%; top: 50%; }
-.benef--bl { left: 21%; top: 83%; }
-.benef--tr { left: 79%; top: 17%; }
-.benef--mr { left: 88%; top: 50%; }
-.benef--br { left: 79%; top: 83%; }
+/* Alineados a las 6 perlas del circulo decorativo */
+.benef--tl { left: 50%; top: 5%; }    /* arriba (perla superior) */
+.benef--ml { left: 19%; top: 25%; }   /* arriba-izquierda */
+.benef--tr { left: 81%; top: 25%; }   /* arriba-derecha */
+.benef--bl { left: 16%; top: 69%; }   /* abajo-izquierda */
+.benef--mr { left: 84%; top: 69%; }   /* abajo-derecha */
+.benef--br { left: 50%; top: 93%; }   /* abajo (perla inferior) */
 
 /* ---- Responsive ---- */
 @media (max-width: 900px) {
