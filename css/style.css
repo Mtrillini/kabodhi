@@ -28,6 +28,7 @@
   --terracota: #A66B3D;
   --tierra: #8B7966;
   --carbon: #2B2B2B;
+  --celeste-claro: #EDF4F7;
 
   --font-primary: 'Playfair Display', Georgia, serif;
   --font-secondary: 'Lato', sans-serif;
@@ -991,15 +992,10 @@ h1, h2, h3, h4, h5, h6 {
    HISTORIA (arriba del footer)
    ============================================================ */
 .historia {
-  background-color: var(--crema);
-  background-image: url('../images/bg-historia.png');
-  /* La seccion toma el mismo ratio que la imagen (1050x300), asi "cover" la
-     encuadra completa: no recorta las esquinas ni la deforma. */
+  background-color: var(--celeste-claro);
+  /* Se conserva el ratio 3.5:1 para mantener la seccion chata. */
   aspect-ratio: 1050 / 300;
   min-height: 300px;
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
   color: var(--carbon);
   display: flex;
   align-items: center;
@@ -1013,16 +1009,6 @@ h1, h2, h3, h4, h5, h6 {
   margin: 0 auto;
 }
 
-.historia__overline {
-  display: block;
-  font-family: var(--font-secondary);
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: var(--terracota);
-  margin-bottom: 0.85rem;
-}
 
 /* Linea fina que se desvanece hacia afuera, con un rombo al centro */
 .historia__ornamento {
@@ -1071,7 +1057,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* En pantallas angostas el ratio 3.5:1 daria una franja de ~107px, donde no
-   entra el texto. Manda el contenido y "cover" recorta sin deformar. */
+   entra el texto: manda el contenido. */
 @media (max-width: 768px) {
   .historia {
     aspect-ratio: auto;
@@ -1637,7 +1623,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .cart-item__name {
-  font-family: 'Garet', 'Nunito', sans-serif;
+  font-family: var(--font-secondary);
   font-size: 1rem;
   font-weight: 400;
   letter-spacing: 0.5px;
@@ -2043,7 +2029,7 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Order summary item name in checkout */
 .order-summary__item-name {
-  font-family: 'Garet', sans-serif;
+  font-family: var(--font-secondary);
   font-size: 0.82rem;
   color: #1F3D2E;
 }
@@ -2741,7 +2727,7 @@ body.page-productos .section {
 }
 
 .mv-header__title {
-  font-family: 'Cormorant', Georgia, serif;
+  font-family: var(--font-primary);
   font-size: 1rem;
   font-weight: 300;
   letter-spacing: 4px;
@@ -2939,7 +2925,7 @@ body.page-productos .section {
 }
 
 .nuve-card__nombre {
-  font-family: 'Garet', 'Nunito', sans-serif;
+  font-family: var(--font-secondary);
   font-size: 0.88rem;
   font-weight: 400;
   color: #1F3D2E;
@@ -3266,7 +3252,7 @@ body.page-productos .section {
 }
 
 .prod-modal__nombre {
-  font-family: 'Garet', 'Nunito', sans-serif;
+  font-family: var(--font-secondary);
   font-size: 1.3rem;
   font-weight: 400;
   color: #1F3D2E;
@@ -3759,7 +3745,7 @@ body { padding-top: calc(var(--nav-h) + var(--nav-arch)); }
 .beneficios__title {
   position: relative;
   z-index: 2;
-  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-family: var(--font-primary);
   font-size: 2.5rem;
   font-weight: 500;
   text-transform: uppercase;
@@ -3902,7 +3888,7 @@ body { padding-top: calc(var(--nav-h) + var(--nav-arch)); }
   display: inline-block;
 }
 .hongo-row__title {
-  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-family: var(--font-primary);
   font-size: clamp(2.1rem, 3.4vw, 2.9rem);
   font-weight: 500;
   text-transform: uppercase;

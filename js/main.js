@@ -76,8 +76,6 @@ function getFooterHTML() {
   return `
  <section class="historia">
   <div class="historia__inner">
-    <span class="historia__overline">Nuestra esencia</span>
-
     <span class="historia__ornamento" aria-hidden="true">&#10022;</span>
 
     <h2 class="historia__title">¿Por qué KABODHI?</h2>
