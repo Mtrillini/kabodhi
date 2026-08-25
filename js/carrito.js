@@ -206,7 +206,7 @@ function renderSummary(carrito) {
           >
           <button
             onclick="calcularEnvioCarrito()"
-            style="padding:0.45rem 0.8rem;background:#1F3D2E;color:#EFE9DC;border:none;border-radius:3px;font-family:inherit;font-size:0.72rem;font-weight:600;letter-spacing:1px;cursor:pointer;white-space:nowrap;"
+            style="padding:0.45rem 0.8rem;background:#1C3A4F;color:#EFE9DC;border:none;border-radius:3px;font-family:inherit;font-size:0.72rem;font-weight:600;letter-spacing:1px;cursor:pointer;white-space:nowrap;"
           >Calcular</button>
           ${envio ? `
           <button

@@ -159,7 +159,7 @@ function modalGoTo(i) {
   const main = document.getElementById('modal-img');
   if (main) main.src = modalImgs[modalImgIdx];
   document.querySelectorAll('#modal-thumbs img').forEach((t, ti) => {
-    t.style.border = '2px solid ' + (ti === modalImgIdx ? '#1F3D2E' : 'transparent');
+    t.style.border = '2px solid ' + (ti === modalImgIdx ? '#1C3A4F' : 'transparent');
   });
 }
 
@@ -218,7 +218,7 @@ function abrirModal(id) {
         <img
           src="${url}"
           onclick="modalGoTo(${i})"
-          style="width:52px;height:52px;object-fit:cover;border-radius:3px;cursor:pointer;border:2px solid ${i === 0 ? '#1F3D2E' : 'transparent'};transition:border 0.2s;"
+          style="width:52px;height:52px;object-fit:cover;border-radius:3px;cursor:pointer;border:2px solid ${i === 0 ? '#1C3A4F' : 'transparent'};transition:border 0.2s;"
         >
       `).join('');
     } else {
