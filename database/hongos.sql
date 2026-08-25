@@ -135,13 +135,13 @@ INSERT INTO `categorias` (`nombre`, `slug`) VALUES
 --   nota_olfativa = formato / bajada corta
 --   tipo          = objetivo para filtrar (enfoque/energia/equilibrio/defensas/bienestar)
 INSERT INTO `productos` (`categoria_id`, `marca`, `nombre`, `descripcion`, `nota_olfativa`, `precio`, `stock`, `imagen_url`, `tipo`, `activo`, `destacado`) VALUES
-(1, 'Enfoque', 'Melena de Leon', 'Hericium erinaceus de doble extraccion. Acompana la claridad mental, la memoria y el foco sostenido a lo largo del dia. Ideal para jornadas de estudio o trabajo profundo.', 'Enfoque & claridad · 60 capsulas', 28900.00, 40, 'images/prod-melena.svg', 'enfoque', 1, 1),
-(1, 'Equilibrio', 'Reishi', 'Ganoderma lucidum de doble extraccion. El hongo de la calma: apoya el descanso reparador, la respuesta al estres y el equilibrio diario.', 'Equilibrio & calma · 60 capsulas', 28900.00, 45, 'images/prod-reishi.svg', 'equilibrio', 1, 1),
-(1, 'Energia', 'Cordyceps', 'Cordyceps militaris de doble extraccion. Energia limpia, resistencia y rendimiento fisico. El aliado natural para entrenar y rendir.', 'Energia & vitalidad · 60 capsulas', 28900.00, 38, 'images/prod-cordyceps.svg', 'energia', 1, 1),
-(1, 'Defensas', 'Chaga', 'Inonotus obliquus de doble extraccion. Rico en antioxidantes, acompana las defensas naturales y el bienestar general.', 'Defensas naturales · 50g polvo', 28900.00, 30, 'images/prod-chaga.svg', 'defensas', 1, 1),
-(1, 'Bienestar', 'Shiitake', 'Lentinula edodes de doble extraccion. Nutritivo y funcional, apoya la inmunidad y el bienestar cotidiano.', 'Bienestar & inmunidad · 60 capsulas', 28900.00, 26, 'images/prod-shiitake.svg', 'bienestar', 1, 0),
-(2, 'Enfoque', 'Blend Focus', 'Mezcla funcional de Melena de Leon y Cordyceps. Claridad mental y energia sostenida en una sola toma diaria.', 'Melena + Cordyceps · 50g polvo', 31900.00, 22, 'images/prod-blend-focus.svg', 'enfoque', 1, 1),
-(2, 'Equilibrio', 'Blend Calm', 'Mezcla funcional de Reishi y Chaga. Calma, defensas y equilibrio para cerrar el dia.', 'Reishi + Chaga · 50g polvo', 31900.00, 20, 'images/prod-blend-calm.svg', 'equilibrio', 1, 0);
+(1, 'Enfoque', 'Melena de Leon', 'Hericium erinaceus de doble extraccion. Acompana la claridad mental, la memoria y el foco sostenido a lo largo del dia. Ideal para jornadas de estudio o trabajo profundo.', 'Enfoque & claridad · 60 capsulas', 28900.00, 40, 'images/hongo-melena-de-leon.png', 'enfoque', 1, 1),
+(1, 'Equilibrio', 'Reishi', 'Ganoderma lucidum de doble extraccion. El hongo de la calma: apoya el descanso reparador, la respuesta al estres y el equilibrio diario.', 'Equilibrio & calma · 60 capsulas', 28900.00, 45, 'images/hongo-reishi.png', 'equilibrio', 1, 1),
+(1, 'Energia', 'Cordyceps', 'Cordyceps militaris de doble extraccion. Energia limpia, resistencia y rendimiento fisico. El aliado natural para entrenar y rendir.', 'Energia & vitalidad · 60 capsulas', 28900.00, 38, 'images/hongo-cordyceps.png', 'energia', 1, 1),
+(1, 'Defensas', 'Chaga', 'Inonotus obliquus de doble extraccion. Rico en antioxidantes, acompana las defensas naturales y el bienestar general.', 'Defensas naturales · 50g polvo', 28900.00, 30, 'images/prod-chaga.svg', 'defensas', 0, 1),
+(1, 'Equilibrio', 'Ashwagandha', 'Withania somnifera de doble extraccion. Raiz adaptogena que acompana el equilibrio, la resistencia y el bienestar en rutinas exigentes.', 'Equilibrio & resistencia · 50 ml', 28900.00, 26, 'images/hongo-ashwagandha.png', 'equilibrio', 1, 0),
+(2, 'Enfoque', 'Blend Focus', 'Mezcla funcional de Melena de Leon y Cordyceps. Claridad mental y energia sostenida en una sola toma diaria.', 'Melena + Cordyceps · 50g polvo', 31900.00, 22, 'images/prod-blend-focus.svg', 'enfoque', 0, 1),
+(2, 'Equilibrio', 'Blend Calm', 'Mezcla funcional de Reishi y Chaga. Calma, defensas y equilibrio para cerrar el dia.', 'Reishi + Chaga · 50g polvo', 31900.00, 20, 'images/prod-blend-calm.svg', 'equilibrio', 0, 0);
 
 -- Melena de Leon se destaca arriba en el circulo de beneficios; aca van los otros 3.
 INSERT INTO `hongos_principales` (`nombre`, `subtitulo`, `descripcion`, `imagen_url`, `orden`, `activo`) VALUES

@@ -71,7 +71,11 @@ async function fetchAllProductos() {
   try {
     const json = await loadProductosData();
     if (!json.success) throw new Error(json.message);
-    PRODUCTOS = (json.data || []).map(mapProducto);
+    // Se respeta el flag "activo": asi el admin puede sacar un producto de
+    // la vista sin borrarlo. El JSON horneado lo trae igual que la API.
+    PRODUCTOS = (json.data || [])
+      .filter(p => p.activo === undefined || parseInt(p.activo) === 1)
+      .map(mapProducto);
   } catch (e) {
     console.error('Error cargando productos:', e);
     PRODUCTOS = [];
@@ -98,7 +102,7 @@ function renderProductos(lista) {
   container.innerHTML = lista.map(p => {
     const imgs = (p.imagenes && p.imagenes.length) ? p.imagenes : (p.img ? [p.img] : []);
     return `
-    <div class="nuve-card" onclick="${p.stock > 0 ? `abrirModal(${p.id})` : ''}">
+    <div class="nuve-card reveal reveal--up" onclick="${p.stock > 0 ? `abrirModal(${p.id})` : ''}">
       <div class="nuve-card__img-wrap">
         ${cardSliderHTML(imgs, p.nombre, p.img)}
       </div>
@@ -116,6 +120,8 @@ function renderProductos(lista) {
     </div>
   `;
   }).join('');
+
+  if (window.observeReveals) window.observeReveals(container);
 }
 
 // ---- Filtro + sort ----

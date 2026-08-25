@@ -2725,8 +2725,8 @@ body.page-productos .section {
 }
 
 .nuve-card {
-  background: #fff;
-  border: 1px solid #E7DECD;
+  background: var(--crema);
+  border: 1px solid var(--arena);
   border-radius: 4px;
   overflow: hidden;
   display: flex;
@@ -2756,7 +2756,7 @@ body.page-productos .section {
 }
 
 .nuve-card__img-wrap {
-  background: #ffffff;
+  background: var(--crema);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2848,7 +2848,7 @@ body.page-productos .section {
 }
 
 .nuve-card__nombre {
-  font-family: var(--font-secondary);
+  font-family: var(--font-primary);
   font-size: 0.88rem;
   font-weight: 400;
   color: #1F3D2E;
@@ -2888,8 +2888,8 @@ body.page-productos .section {
 .nuve-card__btn {
   width: 100%;
   padding: 0.65rem;
-  background: #1F3D2E;
-  color: #EFE9DC;
+  background: var(--bosque);
+  color: var(--crema);
   border: none;
   font-family: var(--font-secondary);
   font-size: 0.6rem;
