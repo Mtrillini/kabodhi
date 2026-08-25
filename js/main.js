@@ -74,22 +74,6 @@ function getNavbarHTML() {
 // ---- Footer HTML ----
 function getFooterHTML() {
   return `
- <section class="historia">
-  <div class="historia__inner">
-    <span class="historia__ornamento" aria-hidden="true">&#10022;</span>
-
-    <h2 class="historia__title">¿Por qué KABODHI?</h2>
-
-    <span class="historia__ornamento" aria-hidden="true">&#10022;</span>
-
-    <p class="historia__text">
-      KABODHI representa el equilibrio natural entre cuerpo, mente y entorno.
-      Inspirados en la sabiduría ancestral y en rituales conscientes, elaboramos
-      adaptógenos naturales y puros que se integran a tu vida con simpleza y
-      propósito. Volver a lo natural. Encontrar el equilibrio. Vivir en bienestar.
-    </p>
-  </div>
-</section>
     <footer class="footer">
       <div class="footer__top-wrap">
       <div class="footer__top">
