@@ -74,37 +74,15 @@ function getNavbarHTML() {
 // ---- Footer HTML ----
 function getFooterHTML() {
   return `
-    <section class="esencia">
-      <div class="esencia__title">La esencia de KABODHI</div>
-      <div class="esencia__divider"></div>
-      <div class="esencia__grid">
-        <div class="esencia__item">
-          <div class="esencia__icon"><i class="fa-solid fa-leaf"></i></div>
-          <div class="esencia__label">100% Natural</div>
-          <div class="esencia__desc">Ingredientes puros y adaptógenos reales.</div>
-        </div>
-        <div class="esencia__item">
-          <div class="esencia__icon"><i class="fa-solid fa-flask"></i></div>
-          <div class="esencia__label">Doble extracción</div>
-          <div class="esencia__desc">Máxima biodisponibilidad de cada hongo.</div>
-        </div>
-        <div class="esencia__item">
-          <div class="esencia__icon"><i class="fa-solid fa-spa"></i></div>
-          <div class="esencia__label">Equilibrio</div>
-          <div class="esencia__desc">Apoyo real a tu cuerpo y tu mente.</div>
-        </div>
-        <div class="esencia__item">
-          <div class="esencia__icon"><i class="fa-solid fa-seedling"></i></div>
-          <div class="esencia__label">Consciente</div>
-          <div class="esencia__desc">Bienestar de elecciones sostenibles.</div>
-        </div>
-      </div>
-    </section>
  <section class="historia">
   <div class="historia__inner">
     <span class="historia__overline">Nuestra esencia</span>
 
+    <span class="historia__ornamento" aria-hidden="true">&#10022;</span>
+
     <h2 class="historia__title">¿Por qué KABODHI?</h2>
+
+    <span class="historia__ornamento" aria-hidden="true">&#10022;</span>
 
     <p class="historia__text">
       KABODHI representa el equilibrio natural entre cuerpo, mente y entorno.
@@ -112,15 +90,12 @@ function getFooterHTML() {
       adaptógenos naturales y puros que se integran a tu vida con simpleza y
       propósito. Volver a lo natural. Encontrar el equilibrio. Vivir en bienestar.
     </p>
-
-    <a href="nosotros.html" class="historia__link">Conocer nuestra historia</a>
   </div>
 </section>
     <footer class="footer">
       <div class="footer__top">
         <div>
-          <span class="footer__logo-text">KABODHI</span>
-          <p class="footer__tagline">Adaptógenos naturales<br>para tu bienestar diario.</p>
+          <img src="images/logo-footer-kabodhi.png" alt="KABODHI — Adaptógenos naturales para tu bienestar diario" class="footer__logo-img">
         </div>
 
         <div>
