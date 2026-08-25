@@ -4042,10 +4042,113 @@ body { padding-top: calc(var(--nav-h) + var(--nav-arch)); }
    MOBILE — home mas liviano
    ============================================================ */
 @media (max-width: 768px) {
-  /* El circulo radial con la Melena de Leon no se muestra en mobile:
-     su layout depende de las dos columnas laterales. */
+  /* El circulo no entra centrado con los beneficios alrededor: se pasa a
+     dos columnas —circulo + melena a la izquierda, detalles apilados a
+     la derecha— y cada detalle lleva su icono al lado, como los puntos
+     del anillo en desktop. */
   .beneficios {
-    display: none;
+    padding: 3rem 1.1rem 3.5rem;
+  }
+
+  .beneficios__inner {
+    min-height: 0;
+    display: grid;
+    grid-template-columns: 40% 1fr;
+    align-items: center;
+    gap: 0.55rem 0.9rem;
+  }
+
+  /* Columna izquierda: el circulo con la melena, a lo alto de las 6 filas */
+  .beneficios__center {
+    position: relative;
+    left: auto;
+    top: auto;
+    transform: none;
+    width: 100%;
+    grid-column: 1;
+    grid-row: 1 / span 6;
+    align-self: center;
+    padding: 0.5rem 0;
+  }
+
+  .beneficios__ring {
+    width: 100%;
+    height: 0;
+    padding-bottom: 100%;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  /* Imagen achicada para que entre al lado de los textos */
+  .beneficios__mush {
+    width: 78%;
+    max-width: 130px;
+    margin: 0 auto 0.3rem;
+  }
+
+  .beneficios__title {
+    font-size: 1.1rem;
+    line-height: 1.15;
+  }
+
+  .beneficios__desc {
+    font-size: 0.62rem;
+    line-height: 1.45;
+  }
+
+  /* Columna derecha: un detalle por fila, icono al lado del texto */
+  .benef {
+    position: relative;
+    left: auto;
+    top: auto;
+    transform: none;
+    width: auto;
+    grid-column: 2;
+    display: grid;
+    grid-template-columns: 26px 1fr;
+    grid-template-rows: auto auto;
+    align-items: center;
+    column-gap: 0.5rem;
+    row-gap: 0.1rem;
+    text-align: left;
+  }
+
+  /* El icono ocupa las dos filas de la columna 1; titulo y bajada van
+     en la columna 2. Sin esto el auto-placement mandaba la bajada a la
+     fila 2 de la columna del icono, o sea a 26px de ancho. */
+  .benef__icon {
+    margin: 0;
+    width: 26px;
+    height: 26px;
+    grid-column: 1;
+    grid-row: 1 / span 2;
+    align-self: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .benef__icon-img {
+    width: 100%;
+    height: auto;
+  }
+
+  .benef__title {
+    grid-column: 2;
+    grid-row: 1;
+    font-size: 0.78rem;
+    margin: 0;
+    line-height: 1.2;
+  }
+
+  .benef__desc {
+    grid-column: 2;
+    grid-row: 2;
+    font-size: 0.66rem;
+    margin: 0;
+    line-height: 1.35;
+    opacity: 0.85;
   }
 
   /* El hero estaba en 68vh con min-height 440px. Como los banners son
