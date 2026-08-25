@@ -3953,3 +3953,87 @@ body { padding-top: calc(var(--nav-h) + var(--nav-arch)); }
     min-height: 46px;
   }
 }
+
+/* ============================================================
+   BOTONES — relieve suave (neumorfico)
+   Gradiente claro + doble sombra: oscura abajo-derecha y luz
+   arriba-izquierda. Al presionar, las sombras van hacia adentro
+   para que el boton se "hunda".
+   El texto va en azul de marca y no en el gris del ejemplo, que
+   sobre blanco daba un contraste de ~1.6:1 (ilegible).
+   ============================================================ */
+.nuve-card__btn,
+.prod-modal__btn,
+.hongos__footer-btn,
+.order-summary__btn-primary,
+.checkout-submit__btn,
+.cart-empty__btn {
+  background: linear-gradient(145deg, #ffffff, #e8e8e8);
+  color: var(--bosque);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: 999px;
+  box-shadow:
+    5px 5px 12px rgba(28, 58, 79, 0.18),
+    -5px -5px 12px rgba(255, 255, 255, 0.95);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8);
+  transition: box-shadow 0.25s ease, transform 0.15s ease;
+}
+
+.nuve-card__btn:hover,
+.prod-modal__btn:hover,
+.hongos__footer-btn:hover,
+.order-summary__btn-primary:hover,
+.checkout-submit__btn:hover,
+.cart-empty__btn:hover {
+  background: linear-gradient(145deg, #ffffff, #e2e2e2);
+  color: var(--bosque);
+  box-shadow:
+    3px 3px 8px rgba(28, 58, 79, 0.22),
+    -3px -3px 8px rgba(255, 255, 255, 0.95);
+}
+
+/* Presionado: el relieve se invierte hacia adentro */
+.nuve-card__btn:active,
+.prod-modal__btn:active,
+.hongos__footer-btn:active,
+.order-summary__btn-primary:active,
+.checkout-submit__btn:active,
+.cart-empty__btn:active {
+  box-shadow:
+    inset 4px 4px 9px rgba(28, 58, 79, 0.20),
+    inset -4px -4px 9px rgba(255, 255, 255, 0.9);
+  transform: translateY(1px);
+}
+
+.nuve-card__btn--agotado,
+.nuve-card__btn:disabled {
+  box-shadow: none;
+  background: #f0f0f0;
+  color: #9a9a9a;
+}
+
+/* Mismo relieve en los controles redondos y en el boton secundario.
+   "Vaciar carrito" queda como texto: es terciario y destructivo. */
+.qty-control__btn,
+.order-summary__btn-secondary {
+  background: linear-gradient(145deg, #ffffff, #e8e8e8);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  box-shadow:
+    3px 3px 7px rgba(28, 58, 79, 0.16),
+    -3px -3px 7px rgba(255, 255, 255, 0.95);
+  transition: box-shadow 0.25s ease;
+}
+
+.qty-control__btn:hover,
+.order-summary__btn-secondary:hover {
+  box-shadow:
+    2px 2px 5px rgba(28, 58, 79, 0.2),
+    -2px -2px 5px rgba(255, 255, 255, 0.95);
+}
+
+.qty-control__btn:active,
+.order-summary__btn-secondary:active {
+  box-shadow:
+    inset 3px 3px 6px rgba(28, 58, 79, 0.18),
+    inset -3px -3px 6px rgba(255, 255, 255, 0.9);
+}
