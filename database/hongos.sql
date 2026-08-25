@@ -147,7 +147,8 @@ INSERT INTO `productos` (`categoria_id`, `marca`, `nombre`, `descripcion`, `nota
 INSERT INTO `hongos_principales` (`nombre`, `subtitulo`, `descripcion`, `imagen_url`, `orden`, `activo`) VALUES
 ('Reishi', 'Equilibrio & calma', 'Tradicionalmente utilizado dentro de rutinas de bienestar orientadas al descanso, la calma y el equilibrio cotidiano.', 'images/hongo-reishi.png', 1, 1),
 ('Cordyceps', 'Energia & vitalidad', 'Una opcion pensada para acompanar rutinas activas y momentos donde buscamos energia y rendimiento.', 'images/hongo-cordyceps.png', 2, 1),
-('Ashwagandha', 'Equilibrio & resistencia', 'Raiz adaptogena tradicionalmente utilizada para acompanar rutinas de bienestar orientadas al equilibrio y la resistencia cotidiana.', 'images/hongo-ashwagandha.png', 3, 1);
+('Ashwagandha', 'Equilibrio & resistencia', 'Raiz adaptogena tradicionalmente utilizada para acompanar rutinas de bienestar orientadas al equilibrio y la resistencia cotidiana.', 'images/hongo-ashwagandha.png', 3, 1),
+('Melena de Leon', 'Enfoque & claridad', 'Tradicionalmente asociado a rutinas de estudio y trabajo profundo, acompana momentos donde buscamos enfoque, memoria y claridad mental.', 'images/hongo-melena-de-leon.png', 4, 1);
 
 INSERT INTO `tarifas_envio` (`descripcion`, `cp_desde`, `cp_hasta`, `precio`, `activo`) VALUES
 ('Envio CABA', 1000, 1499, 3500.00, 1),
