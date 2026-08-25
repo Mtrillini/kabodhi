@@ -202,17 +202,17 @@ function renderSummary(carrito) {
             placeholder="Tu código postal"
             maxlength="8"
             value="${envio ? envio.cp : ''}"
-            style="flex:1;padding:0.45rem 0.6rem;border:1px solid #d6c6ad;border-radius:3px;font-family:inherit;font-size:0.75rem;outline:none;"
+            style="flex:1;padding:0.75rem 0.9rem;border:1px solid #d6c6ad;border-radius:999px;font-family:inherit;font-size:0.85rem;min-height:44px;outline:none;"
           >
           <button
             onclick="calcularEnvioCarrito()"
-            style="padding:0.45rem 0.8rem;background:#1C3A4F;color:#EFE9DC;border:none;border-radius:3px;font-family:inherit;font-size:0.72rem;font-weight:600;letter-spacing:1px;cursor:pointer;white-space:nowrap;"
+            style="padding:0.75rem 1.3rem;background:#1C3A4F;color:#F5F1E8;border:1px solid #1C3A4F;border-radius:999px;font-family:inherit;font-size:0.78rem;font-weight:600;letter-spacing:1px;min-height:44px;cursor:pointer;white-space:nowrap;"
           >Calcular</button>
           ${envio ? `
           <button
             onclick="limpiarEnvioCarrito()"
             title="Limpiar código postal"
-            style="padding:0.45rem 0.6rem;background:transparent;color:#888;border:1px solid #d6c6ad;border-radius:3px;font-family:inherit;font-size:0.72rem;cursor:pointer;white-space:nowrap;"
+            style="padding:0.75rem 1.1rem;background:transparent;color:#888;border:1px solid #d6c6ad;border-radius:999px;font-family:inherit;font-size:0.78rem;min-height:44px;cursor:pointer;white-space:nowrap;"
           >Limpiar</button>
           ` : ''}
         </div>

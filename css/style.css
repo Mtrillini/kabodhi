@@ -754,6 +754,7 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--crema);
   padding: 0.55rem 1.1rem;
   transition: background-color var(--transition), transform var(--transition);
+  border-radius: 999px;
 }
 
 .btn-agregar:hover {
@@ -1208,12 +1209,14 @@ h1, h2, h3, h4, h5, h6 {
   transition: all var(--transition);
   cursor: pointer;
   border: 1px solid transparent;
+  border-radius: 999px;
 }
 
 .btn-primary {
   background-color: var(--negro);
   color: var(--crema);
   border-color: var(--negro);
+  border-radius: 999px;
 }
 
 .btn-primary:hover {
@@ -1225,6 +1228,7 @@ h1, h2, h3, h4, h5, h6 {
   background-color: transparent;
   color: var(--negro);
   border-color: var(--negro);
+  border-radius: 999px;
 }
 
 .btn-secondary:hover {
@@ -1236,6 +1240,7 @@ h1, h2, h3, h4, h5, h6 {
   background-color: transparent;
   color: var(--crema);
   border-color: var(--crema);
+  border-radius: 999px;
 }
 
 .btn-outline-cream:hover {
@@ -1289,6 +1294,7 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--negro);
   outline: none;
   transition: border-color var(--transition);
+  border-radius: 999px;
 }
 
 .filter-bar__search::placeholder {
@@ -1311,6 +1317,7 @@ h1, h2, h3, h4, h5, h6 {
   outline: none;
   cursor: pointer;
   min-width: 160px;
+  border-radius: 999px;
 }
 
 .filter-bar__results {
@@ -1504,6 +1511,7 @@ h1, h2, h3, h4, h5, h6 {
   letter-spacing: 2.5px;
   text-decoration: none;
   transition: background 0.3s;
+  border-radius: 999px;
 }
 
 .cart-empty__btn:hover {
@@ -1627,6 +1635,7 @@ h1, h2, h3, h4, h5, h6 {
   border: none;
   cursor: pointer;
   transition: background 0.2s;
+  border-radius: 50%;
 }
 
 .qty-control__btn:hover {
@@ -1705,6 +1714,7 @@ h1, h2, h3, h4, h5, h6 {
   letter-spacing: 2.5px;
   text-decoration: none;
   transition: background 0.3s;
+  border-radius: 999px;
 }
 
 .order-summary__btn-primary:hover {
@@ -1729,6 +1739,7 @@ h1, h2, h3, h4, h5, h6 {
   letter-spacing: 2.5px;
   text-decoration: none;
   transition: background 0.3s, color 0.3s;
+  border-radius: 999px;
 }
 
 .order-summary__btn-secondary:hover {
@@ -1750,6 +1761,7 @@ h1, h2, h3, h4, h5, h6 {
   text-transform: uppercase;
   cursor: pointer;
   transition: color 0.25s;
+  border-radius: 999px;
 }
 
 .order-summary__btn-vaciar:hover {
@@ -1911,6 +1923,7 @@ h1, h2, h3, h4, h5, h6 {
   cursor: pointer;
   transition: background 0.3s;
   width: 100%;
+  border-radius: 999px;
 }
 
 .checkout-submit__btn:hover {
@@ -2380,8 +2393,6 @@ body.page-productos .section {
   .filter-bar                   { flex-direction: column; align-items: stretch; padding: 0; gap: 0.6rem; }
   .filter-bar__search           { min-width: unset; width: 100%; padding: 0.75rem 0.75rem; font-size: 0.8rem; }
   .filter-bar__select           { min-width: unset; width: 100%; padding: 0.75rem 0.75rem; font-size: 0.8rem; }
-  .filter-genero                { justify-content: flex-start; gap: 0.4rem; }
-  .filter-genero__btn           { padding: 0.55rem 1rem; font-size: 0.62rem; min-height: 36px; }
   .nuve-card__img-wrap          { height: 185px; }
   .nuve-card__body              { padding: 0.8rem 0.85rem 0.9rem; gap: 3px; }
   .nuve-card__nombre            { font-size: 0.85rem; }
@@ -2526,50 +2537,18 @@ body.page-productos .section {
   .footer__nav a         { font-size: 0.72rem; }
 }
 
-/* ============================================================
-   FILTRO GÉNERO
-   ============================================================ */
-.filter-genero {
-  display: flex;
-  gap: 0.5rem;
-}
 
-.filter-genero__btn {
-  padding: 0.45rem 1.2rem;
-  border: 1px solid #E7DECD;
-  background: none;
-  font-family: var(--font-secondary);
-  font-size: 0.65rem;
-  font-weight: 500;
-  letter-spacing: 2px;
-  color: #888;
-  cursor: pointer;
-  transition: 0.25s;
-  border-radius: 0;
-}
 
-.filter-genero__btn:hover {
-  border-color: #1C3A4F;
-  color: #1C3A4F;
-}
 
-.filter-genero__btn.active {
-  background: #1C3A4F;
-  border-color: #1C3A4F;
-  color: #EFE9DC;
-}
 
 /* Mobile: que los 4 botones (TODOS/FEMENINO/MASCULINO/TESTERS) entren
    en una sola fila sin desbordar. flex:1 los reparte por igual.
    (Va DESPUÉS de la base a propósito: con la misma especificidad gana
    la regla de más abajo; si fuera arriba, la base la pisaría.) */
 @media (max-width: 768px) {
-  .filter-genero      { gap: 0.3rem; flex-wrap: nowrap; width: 100%; }
-  .filter-genero__btn { flex: 1 1 0; min-width: 0; padding: 0.5rem 0.25rem; font-size: 0.56rem; letter-spacing: 0.5px; white-space: nowrap; text-align: center; min-height: 36px; }
 }
 
 @media (max-width: 380px) {
-  .filter-genero__btn { font-size: 0.52rem; letter-spacing: 0.3px; padding: 0.5rem 0.15rem; }
 }
 /* ============================================================
    MÁS VENDIDOS (homepage)
@@ -2829,9 +2808,9 @@ body.page-productos .section {
   padding: 0.75rem;
   background: var(--bosque);
   color: var(--crema);
-  /* Rustico: canto recto y borde a la vista, sin redondeos */
+  /* Borde a la vista y puntas ovaladas */
   border: 1px solid var(--bosque);
-  border-radius: 0;
+  border-radius: 999px;
   font-family: var(--font-secondary);
   font-size: 0.6rem;
   font-weight: 600;
@@ -3162,6 +3141,7 @@ body.page-productos .section {
 }
 
 .prod-modal__qty-wrap button {
+  border-radius: 50%;
   width: 30px;
   height: 30px;
   border: 1px solid #ddd;
@@ -3189,7 +3169,7 @@ body.page-productos .section {
   background: var(--bosque);
   color: var(--crema);
   border: 1px solid var(--bosque);
-  border-radius: 0;
+  border-radius: 999px;
   font-family: var(--font-secondary);
   font-size: 0.65rem;
   font-weight: 600;
@@ -3820,6 +3800,7 @@ body { padding-top: calc(var(--nav-h) + var(--nav-arch)); }
   text-transform: uppercase;
   color: var(--bosque);
   border: 1px solid var(--bosque);
+  border-radius: 999px;
   padding: 0.95rem 2.6rem;
   text-decoration: none;
   transition: background var(--transition), color var(--transition);
@@ -3877,4 +3858,98 @@ body { padding-top: calc(var(--nav-h) + var(--nav-arch)); }
   .navbar { animation: navDrop 0.9s ease both; }
   .hero   { animation: heroIn 1.3s ease both; }
   /* Banner estatico (sin zoom) y 100% nitido */
+}
+
+/* ============================================================
+   MOBILE — legibilidad y area tactil
+   Va al final para pisar los ajustes progresivos de los
+   breakpoints anteriores, que dejaban el CTA en 8.6px de
+   fuente y 31px de alto. Referencia: 44px de lado minimo.
+   ============================================================ */
+@media (max-width: 768px) {
+  /* CTA principal: se leia a 8.6px y no daba para tocar comodo */
+  .nuve-card__btn,
+  .productos-grid-nuve .nuve-card__btn {
+    font-size: 0.72rem;
+    letter-spacing: 1.5px;
+    padding: 0.9rem 0.75rem;
+    min-height: 46px;
+    line-height: 1.2;
+  }
+
+  .prod-modal__btn {
+    font-size: 0.72rem;
+    padding: 1rem;
+    min-height: 48px;
+  }
+
+  /* La card se quedaba en 300px con 343px disponibles */
+  .productos-grid-nuve .nuve-card {
+    max-width: 100%;
+  }
+
+  /* Iconos del navbar: median 16x14, el del carrito incluido */
+  .navbar__icon-btn,
+  .navbar__cart {
+    min-width: 44px;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Links del footer: 18px de alto es poco para el dedo */
+  .footer__nav a,
+  .footer__contact-item {
+    display: inline-block;
+    padding: 0.45rem 0;
+    min-height: 24px;
+  }
+
+  /* Buscador y orden, al minimo comodo */
+  .filter-bar__search,
+  .filter-bar__select {
+    min-height: 46px;
+    font-size: 0.85rem;
+  }
+}
+
+/* ============================================================
+   MOBILE — controles del carrito
+   Son el flujo de compra: "Eliminar" median 11px de alto y los
+   +/- 28px. Se llevan a un tamano tocable sin cambiar el diseno.
+   ============================================================ */
+@media (max-width: 768px) {
+  .qty-control__btn {
+    width: 42px;
+    height: 42px;
+    font-size: 1.05rem;
+  }
+
+  .cart-item__remove {
+    font-size: 0.7rem;
+    padding: 0.6rem 0.2rem;
+    min-height: 36px;
+  }
+
+  .order-summary__btn-vaciar {
+    min-height: 42px;
+    font-size: 0.72rem;
+  }
+
+  /* Boton principal del resumen y del checkout */
+  .order-summary__btn-primary,
+  .checkout-submit__btn {
+    min-height: 48px;
+    font-size: 0.78rem;
+  }
+}
+
+/* Inputs del checkout: quedaban en 39px de alto en mobile */
+@media (max-width: 768px) {
+  .form-input {
+    padding: 0.9rem 0;
+    font-size: 1rem;   /* 16px evita el zoom automatico de iOS al enfocar */
+    min-height: 46px;
+  }
 }

@@ -133,7 +133,7 @@ function aplicarFiltros() {
   const sort   = document.getElementById('sort-select')?.value || 'recent';
 
   let lista = PRODUCTOS.filter(p => {
-    const matchSearch    = p.nombre.toLowerCase().includes(search) || p.tipo.toLowerCase().includes(search);
+    const matchSearch    = p.nombre.toLowerCase().includes(search);
     // generoActivo = objetivo/beneficio (enfoque, energia, equilibrio, defensas, bienestar)
     const matchGenero    = !generoActivo || p.genero === generoActivo;
     const matchCategoria = !categoriaActiva || p.categoria_slug === categoriaActiva;
@@ -359,16 +359,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     const si = document.getElementById('search-input');
     if (si) si.value = searchUrl;
   }
+  // Los botones de categoria ya no existen, pero ?genero= y ?categoria=
+  // siguen sirviendo: los usan los links del navbar.
   if (generoUrl) {
     generoActivo = generoUrl;
-    document.querySelectorAll('.filter-genero__btn').forEach(btn => {
-      btn.classList.toggle('active', btn.dataset.genero === generoUrl);
-    });
   } else if (categoriaUrl) {
     categoriaActiva = categoriaUrl;
-    document.querySelectorAll('.filter-genero__btn').forEach(btn => {
-      btn.classList.toggle('active', btn.dataset.categoria === categoriaUrl);
-    });
   }
 
   // Only fetch + render grid on productos.html
@@ -378,16 +374,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     document.getElementById('search-input')?.addEventListener('input', aplicarFiltros);
     document.getElementById('sort-select')?.addEventListener('change', aplicarFiltros);
-
-    document.querySelectorAll('.filter-genero__btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        generoActivo    = btn.dataset.categoria ? '' : (btn.dataset.genero || '');
-        categoriaActiva  = btn.dataset.categoria || '';
-        document.querySelectorAll('.filter-genero__btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        aplicarFiltros();
-      });
-    });
   }
 
   document.addEventListener('keydown', e => { if (e.key === 'Escape') cerrarModal(); });
