@@ -93,6 +93,7 @@ function getFooterHTML() {
   </div>
 </section>
     <footer class="footer">
+      <div class="footer__top-wrap">
       <div class="footer__top">
         <div>
           <img src="images/logo-footer-kabodhi.png" alt="KABODHI — Adaptógenos naturales para tu bienestar diario" class="footer__logo-img">
@@ -117,6 +118,7 @@ function getFooterHTML() {
           <div class="footer__heading" style="margin-top:1.5rem;">Redes</div>
           <a href="https://instagram.com/kabodhi" class="footer__contact-item" target="_blank" rel="noopener noreferrer">@kabodhi</a>
         </div>
+      </div>
       </div>
 
       <div class="footer__bottom">
