@@ -7,13 +7,19 @@ class ProductoService {
         $this->db = Database::getInstance();
     }
 
-    public function getAll(?string $categoria = null, ?string $tipo = null, ?string $search = null, ?bool $destacado = null): array {
+    // $incluirInactivos: solo lo usa el panel admin, para poder ver y reactivar
+    // productos dados de baja. La tienda publica siempre recibe activo = 1.
+    public function getAll(?string $categoria = null, ?string $tipo = null, ?string $search = null, ?bool $destacado = null, bool $incluirInactivos = false): array {
         $sql = "SELECT p.*, c.nombre AS categoria_nombre, c.slug AS categoria_slug,
                        GREATEST(0, p.stock - p.stock_reservado) AS stock_disponible
                 FROM productos p
                 INNER JOIN categorias c ON p.categoria_id = c.id
-                WHERE p.activo = 1";
+                WHERE 1 = 1";
         $params = [];
+
+        if (!$incluirInactivos) {
+            $sql .= " AND p.activo = 1";
+        }
 
         if ($categoria !== null && $categoria !== '') {
             $sql .= " AND c.slug = :categoria";

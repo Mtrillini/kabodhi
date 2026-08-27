@@ -2,8 +2,9 @@
 // KABODHI Admin — pedidos.js
 // ============================================================
 
-let allPedidos    = [];
-let openDetailId  = null;
+let allPedidos      = [];   // lo que devolvio la API (ya filtrado por estado)
+let pedidosVisibles = [];   // lo que se ve tras aplicar busqueda y fechas
+let openDetailId    = null;
 
 // ---- Fetch ----
 async function fetchPedidos(estado = '') {
@@ -16,7 +17,7 @@ async function fetchPedidos(estado = '') {
     if (!json.success) throw new Error(json.message || 'Error al cargar pedidos.');
 
     allPedidos = json.data || [];
-    renderTabla(allPedidos);
+    aplicarFiltros();
   } catch (err) {
     showToast(err.message, 'error');
     document.getElementById('pedidos-tbody').innerHTML =
@@ -27,6 +28,63 @@ async function fetchPedidos(estado = '') {
 function showTableLoading() {
   const tbody = document.getElementById('pedidos-tbody');
   if (tbody) tbody.innerHTML = `<tr><td colspan="7" class="loading">Cargando...</td></tr>`;
+}
+
+// ---- Filtros (busqueda y rango de fechas, del lado del cliente) ----
+function aplicarFiltros() {
+  const q     = (document.getElementById('search-pedidos')?.value || '').toLowerCase().trim();
+  const desde = document.getElementById('filter-desde')?.value || '';
+  const hasta = document.getElementById('filter-hasta')?.value || '';
+
+  pedidosVisibles = allPedidos.filter(p => {
+    if (q) {
+      const enTexto =
+        String(p.id).includes(q) ||
+        (p.cliente_nombre || '').toLowerCase().includes(q) ||
+        (p.cliente_email  || '').toLowerCase().includes(q);
+      if (!enTexto) return false;
+    }
+
+    // created_at viene como "YYYY-MM-DD HH:MM:SS": los primeros 10 chars
+    // comparan bien contra el value de un <input type="date">.
+    const fecha = (p.created_at || '').slice(0, 10);
+    if (desde && fecha < desde) return false;
+    if (hasta && fecha > hasta) return false;
+
+    return true;
+  });
+
+  renderTabla(pedidosVisibles);
+  renderResumen();
+}
+
+function renderResumen() {
+  const el = document.getElementById('resumen-filtros');
+  if (!el) return;
+
+  const total = pedidosVisibles.reduce((sum, p) => sum + parseFloat(p.total || 0), 0);
+  const aprobados = pedidosVisibles.filter(p => p.estado === 'aprobado');
+  const facturado = aprobados.reduce((sum, p) => sum + parseFloat(p.total || 0), 0);
+
+  if (!allPedidos.length) { el.textContent = ''; return; }
+
+  el.innerHTML = `
+    <strong>${pedidosVisibles.length}</strong> de ${allPedidos.length} pedido(s)
+    &nbsp;·&nbsp; Suma: <strong>${formatMoney(total)}</strong>
+    &nbsp;·&nbsp; Aprobados (${aprobados.length}): <strong>${formatMoney(facturado)}</strong>
+  `;
+}
+
+function limpiarFiltros() {
+  const s = document.getElementById('search-pedidos');
+  const d = document.getElementById('filter-desde');
+  const h = document.getElementById('filter-hasta');
+  const e = document.getElementById('filter-estado');
+  if (s) s.value = '';
+  if (d) d.value = '';
+  if (h) h.value = '';
+  if (e) e.value = '';
+  fetchPedidos('');
 }
 
 // ---- Render table ----
@@ -53,17 +111,20 @@ function renderTabla(pedidos) {
       <td><span class="badge badge--${p.estado}">${capitalize(p.estado)}</span></td>
       <td style="color:var(--taupe);">${formatDate(p.created_at)}</td>
       <td onclick="event.stopPropagation();">
-        <select
-          class="filter-select"
-          style="font-size:0.68rem;padding:0.3rem 0.5rem;"
-          onchange="actualizarEstado(${p.id}, this.value)"
-        >
-          <option value="">Cambiar estado</option>
-          <option value="pendiente"  ${p.estado === 'pendiente'  ? 'selected' : ''}>Pendiente</option>
-          <option value="aprobado"   ${p.estado === 'aprobado'   ? 'selected' : ''}>Aprobado</option>
-          <option value="rechazado"  ${p.estado === 'rechazado'  ? 'selected' : ''}>Rechazado</option>
-          <option value="cancelado"  ${p.estado === 'cancelado'  ? 'selected' : ''}>Cancelado</option>
-        </select>
+        <div style="display:flex;gap:0.4rem;align-items:center;">
+          <select
+            class="filter-select"
+            style="font-size:0.68rem;padding:0.3rem 0.5rem;"
+            onchange="actualizarEstado(${p.id}, this.value)"
+          >
+            <option value="">Cambiar estado</option>
+            <option value="pendiente"  ${p.estado === 'pendiente'  ? 'selected' : ''}>Pendiente</option>
+            <option value="aprobado"   ${p.estado === 'aprobado'   ? 'selected' : ''}>Aprobado</option>
+            <option value="rechazado"  ${p.estado === 'rechazado'  ? 'selected' : ''}>Rechazado</option>
+            <option value="cancelado"  ${p.estado === 'cancelado'  ? 'selected' : ''}>Cancelado</option>
+          </select>
+          <button class="btn btn-secondary btn-sm" onclick="imprimirRemito(${p.id})" title="Imprimir remito">🖶</button>
+        </div>
       </td>
     </tr>
     <tr id="detalle-${p.id}" class="row-detail">
@@ -104,14 +165,9 @@ async function toggleDetalle(id) {
   row.classList.add('open');
   openDetailId = id;
 
-  // Load detail from API
   try {
-    const res  = await fetch(API_URL + '/pedidos/' + id, { credentials: 'include' });
-    const json = await res.json();
-
-    if (!json.success) throw new Error(json.message);
-
-    renderDetalle(id, json.data);
+    const pedido = await getPedido(id);
+    renderDetalle(id, pedido);
   } catch (err) {
     const itemsEl = document.getElementById('items-' + id);
     if (itemsEl) itemsEl.innerHTML = `<div style="color:#c07b7b;font-size:0.78rem;">${err.message}</div>`;
@@ -119,6 +175,14 @@ async function toggleDetalle(id) {
 }
 
 window.toggleDetalle = toggleDetalle;
+
+/** Trae un pedido con sus items desde la API. */
+async function getPedido(id) {
+  const res  = await fetch(API_URL + '/pedidos/' + id, { credentials: 'include' });
+  const json = await res.json();
+  if (!json.success) throw new Error(json.message || 'Error al cargar el pedido.');
+  return json.data;
+}
 
 // ---- Render detail items ----
 function renderDetalle(id, pedido) {
@@ -130,6 +194,11 @@ function renderDetalle(id, pedido) {
     return;
   }
 
+  const envio    = parseFloat(pedido.envio_costo || 0);
+  const subtotal = pedido.items.reduce(
+    (sum, i) => sum + parseFloat(i.precio_unitario) * parseInt(i.cantidad), 0
+  );
+
   itemsEl.innerHTML = pedido.items.map(item => `
     <div class="detail-item">
       <span>
@@ -139,7 +208,15 @@ function renderDetalle(id, pedido) {
       <span>${formatMoney(item.precio_unitario * item.cantidad)}</span>
     </div>
   `).join('') + `
-    <div class="detail-item" style="font-weight:600;margin-top:0.5rem;">
+    <div class="detail-item" style="margin-top:0.5rem;color:var(--taupe);">
+      <span>Subtotal</span>
+      <span>${formatMoney(subtotal)}</span>
+    </div>
+    <div class="detail-item" style="color:var(--taupe);">
+      <span>Envío${pedido.envio_descripcion ? ' — ' + escHtml(pedido.envio_descripcion) : ''}</span>
+      <span>${envio > 0 ? formatMoney(envio) : 'Sin cargo'}</span>
+    </div>
+    <div class="detail-item" style="font-weight:600;">
       <span>Total</span>
       <span>${formatMoney(pedido.total)}</span>
     </div>
@@ -174,14 +251,171 @@ async function actualizarEstado(id, estado) {
       badge.textContent = capitalize(estado);
     }
 
+    renderResumen();
+
   } catch (err) {
     showToast(err.message, 'error');
     // Re-fetch to restore correct state
-    fetchPedidos();
+    fetchPedidos(document.getElementById('filter-estado')?.value || '');
   }
 }
 
 window.actualizarEstado = actualizarEstado;
+
+// ---- Exportar CSV ----
+function exportarCSV() {
+  if (!pedidosVisibles.length) {
+    showToast('No hay pedidos para exportar.', 'error');
+    return;
+  }
+
+  const cabecera = ['#', 'Cliente', 'Email', 'Teléfono', 'Dirección', 'Envío', 'Total', 'Estado', 'Fecha'];
+
+  const filas = pedidosVisibles.map(p => [
+    p.id,
+    p.cliente_nombre,
+    p.cliente_email,
+    p.cliente_telefono,
+    p.cliente_direccion,
+    p.envio_costo,
+    p.total,
+    p.estado,
+    p.created_at,
+  ]);
+
+  const csv = [cabecera, ...filas].map(fila => fila.map(csvCampo).join(';')).join('\r\n');
+
+  // BOM para que Excel en es-AR abra los acentos bien.
+  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = `pedidos-kabodhi-${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+
+  showToast(`${pedidosVisibles.length} pedido(s) exportado(s).`, 'success');
+}
+
+/** Escapa un campo CSV: comillas dobles y separador ; */
+function csvCampo(valor) {
+  const texto = valor === null || valor === undefined ? '' : String(valor);
+  return `"${texto.replace(/"/g, '""')}"`;
+}
+
+// ---- Remito imprimible ----
+async function imprimirRemito(id) {
+  let pedido;
+  try {
+    pedido = await getPedido(id);
+  } catch (err) {
+    showToast(err.message, 'error');
+    return;
+  }
+
+  const envio    = parseFloat(pedido.envio_costo || 0);
+  const subtotal = (pedido.items || []).reduce(
+    (sum, i) => sum + parseFloat(i.precio_unitario) * parseInt(i.cantidad), 0
+  );
+
+  const filas = (pedido.items || []).map(i => `
+    <tr>
+      <td>${escHtml(i.producto_nombre || 'Producto #' + i.producto_id)}</td>
+      <td class="num">${i.cantidad}</td>
+      <td class="num">${formatMoney(i.precio_unitario)}</td>
+      <td class="num">${formatMoney(i.precio_unitario * i.cantidad)}</td>
+    </tr>
+  `).join('');
+
+  const html = `<!DOCTYPE html>
+<html lang="es"><head><meta charset="UTF-8">
+<title>Remito #${pedido.id} — KABODHI</title>
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: Georgia, 'Times New Roman', serif; color: #1F3D2E; margin: 2.5rem; font-size: 13px; }
+  h1 { font-size: 1.6rem; margin: 0; letter-spacing: 0.15em; }
+  .sub { color: #8B7966; font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; }
+  .head { display: flex; justify-content: space-between; align-items: flex-start;
+          border-bottom: 2px solid #1F3D2E; padding-bottom: 1rem; margin-bottom: 1.5rem; }
+  .meta { text-align: right; font-size: 0.8rem; }
+  .bloque { margin-bottom: 1.5rem; }
+  .bloque h2 { font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase;
+               color: #8B7966; margin: 0 0 0.4rem; font-weight: normal; }
+  table { width: 100%; border-collapse: collapse; margin-top: 0.5rem; }
+  th { text-align: left; font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase;
+       color: #8B7966; border-bottom: 1px solid #A66B3D; padding: 0.5rem 0.4rem; font-weight: normal; }
+  td { padding: 0.55rem 0.4rem; border-bottom: 1px solid #eee; }
+  .num { text-align: right; white-space: nowrap; }
+  .totales { margin-left: auto; width: 280px; margin-top: 1rem; }
+  .totales tr td { border: none; padding: 0.3rem 0.4rem; }
+  .totales .total td { border-top: 2px solid #1F3D2E; font-weight: bold; font-size: 1.05rem; padding-top: 0.6rem; }
+  .pie { margin-top: 3rem; font-size: 0.7rem; color: #8B7966; text-align: center;
+         border-top: 1px solid #eee; padding-top: 1rem; }
+  @media print { body { margin: 1.5cm; } }
+</style></head>
+<body>
+  <div class="head">
+    <div>
+      <h1>KABODHI</h1>
+      <div class="sub">Adaptógenos naturales</div>
+    </div>
+    <div class="meta">
+      <div style="font-size:1.2rem;font-weight:bold;">Remito #${pedido.id}</div>
+      <div class="sub">${formatDate(pedido.created_at)}</div>
+      <div class="sub">Estado: ${capitalize(pedido.estado)}</div>
+    </div>
+  </div>
+
+  <div class="bloque">
+    <h2>Cliente</h2>
+    <div><strong>${escHtml(pedido.cliente_nombre)}</strong></div>
+    <div>${escHtml(pedido.cliente_email)}</div>
+    ${pedido.cliente_telefono ? `<div>Tel: ${escHtml(pedido.cliente_telefono)}</div>` : ''}
+  </div>
+
+  ${pedido.cliente_direccion ? `
+  <div class="bloque">
+    <h2>Dirección de entrega</h2>
+    <div>${escHtml(pedido.cliente_direccion)}</div>
+  </div>` : ''}
+
+  <div class="bloque">
+    <h2>Detalle</h2>
+    <table>
+      <thead>
+        <tr><th>Producto</th><th class="num">Cant.</th><th class="num">Precio</th><th class="num">Subtotal</th></tr>
+      </thead>
+      <tbody>${filas || '<tr><td colspan="4">Sin items.</td></tr>'}</tbody>
+    </table>
+
+    <table class="totales">
+      <tr><td>Subtotal</td><td class="num">${formatMoney(subtotal)}</td></tr>
+      <tr>
+        <td>Envío${pedido.envio_descripcion ? ' — ' + escHtml(pedido.envio_descripcion) : ''}</td>
+        <td class="num">${envio > 0 ? formatMoney(envio) : 'Sin cargo'}</td>
+      </tr>
+      <tr class="total"><td>Total</td><td class="num">${formatMoney(pedido.total)}</td></tr>
+    </table>
+  </div>
+
+  <div class="pie">Gracias por tu compra · kabodhi.com</div>
+</body></html>`;
+
+  const win = window.open('', '_blank');
+  if (!win) {
+    showToast('El navegador bloqueó la ventana. Permití los pop-ups para imprimir.', 'error');
+    return;
+  }
+  win.document.write(html);
+  win.document.close();
+  win.focus();
+  // Esperar al render antes de abrir el diálogo de impresión.
+  win.addEventListener('load', () => win.print());
+  setTimeout(() => { try { win.print(); } catch { /* ya se imprimió */ } }, 400);
+}
+window.imprimirRemito = imprimirRemito;
 
 // ---- Helpers ----
 function escHtml(str) {
@@ -208,11 +442,18 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   fetchPedidos();
 
-  // Estado filter
-  const filterSelect = document.getElementById('filter-estado');
-  if (filterSelect) {
-    filterSelect.addEventListener('change', () => {
-      fetchPedidos(filterSelect.value);
-    });
-  }
+  // El estado se filtra en el servidor; busqueda y fechas, en el cliente.
+  document.getElementById('filter-estado')?.addEventListener('change', function () {
+    fetchPedidos(this.value);
+  });
+
+  document.getElementById('search-pedidos')?.addEventListener('input', aplicarFiltros);
+  document.getElementById('filter-desde')?.addEventListener('change', aplicarFiltros);
+  document.getElementById('filter-hasta')?.addEventListener('change', aplicarFiltros);
+
+  document.getElementById('btn-limpiar-filtros')?.addEventListener('click', limpiarFiltros);
+  document.getElementById('btn-exportar')?.addEventListener('click', exportarCSV);
+  document.getElementById('btn-actualizar')?.addEventListener('click', () => {
+    fetchPedidos(document.getElementById('filter-estado')?.value || '');
+  });
 });

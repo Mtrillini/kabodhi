@@ -5,3 +5,6 @@ vendor/
 
 # Backups locales
 *.bak
+
+# Config local de Claude Code
+.claude/

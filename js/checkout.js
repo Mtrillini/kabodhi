@@ -142,8 +142,8 @@ async function submitCheckout(e) {
       id:         item.id,
       cantidad:   item.cantidad,
     })),
-    envio_costo:        envio ? parseFloat(envio.precio) : 0,
-    envio_descripcion:  envio ? envio.descripcion : null,
+    // Solo el CP: el costo de envio lo recalcula el servidor.
+    envio_cp:           envio ? parseInt(envio.cp) : 0,
   };
 
   // Combine nombre + apellido for the API

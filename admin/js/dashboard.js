@@ -6,7 +6,7 @@ async function fetchStats() {
   try {
     const [pedidosRes, productosRes] = await Promise.all([
       fetch(API_URL + '/pedidos', { credentials: 'include' }),
-      fetch(API_URL + '/productos', { credentials: 'include' }),
+      fetch(API_URL + '/productos?incluir_inactivos=1', { credentials: 'include' }),
     ]);
 
     const pedidosJson   = await pedidosRes.json();
@@ -84,9 +84,9 @@ function renderLowStock(productos) {
       <td>
         <img
           class="table-img"
-          src="${p.imagen_url || 'https://via.placeholder.com/44x44/F2ECE6/0D0D0D?text=N'}"
+          src="${mediaUrl(p.imagen_url) || IMG_PLACEHOLDER}"
           alt="${escHtml(p.nombre)}"
-          onerror="this.src='https://via.placeholder.com/44x44/F2ECE6/0D0D0D?text=N'"
+          onerror="this.onerror=null;this.src=IMG_PLACEHOLDER"
         >
       </td>
       <td>${escHtml(p.nombre)}</td>

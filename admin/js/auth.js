@@ -14,6 +14,10 @@ async function checkAuth() {
       return false;
     }
 
+    // Admin de la sesion actual, para las pantallas que lo necesitan
+    // (ej: usuarios.js, que no deja borrarse a uno mismo).
+    window.ADMIN_ACTUAL = json.admin || null;
+
     // Update username display if present
     const usernameEl = document.getElementById('admin-username');
     if (usernameEl && json.admin) {

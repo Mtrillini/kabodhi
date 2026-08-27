@@ -21,7 +21,11 @@ class EnvioService {
         return $row !== false ? $row : null;
     }
 
-    public function calcular(int $cp): ?array {
+    /**
+     * Tarifa que corresponde a un CP. Si se pasa el subtotal del carrito y
+     * supera el umbral de envio gratis configurado, el precio queda en 0.
+     */
+    public function calcular(int $cp, ?float $subtotal = null): ?array {
         $stmt = $this->db->prepare(
             "SELECT * FROM tarifas_envio
              WHERE activo = 1 AND cp_desde <= :cp1 AND cp_hasta >= :cp2
@@ -30,7 +34,23 @@ class EnvioService {
         );
         $stmt->execute([':cp1' => $cp, ':cp2' => $cp]);
         $row = $stmt->fetch();
-        return $row !== false ? $row : null;
+        if ($row === false) return null;
+
+        $row['precio_lista'] = (float)$row['precio'];
+        $row['bonificado']   = false;
+
+        $umbral = (new ConfigService())->getEnvioGratisDesde();
+        if ($umbral > 0 && $subtotal !== null && $subtotal >= $umbral) {
+            $row['precio']      = 0.0;
+            $row['bonificado']  = true;
+            $row['descripcion'] = $row['descripcion'] . ' (envío bonificado)';
+        }
+
+        return $row;
+    }
+
+    public function hayTarifasActivas(): bool {
+        return (int)$this->db->query("SELECT COUNT(*) FROM tarifas_envio WHERE activo = 1")->fetchColumn() > 0;
     }
 
     public function create(array $data): array {

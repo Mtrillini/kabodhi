@@ -19,7 +19,8 @@ class EnvioController {
             echo json_encode(['success' => false, 'message' => 'Código postal inválido.']);
             return;
         }
-        $tarifa = $this->service->calcular($cp);
+        $subtotal = isset($_GET['subtotal']) ? (float)$_GET['subtotal'] : null;
+        $tarifa   = $this->service->calcular($cp, $subtotal);
         if (!$tarifa) {
             echo json_encode(['success' => false, 'message' => 'No hay tarifas disponibles para ese código postal.', 'data' => null]);
             return;

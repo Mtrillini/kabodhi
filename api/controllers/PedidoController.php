@@ -35,10 +35,8 @@ class PedidoController {
             'direccion' => trim($body['direccion']  ?? ''),
         ];
 
-        $envioData = [
-            'costo'       => (float)($body['envio_costo'] ?? 0),
-            'descripcion' => $body['envio_descripcion'] ?? null,
-        ];
+        // Solo el CP es dato del cliente; el costo lo calcula PedidoService.
+        $envioData = ['cp' => (int)($body['envio_cp'] ?? 0)];
 
         try {
             $pedido = $this->pedidoService->crear($clienteData, $body['items'], $envioData);

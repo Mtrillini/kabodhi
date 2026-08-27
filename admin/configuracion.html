@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Configuración — KABODHI Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+
+  <aside class="sidebar" id="sidebar" data-page="configuracion"></aside>
+
+  <div class="main">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:1rem;">
+        <button class="hamburger-admin" id="hamburger-admin" aria-label="Menú">
+          <span></span><span></span><span></span>
+        </button>
+        <span class="topbar__title">Configuración de la tienda</span>
+      </div>
+      <div class="topbar__actions">
+        <button id="btn-guardar" class="btn btn-primary">Guardar cambios</button>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="panel" style="max-width:640px;">
+        <div class="panel__header" style="padding:1rem 1.5rem;border-bottom:1px solid var(--champagne);">
+          <p style="font-size:0.78rem;color:var(--taupe);">
+            Estos valores los usa la tienda pública. Antes estaban escritos en el código:
+            cambiarlos acá no requiere volver a publicar el sitio.
+          </p>
+        </div>
+
+        <div class="panel__body" style="padding:1.5rem;">
+          <form id="config-form" onsubmit="event.preventDefault();">
+
+            <div class="form-group">
+              <label class="form-label" for="f-whatsapp">Número de WhatsApp</label>
+              <input type="text" id="f-whatsapp" class="form-input" placeholder="5491171003392" inputmode="numeric">
+              <p style="font-size:0.7rem;color:var(--taupe);margin-top:0.35rem;">
+                Con código de país, sin el <code>+</code> ni espacios. Es el número al que llegan
+                los pedidos por WhatsApp desde el carrito.
+              </p>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="f-email">Email de contacto</label>
+              <input type="email" id="f-email" class="form-input" placeholder="hola@kabodhi.com">
+              <p style="font-size:0.7rem;color:var(--taupe);margin-top:0.35rem;">
+                Destino del formulario de contacto.
+              </p>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="f-envio-gratis">Envío gratis a partir de (ARS)</label>
+              <input type="number" id="f-envio-gratis" class="form-input" min="0" step="100" placeholder="0">
+              <p style="font-size:0.7rem;color:var(--taupe);margin-top:0.35rem;">
+                Si el subtotal del carrito llega a este monto, el envío se bonifica.
+                Poné <strong>0</strong> para desactivarlo.
+              </p>
+            </div>
+
+          </form>
+
+          <div id="config-estado" style="font-size:0.72rem;color:var(--taupe);margin-top:1rem;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/layout.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/configuracion.js"></script>
+</body>
+</html>

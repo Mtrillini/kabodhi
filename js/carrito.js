@@ -262,7 +262,10 @@ async function calcularEnvioCarrito() {
   if (msg) msg.textContent = 'Calculando...';
 
   try {
-    const res  = await fetch(API_URL + '/envios/calcular?cp=' + encodeURIComponent(cp));
+    const subtotal = getTotal();
+    const res  = await fetch(
+      API_URL + '/envios/calcular?cp=' + encodeURIComponent(cp) + '&subtotal=' + encodeURIComponent(subtotal)
+    );
     const json = await res.json();
 
     if (!json.success || !json.data) {

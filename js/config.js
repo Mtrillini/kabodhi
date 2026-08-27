@@ -24,10 +24,6 @@ const API_URL = APP_BASE + '/api/index.php';
 // y las acciones (checkout/contacto) van por WhatsApp / mail.
 const IS_STATIC  = !isLocal;
 
-// WhatsApp para pedidos/consultas en modo estatico (reemplazar por el numero real)
-const WHATSAPP_NUMERO = '5491100000000';
-const CONTACTO_EMAIL  = 'hola@kabodhi.com';
-
 // Base de los JSON horneados (rutas relativas para que anden en cualquier host)
 const DATA_BASE = 'data/';
 
@@ -47,6 +43,28 @@ async function fetchDatos(apiPath, staticFile) {
   if (!res.ok) throw new Error('JSON ' + res.status);
   return await res.json();
 }
+
+// Configuracion de la tienda. Se edita desde el panel admin (tabla `configuracion`)
+// y se carga al inicio; estos son solo los valores de arranque por si la API
+// todavia no respondio.
+let WHATSAPP_NUMERO   = '';
+let CONTACTO_EMAIL    = '';
+let ENVIO_GRATIS_DESDE = 0;
+
+// Promesa unica: cualquier pagina puede hacer `await configLista` antes de usar
+// WHATSAPP_NUMERO o CONTACTO_EMAIL.
+const configLista = (async () => {
+  try {
+    const json = await fetchDatos('/configuracion', 'configuracion.json');
+    const cfg  = json.data || json || {};
+    WHATSAPP_NUMERO    = cfg.whatsapp_numero    || WHATSAPP_NUMERO;
+    CONTACTO_EMAIL     = cfg.contacto_email     || CONTACTO_EMAIL;
+    ENVIO_GRATIS_DESDE = parseFloat(cfg.envio_gratis_desde || 0);
+  } catch {
+    /* se mantienen los valores de arranque */
+  }
+  return { WHATSAPP_NUMERO, CONTACTO_EMAIL, ENVIO_GRATIS_DESDE };
+})();
 
 const loadProductosData = () => fetchDatos('/productos', 'productos.json');
 const loadHongosData    = () => fetchDatos('/hongos',    'hongos.json');

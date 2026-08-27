@@ -13,7 +13,10 @@ class ProductoController {
         $search    = $_GET['search']    ?? null;
         $destacado = isset($_GET['destacado']) ? (bool)(int)$_GET['destacado'] : null;
 
-        $productos = $this->service->getAll($categoria, $tipo, $search, $destacado);
+        // Los inactivos solo se listan para un admin logueado (panel de gestion).
+        $incluirInactivos = Auth::isAdmin() && !empty($_GET['incluir_inactivos']);
+
+        $productos = $this->service->getAll($categoria, $tipo, $search, $destacado, $incluirInactivos);
         echo json_encode(['success' => true, 'data' => $productos]);
     }
 

@@ -7,11 +7,35 @@ let editingId      = null;
 let imagenesActuales = [];
 // Each item: { url: string|null, file: File|null, preview: string }
 
+let categorias = [];
+
+// ---- Categorias ----
+async function fetchCategorias() {
+  try {
+    const res  = await fetch(API_URL + '/categorias', { credentials: 'include' });
+    const json = await res.json();
+    categorias = json.data || [];
+  } catch {
+    categorias = [];
+  }
+
+  const select = document.getElementById('f-categoria');
+  if (!select) return;
+
+  if (!categorias.length) {
+    select.innerHTML = '<option value="">Sin categorías</option>';
+    return;
+  }
+  select.innerHTML = categorias
+    .map(c => `<option value="${c.id}">${escHtml(c.nombre)}</option>`)
+    .join('');
+}
+
 // ---- Fetch ----
 async function fetchProductos() {
   try {
     showTableLoading();
-    const res  = await fetch(API_URL + '/productos', { credentials: 'include' });
+    const res  = await fetch(API_URL + '/productos?incluir_inactivos=1', { credentials: 'include' });
     const json = await res.json();
     if (!json.success) throw new Error(json.message || 'Error al cargar productos.');
     allProductos = json.data || [];
@@ -50,9 +74,9 @@ function renderTabla(productos) {
       <td>
         <img
           class="table-img"
-          src="${firstImg || 'https://via.placeholder.com/44x44/F2ECE6/0D0D0D?text=N'}"
+          src="${mediaUrl(firstImg) || IMG_PLACEHOLDER}"
           alt="${escHtml(p.nombre)}"
-          onerror="this.src='https://via.placeholder.com/44x44/F2ECE6/0D0D0D?text=N'"
+          onerror="this.onerror=null;this.src=IMG_PLACEHOLDER"
         >
       </td>
       <td>
@@ -98,7 +122,7 @@ function renderImagenes() {
 
   lista.innerHTML = imagenesActuales.map((img, i) => `
     <div style="position:relative;width:80px;height:80px;flex-shrink:0;">
-      <img src="${img.preview || img.url}" style="width:80px;height:80px;object-fit:cover;border-radius:4px;border:1px solid var(--champagne);" alt="imagen ${i+1}">
+      <img src="${mediaUrl(img.preview || img.url)}" style="width:80px;height:80px;object-fit:cover;border-radius:4px;border:1px solid var(--champagne);" alt="imagen ${i+1}">
       <button
         type="button"
         onclick="removeImagen(${i})"
@@ -152,7 +176,7 @@ async function openModal(id = null) {
         document.getElementById('f-precio').value       = p.precio        || '';
         document.getElementById('f-stock').value        = p.stock         ?? '';
         document.getElementById('f-tipo').value         = p.tipo          || 'enfoque';
-        document.getElementById('f-categoria').value    = p.categoria_id  || '1';
+        document.getElementById('f-categoria').value    = p.categoria_id  || (categorias[0]?.id ?? '');
         document.getElementById('f-activo').checked     = parseInt(p.activo)    === 1;
         document.getElementById('f-destacado').checked  = parseInt(p.destacado) === 1;
 
@@ -171,7 +195,7 @@ async function openModal(id = null) {
     title.textContent = 'Nuevo Producto';
     document.getElementById('f-activo').checked  = true;
     document.getElementById('f-tipo').value      = 'enfoque';
-    document.getElementById('f-categoria').value = '1';
+    document.getElementById('f-categoria').value = categorias[0]?.id ?? '';
   }
 
   modal.classList.add('open');
@@ -325,6 +349,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const authenticated = await checkAuth();
   if (!authenticated) return;
 
+  await fetchCategorias();
   fetchProductos();
 
   document.getElementById('btn-nuevo-producto')?.addEventListener('click', () => openModal(null));

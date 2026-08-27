@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Categorías — KABODHI Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+
+  <aside class="sidebar" id="sidebar" data-page="categorias"></aside>
+
+  <div class="main">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:1rem;">
+        <button class="hamburger-admin" id="hamburger-admin" aria-label="Menú">
+          <span></span><span></span><span></span>
+        </button>
+        <span class="topbar__title">Categorías</span>
+      </div>
+      <div class="topbar__actions">
+        <button id="btn-nueva-categoria" class="btn btn-primary">+ Nueva Categoría</button>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="panel">
+        <div class="panel__header" style="padding:1rem 1.5rem;border-bottom:1px solid var(--champagne);">
+          <p style="font-size:0.78rem;color:var(--taupe);">
+            Las categorías agrupan los productos en el catálogo. El <em>slug</em> se genera solo
+            a partir del nombre y es lo que aparece en la URL de la tienda.
+          </p>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Nombre</th>
+                <th>Slug</th>
+                <th>Productos</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="categorias-tbody">
+              <tr><td colspan="4" class="loading">Cargando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modal-overlay">
+    <div class="modal">
+      <div class="modal__header">
+        <span class="modal__title" id="modal-title">Nueva Categoría</span>
+        <button class="modal__close" id="btn-close-modal">✕</button>
+      </div>
+      <div class="modal__body">
+        <form id="categoria-form" onsubmit="event.preventDefault();">
+          <div class="form-group">
+            <label class="form-label" for="f-nombre">Nombre *</label>
+            <input type="text" id="f-nombre" class="form-input" required placeholder="Ej: Tés &amp; Infusiones">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="f-slug">Slug</label>
+            <input type="text" id="f-slug" class="form-input" placeholder="se genera solo">
+            <p style="font-size:0.7rem;color:var(--taupe);margin-top:0.35rem;">
+              Dejalo vacío para generarlo desde el nombre.
+            </p>
+          </div>
+        </form>
+      </div>
+      <div class="modal__footer">
+        <button class="btn btn-secondary" id="btn-cancel-modal">Cancelar</button>
+        <button class="btn btn-primary" id="btn-save">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/layout.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/categorias.js"></script>
+</body>
+</html>

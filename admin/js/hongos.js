@@ -37,9 +37,9 @@ function renderTabla(hongos) {
     <tr>
       <td style="font-weight:600;">${h.orden}</td>
       <td>
-        <img class="table-img" src="${h.imagen_url || 'https://via.placeholder.com/44x44/F5F1E8/1F3D2E?text=K'}"
+        <img class="table-img" src="${mediaUrl(h.imagen_url) || IMG_PLACEHOLDER}"
              alt="${escHtml(h.nombre)}"
-             onerror="this.src='https://via.placeholder.com/44x44/F5F1E8/1F3D2E?text=K'">
+             onerror="this.onerror=null;this.src=IMG_PLACEHOLDER">
       </td>
       <td><strong style="font-weight:500;">${escHtml(h.nombre)}</strong></td>
       <td style="color:var(--taupe);font-size:0.82rem;">${escHtml(h.subtitulo || '')}</td>
@@ -66,7 +66,7 @@ function renderImagen() {
   if (!imagenActual) { cont.innerHTML = ''; return; }
   cont.innerHTML = `
     <div style="position:relative;width:120px;height:90px;">
-      <img src="${imagenActual.preview || imagenActual.url}" style="width:120px;height:90px;object-fit:cover;border-radius:4px;border:1px solid var(--champagne);">
+      <img src="${mediaUrl(imagenActual.preview || imagenActual.url)}" style="width:120px;height:90px;object-fit:cover;border-radius:4px;border:1px solid var(--champagne);">
       <button type="button" onclick="removeImagen()"
         style="position:absolute;top:-6px;right:-6px;background:#c07b7b;color:#fff;border:none;border-radius:50%;width:20px;height:20px;cursor:pointer;font-size:0.65rem;">✕</button>
     </div>`;

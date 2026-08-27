@@ -12,40 +12,7 @@
 <body>
 
   <!-- Sidebar -->
-  <aside class="sidebar" id="sidebar">
-    <div class="sidebar__header">
-      <span class="sidebar__logo">KABODHI</span>
-      <span class="sidebar__subtitle">Admin Panel</span>
-    </div>
-    <nav class="sidebar__nav">
-      <div class="sidebar__nav-label">Principal</div>
-      <a href="dashboard.html" class="sidebar__link">
-        <span class="sidebar__link-icon">◈</span> Dashboard
-      </a>
-      <a href="productos.html" class="sidebar__link">
-        <span class="sidebar__link-icon">◆</span> Productos
-      </a>
-      <a href="hongos.html" class="sidebar__link">
-        <span class="sidebar__link-icon">✦</span> Hongos principales
-      </a>
-      <a href="pedidos.html" class="sidebar__link">
-        <span class="sidebar__link-icon">◇</span> Pedidos
-      </a>
-      <a href="envios.html" class="sidebar__link active">
-        <span class="sidebar__link-icon">◎</span> Envíos
-      </a>
-      <div class="sidebar__nav-label" style="margin-top:1.5rem;">Tienda</div>
-      <a href="../frontend/index.html" target="_blank" class="sidebar__link">
-        <span class="sidebar__link-icon">↗</span> Ver tienda
-      </a>
-    </nav>
-    <div class="sidebar__footer">
-      <div class="sidebar__user">Bienvenido, <span id="admin-username">Admin</span></div>
-      <button class="sidebar__logout" id="btn-logout">
-        <span>↩</span> Cerrar sesión
-      </button>
-    </div>
-  </aside>
+  <aside class="sidebar" id="sidebar" data-page="envios"></aside>
 
   <!-- Main -->
   <div class="main">
@@ -136,6 +103,7 @@
   </div>
 
   <script src="js/config.js"></script>
+  <script src="js/layout.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/envios.js"></script>
 </body>
