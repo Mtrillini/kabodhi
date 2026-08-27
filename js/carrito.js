@@ -292,9 +292,19 @@ function limpiarEnvioCarrito() {
 window.limpiarEnvioCarrito = limpiarEnvioCarrito;
 
 // ---- Pedido por WhatsApp (modo estatico) ----
-window.pedirPorWhatsApp = function () {
+window.pedirPorWhatsApp = async function () {
   const carrito = getCarrito();
   if (!carrito || !carrito.items.length) return;
+
+  // El numero llega de la configuracion, que se carga async: si el visitante
+  // hace clic antes de que resuelva, el link saldria sin destinatario.
+  if (typeof configLista !== 'undefined') await configLista;
+
+  if (!WHATSAPP_NUMERO) {
+    if (window.showToast) showToast('No pudimos abrir WhatsApp. Escribinos por el formulario de contacto.', 'error');
+    return;
+  }
+
   const fmt = window.formatMoney || (v => '$' + v);
   const lineas = carrito.items.map(it => `• ${it.cantidad} x ${it.nombre} — ${fmt(it.precio * it.cantidad)}`);
   const texto =

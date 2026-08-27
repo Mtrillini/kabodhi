@@ -134,6 +134,12 @@
 
       // Modo estatico (sin PHP): abrir el cliente de mail
       if (typeof IS_STATIC !== 'undefined' && IS_STATIC) {
+        // CONTACTO_EMAIL viene de la configuracion, que se carga async.
+        if (typeof configLista !== 'undefined') await configLista;
+        if (!CONTACTO_EMAIL) {
+          showToast('No pudimos abrir tu correo. Escribinos por WhatsApp.', 'error');
+          return;
+        }
         const cuerpo = `Nombre: ${nombre}\nEmail: ${email}\n\n${mensaje}`;
         window.location.href = 'mailto:' + CONTACTO_EMAIL +
           '?subject=' + encodeURIComponent('Contacto web: ' + asunto) +
