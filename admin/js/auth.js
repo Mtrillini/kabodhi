@@ -2,7 +2,33 @@
 // KABODHI Admin — auth.js
 // ============================================================
 
+/** Aviso a pantalla completa cuando el panel se abre en un hosting sin PHP. */
+function avisarSinBackend() {
+  document.body.innerHTML = `
+    <div style="max-width:520px;margin:14vh auto;padding:2.5rem;font-family:Lato,sans-serif;
+                background:#fff;border-radius:6px;box-shadow:0 2px 12px rgba(0,0,0,0.08);text-align:center;">
+      <div style="font-size:1.5rem;letter-spacing:6px;color:#1F3D2E;margin-bottom:0.5rem;">KABODHI</div>
+      <h1 style="font-size:1.1rem;font-weight:normal;color:#1F3D2E;margin:1.5rem 0 1rem;">
+        El panel necesita un hosting con PHP
+      </h1>
+      <p style="font-size:0.85rem;color:#8B7966;line-height:1.7;">
+        Esta copia está publicada en un hosting estático, donde la API no corre.
+        La tienda funciona igual, pero la administración requiere PHP y MySQL.
+      </p>
+      <a href="../index.html"
+         style="display:inline-block;margin-top:1.5rem;padding:0.7rem 1.5rem;background:#1F3D2E;
+                color:#F5F1E8;text-decoration:none;border-radius:4px;font-size:0.8rem;letter-spacing:1px;">
+        Ir a la tienda
+      </a>
+    </div>`;
+}
+
 async function checkAuth() {
+  if (typeof PANEL_SIN_BACKEND !== 'undefined' && PANEL_SIN_BACKEND) {
+    avisarSinBackend();
+    return false;
+  }
+
   try {
     const res = await fetch(API_URL + '/auth/check', {
       credentials: 'include',

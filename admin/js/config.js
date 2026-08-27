@@ -1,7 +1,23 @@
 const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-const APP_BASE   = isLocal ? '/hongos' : '';
-const PAGES_BASE = isLocal ? '/hongos' : '';
+const isGitHubPages = window.location.hostname.endsWith('github.io');
+
+// Misma deteccion de base que js/config.js del sitio publico. Sin esto, en
+// GitHub Pages los redirects del panel pierden el /<repo> y caen en un 404.
+let APP_BASE;
+if (isLocal) {
+  APP_BASE = '/hongos';
+} else if (isGitHubPages) {
+  const seg = window.location.pathname.split('/').filter(Boolean)[0] || '';
+  APP_BASE = seg ? '/' + seg : '';
+} else {
+  APP_BASE = '';
+}
+const PAGES_BASE = APP_BASE;
 const API_URL    = APP_BASE + '/api/index.php';
+
+// El panel necesita PHP: en un hosting estatico (GitHub Pages / Netlify) la
+// API no existe y ninguna pantalla puede funcionar.
+const PANEL_SIN_BACKEND = isGitHubPages;
 
 // Base para archivos de media (las imagenes se guardan como "images/foo.png",
 // relativas a la raiz del sitio, no a /admin/).

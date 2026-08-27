@@ -60,6 +60,10 @@
   <script>
     // If already logged in, redirect
     (async () => {
+      if (typeof PANEL_SIN_BACKEND !== 'undefined' && PANEL_SIN_BACKEND) {
+        avisarSinBackend();
+        return;
+      }
       try {
         const res  = await fetch(API_URL + '/auth/check', { credentials: 'include' });
         const json = await res.json();
