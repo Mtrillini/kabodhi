@@ -156,7 +156,7 @@ class PedidoService {
     }
 
     public function actualizarEstado(int $id, string $estado): ?array {
-        $allowed = ['pendiente', 'aprobado', 'rechazado', 'cancelado'];
+        $allowed = ['pendiente', 'aprobado', 'enviado', 'entregado', 'rechazado', 'cancelado'];
         if (!in_array($estado, $allowed, true)) {
             throw new InvalidArgumentException("Estado inválido: {$estado}");
         }
@@ -175,20 +175,18 @@ class PedidoService {
 
         $this->db->beginTransaction();
         try {
-            $stmt = $this->db->prepare("UPDATE pedidos SET estado = :estado WHERE id = :id");
-            $stmt->execute([':estado' => $estado, ':id' => $id]);
+            // enviado_at se sella la primera vez que el pedido sale.
+            $sql = $estado === 'enviado'
+                ? "UPDATE pedidos SET estado = :estado, enviado_at = COALESCE(enviado_at, NOW()) WHERE id = :id"
+                : "UPDATE pedidos SET estado = :estado WHERE id = :id";
+            $this->db->prepare($sql)->execute([':estado' => $estado, ':id' => $id]);
 
             $this->aplicarEfectoStock($pedido['estado'], $estado, $pedido['items']);
 
             $this->db->commit();
 
             $pedidoActualizado = $this->getById($id);
-
-            if ($estado === 'aprobado') {
-                MailService::enviarPedidoAprobado($pedidoActualizado);
-            } elseif ($estado === 'rechazado') {
-                MailService::enviarPedidoRechazado($pedidoActualizado);
-            }
+            self::notificar($estado, $pedidoActualizado);
 
             return $pedidoActualizado;
 
@@ -198,25 +196,43 @@ class PedidoService {
         }
     }
 
+    /** Estados en los que las unidades ya salieron del stock. */
+    private const ESTADOS_DESCONTADOS = ['aprobado', 'enviado', 'entregado'];
+
+    /** Manda el mail que corresponde al nuevo estado del pedido. */
+    private static function notificar(string $estado, array $pedido): void {
+        switch ($estado) {
+            case 'aprobado':  MailService::enviarPedidoAprobado($pedido);  break;
+            case 'enviado':   MailService::enviarPedidoEnviado($pedido);   break;
+            case 'entregado': MailService::enviarPedidoEntregado($pedido); break;
+            case 'rechazado': MailService::enviarPedidoRechazado($pedido); break;
+            case 'cancelado': MailService::enviarPedidoCancelado($pedido); break;
+        }
+    }
+
     /**
      * Ajusta el stock segun la transicion de estado del pedido.
      *
      * Que significa cada estado para el inventario:
-     *   pendiente               -> unidades reservadas (stock_reservado), stock intacto
-     *   aprobado                -> unidades descontadas del stock, sin reserva
-     *   rechazado / cancelado   -> sin reserva y sin descuento
+     *   pendiente                        -> unidades reservadas, stock intacto
+     *   aprobado / enviado / entregado   -> unidades descontadas, sin reserva
+     *   rechazado / cancelado            -> sin reserva y sin descuento
      */
     private function aplicarEfectoStock(string $anterior, string $nuevo, array $items): void {
         if ($anterior === $nuevo) return;
 
         $estabaReservado  = $anterior === 'pendiente';
-        $estabaDescontado = $anterior === 'aprobado';
+        $estabaDescontado = in_array($anterior, self::ESTADOS_DESCONTADOS, true);
+        $quedaDescontado  = in_array($nuevo,    self::ESTADOS_DESCONTADOS, true);
+
+        // Moverse entre aprobado / enviado / entregado no toca el inventario.
+        if ($estabaDescontado && $quedaDescontado) return;
 
         foreach ($items as $item) {
             $productoId = (int)$item['producto_id'];
             $cantidad   = (int)$item['cantidad'];
 
-            if ($nuevo === 'aprobado') {
+            if ($quedaDescontado) {
                 // confirmar() descuenta del stock y limpia la reserva si existia.
                 $this->stockService->confirmar($productoId, $cantidad);
 
@@ -257,12 +273,58 @@ class PedidoService {
             $stmt->execute([':id' => $id]);
 
             $this->db->commit();
-            return $this->getById($id);
+
+            $pedidoActualizado = $this->getById($id);
+            self::notificar('cancelado', $pedidoActualizado);
+
+            return $pedidoActualizado;
 
         } catch (Throwable $e) {
             $this->db->rollBack();
             throw $e;
         }
+    }
+
+    /** Mails que se le enviaron al cliente por este pedido. */
+    public function getMails(int $id): array {
+        $stmt = $this->db->prepare(
+            "SELECT tipo, destino, asunto, exito, error, created_at
+             FROM mail_log WHERE pedido_id = :id ORDER BY id ASC"
+        );
+        $stmt->execute([':id' => $id]);
+        return $stmt->fetchAll();
+    }
+
+    /** Guarda los datos de seguimiento del envio. */
+    public function actualizarTracking(int $id, array $data): ?array {
+        $pedido = $this->getById($id);
+        if (!$pedido) {
+            throw new RuntimeException("Pedido #{$id} no encontrado.");
+        }
+
+        $url = trim((string)($data['tracking_url'] ?? ''));
+        if ($url !== '' && !filter_var($url, FILTER_VALIDATE_URL)) {
+            throw new InvalidArgumentException('El link de seguimiento no es una URL válida.');
+        }
+
+        $stmt = $this->db->prepare(
+            "UPDATE pedidos
+             SET transporte = :transporte, tracking_codigo = :codigo, tracking_url = :url
+             WHERE id = :id"
+        );
+        $stmt->execute([
+            ':transporte' => self::nullSiVacio($data['transporte']      ?? ''),
+            ':codigo'     => self::nullSiVacio($data['tracking_codigo'] ?? ''),
+            ':url'        => self::nullSiVacio($url),
+            ':id'         => $id,
+        ]);
+
+        return $this->getById($id);
+    }
+
+    private static function nullSiVacio($valor): ?string {
+        $texto = trim((string)$valor);
+        return $texto === '' ? null : $texto;
     }
 
     public function updateMercadoPago(int $id, string $mpPaymentId, string $mpPreferenceId): void {

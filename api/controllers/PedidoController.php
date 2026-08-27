@@ -101,6 +101,31 @@ class PedidoController {
         echo json_encode(['success' => true, 'data' => $pedido]);
     }
 
+    public function mails(int $id): void {
+        Auth::requireAdmin();
+        echo json_encode(['success' => true, 'data' => $this->pedidoService->getMails($id)]);
+    }
+
+    public function updateTracking(int $id): void {
+        Auth::requireAdmin();
+
+        $body = json_decode(file_get_contents('php://input'), true) ?? [];
+
+        try {
+            $pedido = $this->pedidoService->actualizarTracking($id, $body);
+            echo json_encode(['success' => true, 'data' => $pedido, 'message' => 'Seguimiento guardado.']);
+        } catch (InvalidArgumentException $e) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        } catch (RuntimeException $e) {
+            http_response_code(404);
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        } catch (Throwable $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error interno.']);
+        }
+    }
+
     public function updateEstado(int $id): void {
         Auth::requireAdmin();
 

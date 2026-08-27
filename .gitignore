@@ -8,3 +8,6 @@ vendor/
 
 # Config local de Claude Code
 .claude/
+
+# Mails guardados en desarrollo (contienen datos de clientes)
+storage/

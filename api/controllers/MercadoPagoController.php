@@ -67,6 +67,16 @@ class MercadoPagoController {
 
             $currentEstado = $pedido['estado'];
 
+            // Los webhooks de MP pueden llegar duplicados o fuera de orden. Si el
+            // pedido ya avanzo mas alla del pago (lo despachamos o se entrego), una
+            // notificacion de "approved" no debe hacerlo retroceder ni reenviar el
+            // mail de pago confirmado.
+            $yaDespachado = in_array($currentEstado, ['enviado', 'entregado'], true);
+            if ($yaDespachado && $newEstado === 'aprobado') {
+                echo json_encode(['success' => true, 'message' => 'Webhook ignorado: el pedido ya fue despachado.']);
+                return;
+            }
+
             // If payment was rejected and order was pending, restore stock
             if ($newEstado === 'rechazado' && $currentEstado === 'pendiente') {
                 $this->pedidoService->cancelar($pedidoId);

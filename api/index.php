@@ -29,6 +29,7 @@ require_once __DIR__ . '/config/Database.php';
 require_once __DIR__ . '/middleware/Auth.php';
 require_once __DIR__ . '/services/ConfigService.php';
 require_once __DIR__ . '/services/StockService.php';
+require_once __DIR__ . '/services/Mailer.php';
 require_once __DIR__ . '/services/MailService.php';
 require_once __DIR__ . '/services/ProductoService.php';
 require_once __DIR__ . '/services/EnvioService.php';
@@ -208,7 +209,23 @@ if ($seg0 === 'pedidos') {
         }
     } elseif (is_numeric($seg1)) {
         $id = (int)$seg1;
-        if ($seg2 === 'estado') {
+        if ($seg2 === 'mails') {
+            // GET /pedidos/{id}/mails
+            if ($method === 'GET') {
+                $ctrl->mails($id);
+            } else {
+                http_response_code(405);
+                echo json_encode(['success' => false, 'message' => 'Método no permitido.']);
+            }
+        } elseif ($seg2 === 'tracking') {
+            // PUT /pedidos/{id}/tracking
+            if ($method === 'PUT') {
+                $ctrl->updateTracking($id);
+            } else {
+                http_response_code(405);
+                echo json_encode(['success' => false, 'message' => 'Método no permitido.']);
+            }
+        } elseif ($seg2 === 'estado') {
             // PUT /pedidos/{id}/estado
             if ($method === 'PUT') {
                 $ctrl->updateEstado($id);

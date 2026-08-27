@@ -361,6 +361,8 @@ tbody tr:last-child td {
 
 .badge--pendiente  { background-color: rgba(214, 198, 173, 0.3);  color: #A66B3D; }
 .badge--aprobado   { background-color: rgba(124, 184, 124, 0.2);  color: #3a7a3a; }
+.badge--enviado    { background-color: rgba(107, 154, 196, 0.22); color: #2c5f8a; }
+.badge--entregado  { background-color: rgba(90, 150, 90, 0.28);   color: #2f6b2f; }
 .badge--rechazado  { background-color: rgba(192, 123, 123, 0.2);  color: #8b3a3a; }
 .badge--cancelado  { background-color: rgba(168, 162, 154, 0.2);  color: var(--taupe); }
 .badge--activo     { background-color: rgba(124, 184, 124, 0.2);  color: #3a7a3a; }

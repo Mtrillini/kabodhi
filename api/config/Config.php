@@ -39,12 +39,14 @@ if (!defined('SESSION_SECRET'))     define('SESSION_SECRET',     'nuve_secret_20
 if (!defined('CORS_ORIGIN'))        define('CORS_ORIGIN',        '*');
 
 // Mail
-if (!defined('MAIL_FROM'))          define('MAIL_FROM',          'noreply@nuve.com');
-if (!defined('MAIL_FROM_NAME'))     define('MAIL_FROM_NAME',     'NÜVE Perfumería');
+if (!defined('MAIL_FROM'))          define('MAIL_FROM',          'noreply@kabodhi.com');
+if (!defined('MAIL_FROM_NAME'))     define('MAIL_FROM_NAME',     'KABODHI');
 if (!defined('MAIL_SMTP_HOST'))     define('MAIL_SMTP_HOST',     '');
 if (!defined('MAIL_SMTP_PORT'))     define('MAIL_SMTP_PORT',     '587');
 if (!defined('MAIL_SMTP_USER'))     define('MAIL_SMTP_USER',     '');
 if (!defined('MAIL_SMTP_PASS'))     define('MAIL_SMTP_PASS',     '');
+// tls (STARTTLS, puerto 587) | ssl (puerto 465) | none
+if (!defined('MAIL_SMTP_SECURE'))   define('MAIL_SMTP_SECURE',   'tls');
 
 // Email que recibe los mensajes del formulario de contacto
-if (!defined('CONTACT_EMAIL'))      define('CONTACT_EMAIL',      'diegobrunetti33@gmail.com');
+if (!defined('CONTACT_EMAIL'))      define('CONTACT_EMAIL',      '');

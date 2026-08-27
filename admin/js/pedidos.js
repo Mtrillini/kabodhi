@@ -2,6 +2,9 @@
 // KABODHI Admin — pedidos.js
 // ============================================================
 
+// Estados en los que la venta ya se cobro.
+const ESTADOS_COBRADOS = ['aprobado', 'enviado', 'entregado'];
+
 let allPedidos      = [];   // lo que devolvio la API (ya filtrado por estado)
 let pedidosVisibles = [];   // lo que se ve tras aplicar busqueda y fechas
 let openDetailId    = null;
@@ -63,15 +66,16 @@ function renderResumen() {
   if (!el) return;
 
   const total = pedidosVisibles.reduce((sum, p) => sum + parseFloat(p.total || 0), 0);
-  const aprobados = pedidosVisibles.filter(p => p.estado === 'aprobado');
-  const facturado = aprobados.reduce((sum, p) => sum + parseFloat(p.total || 0), 0);
+  // Un pedido enviado o entregado tambien es una venta cobrada.
+  const cobrados  = pedidosVisibles.filter(p => ESTADOS_COBRADOS.includes(p.estado));
+  const facturado = cobrados.reduce((sum, p) => sum + parseFloat(p.total || 0), 0);
 
   if (!allPedidos.length) { el.textContent = ''; return; }
 
   el.innerHTML = `
     <strong>${pedidosVisibles.length}</strong> de ${allPedidos.length} pedido(s)
     &nbsp;·&nbsp; Suma: <strong>${formatMoney(total)}</strong>
-    &nbsp;·&nbsp; Aprobados (${aprobados.length}): <strong>${formatMoney(facturado)}</strong>
+    &nbsp;·&nbsp; Cobrados (${cobrados.length}): <strong>${formatMoney(facturado)}</strong>
   `;
 }
 
@@ -120,6 +124,8 @@ function renderTabla(pedidos) {
             <option value="">Cambiar estado</option>
             <option value="pendiente"  ${p.estado === 'pendiente'  ? 'selected' : ''}>Pendiente</option>
             <option value="aprobado"   ${p.estado === 'aprobado'   ? 'selected' : ''}>Aprobado</option>
+            <option value="enviado"    ${p.estado === 'enviado'    ? 'selected' : ''}>Enviado</option>
+            <option value="entregado"  ${p.estado === 'entregado'  ? 'selected' : ''}>Entregado</option>
             <option value="rechazado"  ${p.estado === 'rechazado'  ? 'selected' : ''}>Rechazado</option>
             <option value="cancelado"  ${p.estado === 'cancelado'  ? 'selected' : ''}>Cancelado</option>
           </select>
@@ -139,6 +145,45 @@ function renderTabla(pedidos) {
           ${p.mp_payment_id ? `<div style="font-size:0.72rem;color:var(--taupe);">MP Payment: ${p.mp_payment_id}</div>` : ''}
           ${p.cliente_telefono ? `<div style="font-size:0.72rem;color:var(--taupe);">Tel: ${escHtml(p.cliente_telefono)}</div>` : ''}
           ${p.cliente_direccion ? `<div style="font-size:0.72rem;color:var(--taupe);">Dir: ${escHtml(p.cliente_direccion)}</div>` : ''}
+        </div>
+
+        <div style="margin-top:1.25rem;padding-top:1rem;border-top:1px solid var(--champagne);">
+          <div style="font-size:0.7rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--taupe);margin-bottom:0.6rem;">
+            Seguimiento del envío
+          </div>
+          <div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:flex-end;">
+            <div style="flex:0 0 150px;">
+              <label class="form-label" for="tr-transporte-${p.id}" style="font-size:0.65rem;">Transporte</label>
+              <input type="text" id="tr-transporte-${p.id}" class="form-input" style="padding:0.4rem 0.6rem;font-size:0.78rem;"
+                     placeholder="Andreani" value="${escAttr(p.transporte)}">
+            </div>
+            <div style="flex:0 0 170px;">
+              <label class="form-label" for="tr-codigo-${p.id}" style="font-size:0.65rem;">Código</label>
+              <input type="text" id="tr-codigo-${p.id}" class="form-input" style="padding:0.4rem 0.6rem;font-size:0.78rem;"
+                     placeholder="AR123456789" value="${escAttr(p.tracking_codigo)}">
+            </div>
+            <div style="flex:1 1 240px;">
+              <label class="form-label" for="tr-url-${p.id}" style="font-size:0.65rem;">Link de seguimiento</label>
+              <input type="url" id="tr-url-${p.id}" class="form-input" style="padding:0.4rem 0.6rem;font-size:0.78rem;"
+                     placeholder="https://..." value="${escAttr(p.tracking_url)}">
+            </div>
+            <button class="btn btn-secondary btn-sm" onclick="guardarTracking(${p.id})">Guardar</button>
+            <button class="btn btn-primary btn-sm" onclick="marcarEnviado(${p.id})"
+                    title="Guarda el seguimiento, marca el pedido como enviado y le manda el mail al cliente">
+              Guardar y avisar al cliente
+            </button>
+          </div>
+          <p style="font-size:0.68rem;color:var(--taupe);margin-top:0.5rem;">
+            El mail con el seguimiento se manda al pasar el pedido a <strong>Enviado</strong>.
+            Cargá estos datos antes para que salgan incluidos.
+          </p>
+        </div>
+
+        <div style="margin-top:1.25rem;padding-top:1rem;border-top:1px solid var(--champagne);">
+          <div style="font-size:0.7rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--taupe);margin-bottom:0.6rem;">
+            Mails enviados
+          </div>
+          <div id="mails-${p.id}" style="font-size:0.72rem;color:var(--taupe);">Cargando...</div>
         </div>
       </td>
     </tr>
@@ -171,6 +216,40 @@ async function toggleDetalle(id) {
   } catch (err) {
     const itemsEl = document.getElementById('items-' + id);
     if (itemsEl) itemsEl.innerHTML = `<div style="color:#c07b7b;font-size:0.78rem;">${err.message}</div>`;
+  }
+
+  cargarMails(id);
+}
+
+/** Historial de mails del pedido, para saber que le llego al cliente. */
+async function cargarMails(id) {
+  const cont = document.getElementById('mails-' + id);
+  if (!cont) return;
+
+  try {
+    const res  = await fetch(API_URL + '/pedidos/' + id + '/mails', { credentials: 'include' });
+    const json = await res.json();
+    if (!json.success) throw new Error(json.message);
+
+    const mails = json.data || [];
+    if (!mails.length) {
+      cont.textContent = 'Todavía no se envió ningún mail por este pedido.';
+      return;
+    }
+
+    cont.innerHTML = mails.map(m => `
+      <div style="display:flex;gap:0.5rem;align-items:baseline;padding:0.25rem 0;border-bottom:1px solid #f0ece6;">
+        <span class="badge badge--${m.exito == 1 ? 'aprobado' : 'rechazado'}" style="font-size:0.6rem;">
+          ${m.exito == 1 ? 'Enviado' : 'No enviado'}
+        </span>
+        <span style="flex:1;">${escHtml(m.asunto)}</span>
+        <span style="white-space:nowrap;">${escHtml(m.destino)}</span>
+        <span style="white-space:nowrap;">${formatDate(m.created_at)}</span>
+      </div>
+      ${m.error ? `<div style="font-size:0.66rem;color:#c07b7b;padding:0.15rem 0 0.4rem;">${escHtml(m.error)}</div>` : ''}
+    `).join('');
+  } catch (err) {
+    cont.innerHTML = `<span style="color:#c07b7b;">${err.message}</span>`;
   }
 }
 
@@ -224,7 +303,7 @@ function renderDetalle(id, pedido) {
 }
 
 // ---- Update status ----
-async function actualizarEstado(id, estado) {
+async function actualizarEstado(id, estado, silencioso = false) {
   if (!estado) return;
 
   try {
@@ -238,7 +317,7 @@ async function actualizarEstado(id, estado) {
 
     if (!json.success) throw new Error(json.message || 'Error al actualizar estado.');
 
-    showToast(`Pedido #${id}: estado actualizado a "${estado}".`, 'success');
+    if (!silencioso) showToast(`Pedido #${id}: estado actualizado a "${estado}".`, 'success');
 
     // Update local data and re-render
     const idx = allPedidos.findIndex(p => p.id === id);
@@ -262,6 +341,61 @@ async function actualizarEstado(id, estado) {
 
 window.actualizarEstado = actualizarEstado;
 
+// ---- Seguimiento ----
+function leerTracking(id) {
+  return {
+    transporte:      document.getElementById('tr-transporte-' + id)?.value.trim() || '',
+    tracking_codigo: document.getElementById('tr-codigo-' + id)?.value.trim()     || '',
+    tracking_url:    document.getElementById('tr-url-' + id)?.value.trim()        || '',
+  };
+}
+
+/**
+ * Guarda transporte / codigo / link sin tocar el estado ni mandar mails.
+ * Nombre distinto al handler expuesto en window: una declaracion de funcion
+ * top-level vive en window, asi que reusar el nombre la pisaria y el handler
+ * terminaria llamandose a si mismo.
+ */
+async function persistirTracking(id, silencioso = false) {
+  const res  = await fetch(API_URL + '/pedidos/' + id + '/tracking', {
+    method: 'PUT',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(leerTracking(id)),
+  });
+  const json = await res.json();
+  if (!json.success) throw new Error(json.message || 'Error al guardar el seguimiento.');
+
+  // Reflejar en la copia local para no perder los datos al re-renderizar.
+  const idx = allPedidos.findIndex(p => p.id === id);
+  if (idx >= 0) Object.assign(allPedidos[idx], leerTracking(id));
+
+  if (!silencioso) showToast('Seguimiento guardado.', 'success');
+  return json.data;
+}
+
+window.guardarTracking = async (id) => {
+  try { await persistirTracking(id); }
+  catch (err) { showToast(err.message, 'error'); }
+};
+
+/** Guarda el seguimiento y recien despues pasa a "enviado", para que el mail lo incluya. */
+async function marcarEnviado(id) {
+  const datos = leerTracking(id);
+  if (!datos.transporte && !datos.tracking_codigo && !datos.tracking_url) {
+    if (!confirm('No cargaste datos de seguimiento. ¿Avisar igual que el pedido salió?')) return;
+  }
+
+  try {
+    await persistirTracking(id, true);
+    await actualizarEstado(id, 'enviado', true);
+    showToast('Pedido marcado como enviado. Se le avisó al cliente.', 'success');
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+}
+window.marcarEnviado = marcarEnviado;
+
 // ---- Exportar CSV ----
 function exportarCSV() {
   if (!pedidosVisibles.length) {
@@ -269,7 +403,8 @@ function exportarCSV() {
     return;
   }
 
-  const cabecera = ['#', 'Cliente', 'Email', 'Teléfono', 'Dirección', 'Envío', 'Total', 'Estado', 'Fecha'];
+  const cabecera = ['#', 'Cliente', 'Email', 'Teléfono', 'Dirección', 'Envío', 'Total',
+                    'Estado', 'Fecha', 'Transporte', 'Seguimiento'];
 
   const filas = pedidosVisibles.map(p => [
     p.id,
@@ -281,6 +416,8 @@ function exportarCSV() {
     p.total,
     p.estado,
     p.created_at,
+    p.transporte,
+    p.tracking_codigo,
   ]);
 
   const csv = [cabecera, ...filas].map(fila => fila.map(csvCampo).join(';')).join('\r\n');
@@ -422,6 +559,11 @@ function escHtml(str) {
   const d = document.createElement('div');
   d.textContent = str || '';
   return d.innerHTML;
+}
+
+// Para interpolar dentro de un atributo HTML entre comillas dobles.
+function escAttr(str) {
+  return escHtml(str).replace(/"/g, '&quot;');
 }
 
 function capitalize(str) {
