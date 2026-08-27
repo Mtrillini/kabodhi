@@ -103,7 +103,7 @@ function renderTabla(productos) {
       <td>
         <div style="display:flex;gap:0.4rem;">
           <button class="btn btn-secondary btn-sm" onclick="openModal(${p.id})" title="Editar">Editar</button>
-          <button class="btn btn-danger btn-sm" onclick="deleteProducto(${p.id}, '${escHtml(p.nombre)}')" title="Eliminar">✕</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteProducto(${p.id})" title="Eliminar">✕</button>
         </div>
       </td>
     </tr>`;
@@ -283,7 +283,11 @@ async function saveProducto() {
 window.saveProducto = saveProducto;
 
 // ---- Delete ----
-async function deleteProducto(id, nombre) {
+async function deleteProducto(id) {
+  // El nombre se busca aca y no se interpola en el atributo onclick: escHtml
+  // no escapa comillas, y un nombre con ' permitiria inyectar JS.
+  const producto = allProductos.find(x => parseInt(x.id) === parseInt(id));
+  const nombre   = producto ? producto.nombre : '#' + id;
   if (!confirm(`¿Eliminar "${nombre}"? El producto quedará inactivo.`)) return;
   try {
     const res  = await fetch(API_URL + '/productos/' + id, { method: 'DELETE', credentials: 'include' });

@@ -22,6 +22,14 @@ if (strpos($uri, '/hongos') !== 0) {
 $path = substr($uri, strlen('/hongos'));
 if ($path === '' ) { header('Location: /hongos/index.html'); exit; }
 
+// Mismas protecciones que el .htaccess de produccion: el dev server no debe
+// servir credenciales, dumps de la base ni los mails guardados.
+if (preg_match('#(^|/)\.(env|git)|^/(database|storage)/|\.(sql|log)$#i', $path)) {
+    http_response_code(403);
+    echo 'Forbidden';
+    exit;
+}
+
 // API: /hongos/api/index.php/<ruta>  ->  PATH_INFO = /<ruta>
 if (preg_match('#^/api/index\.php(/.*)?$#', $path, $m)) {
     $_SERVER['PATH_INFO']       = $m[1] ?? '';

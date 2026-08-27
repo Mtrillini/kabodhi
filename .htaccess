@@ -1,5 +1,21 @@
 DirectoryIndex index.html
 
+# --- Archivos que nunca deben servirse por HTTP ---
+# .env tiene credenciales de base y tokens de MercadoPago; database/ tiene los
+# dumps con el hash del admin; storage/ guarda mails con datos de clientes.
+<FilesMatch "^\.env">
+  Require all denied
+</FilesMatch>
+<FilesMatch "\.(sql|log|md)$">
+  Require all denied
+</FilesMatch>
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteRule ^(database|storage)/ - [F,L]
+  RewriteRule (^|/)\.git - [F,L]
+</IfModule>
+Options -Indexes
+
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteBase /hongos/

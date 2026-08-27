@@ -18,10 +18,18 @@ class UploadController {
             return;
         }
 
-        $allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-        $mime    = mime_content_type($file['tmp_name']);
+        // La extension se deriva del MIME real, nunca del nombre que mando el
+        // cliente: un GIF valido con codigo PHP adentro, subido como "x.php",
+        // quedaria ejecutable dentro de /uploads/.
+        $extPorMime = [
+            'image/jpeg' => 'jpg',
+            'image/png'  => 'png',
+            'image/webp' => 'webp',
+            'image/gif'  => 'gif',
+        ];
+        $mime = mime_content_type($file['tmp_name']);
 
-        if (!in_array($mime, $allowed, true)) {
+        if (!isset($extPorMime[$mime])) {
             http_response_code(400);
             echo json_encode(['success' => false, 'message' => 'Tipo de archivo no permitido. Solo JPG, PNG, WEBP o GIF.']);
             return;
@@ -38,7 +46,7 @@ class UploadController {
             mkdir($uploadDir, 0755, true);
         }
 
-        $ext      = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+        $ext      = $extPorMime[$mime];
         $filename = uniqid('prod_', true) . '.' . $ext;
         $destPath = $uploadDir . $filename;
 
@@ -48,7 +56,9 @@ class UploadController {
             return;
         }
 
-        $url = APP_URL . '/uploads/' . $filename;
+        // Ruta relativa a la raiz del sitio, igual que el resto de las imagenes.
+        // Guardar APP_URL absoluta ataba las imagenes al dominio del .env.
+        $url = 'uploads/' . $filename;
         echo json_encode(['success' => true, 'url' => $url]);
     }
 }

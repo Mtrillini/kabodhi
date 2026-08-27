@@ -30,8 +30,15 @@ class ProductoService {
             $params[':tipo'] = $tipo;
         }
         if ($search !== null && $search !== '') {
-            $sql .= " AND (p.nombre LIKE :search OR p.descripcion LIKE :search OR p.nota_olfativa LIKE :search)";
-            $params[':search'] = '%' . $search . '%';
+            // Un placeholder por columna: con prepares nativos (EMULATE_PREPARES
+            // = false) no se puede reusar el mismo nombre dos veces.
+            $sql .= " AND (p.nombre LIKE :search_nombre
+                        OR p.descripcion LIKE :search_desc
+                        OR p.nota_olfativa LIKE :search_nota)";
+            $termino = '%' . $search . '%';
+            $params[':search_nombre'] = $termino;
+            $params[':search_desc']   = $termino;
+            $params[':search_nota']   = $termino;
         }
         if ($destacado !== null) {
             $sql .= " AND p.destacado = :destacado";
@@ -65,13 +72,18 @@ class ProductoService {
         return $productos;
     }
 
-    public function getById(int $id): ?array {
+    /**
+     * @param bool $incluirInactivos El panel necesita ver los dados de baja;
+     *                               la compra NO, o se venderia un producto
+     *                               discontinuado que ya no figura en la tienda.
+     */
+    public function getById(int $id, bool $incluirInactivos = true): ?array {
         $stmt = $this->db->prepare(
             "SELECT p.*, c.nombre AS categoria_nombre, c.slug AS categoria_slug,
                     GREATEST(0, p.stock - p.stock_reservado) AS stock_disponible
              FROM productos p
              INNER JOIN categorias c ON p.categoria_id = c.id
-             WHERE p.id = :id"
+             WHERE p.id = :id" . ($incluirInactivos ? "" : " AND p.activo = 1")
         );
         $stmt->execute([':id' => $id]);
         $result = $stmt->fetch();

@@ -16,8 +16,55 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 // ---------------------------------------------------------------
+// 1b. Errores: nunca mostrar trazas al cliente
+// ---------------------------------------------------------------
+// Un fatal sin capturar imprimia el stack trace con rutas absolutas del
+// servidor en medio de la respuesta JSON.
+ini_set('display_errors', '0');
+error_reporting(E_ALL);
+
+set_exception_handler(function (Throwable $e): void {
+    error_log('API sin capturar: ' . $e->getMessage() . ' @ ' . $e->getFile() . ':' . $e->getLine());
+    if (!headers_sent()) {
+        http_response_code(500);
+        header('Content-Type: application/json; charset=UTF-8');
+    }
+    echo json_encode(['success' => false, 'message' => 'Error interno del servidor.']);
+});
+
+register_shutdown_function(function (): void {
+    $error = error_get_last();
+    if ($error === null || !in_array($error['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR], true)) {
+        return;
+    }
+    error_log('API fatal: ' . $error['message'] . ' @ ' . $error['file'] . ':' . $error['line']);
+    if (!headers_sent()) {
+        http_response_code(500);
+        header('Content-Type: application/json; charset=UTF-8');
+    }
+    echo json_encode(['success' => false, 'message' => 'Error interno del servidor.']);
+});
+
+// ---------------------------------------------------------------
 // 2. Session
 // ---------------------------------------------------------------
+// La cookie de sesion no debe ser legible por JS (si un XSS se cuela, que no
+// se lleve la sesion), no debe viajar en requests cross-site, y sobre HTTPS
+// debe ir marcada como secure.
+$esHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+    || (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https')
+    || (int)($_SERVER['SERVER_PORT'] ?? 80) === 443;
+
+ini_set('session.use_strict_mode', '1');
+session_set_cookie_params([
+    'lifetime' => 0,
+    'path'     => '/',
+    'domain'   => '',
+    'secure'   => $esHttps,
+    'httponly' => true,
+    'samesite' => 'Lax',
+]);
+
 session_name('nuve_admin_session');
 session_start();
 

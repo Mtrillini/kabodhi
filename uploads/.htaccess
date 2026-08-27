@@ -1,0 +1,6 @@
+# Nada de lo que se sube aca debe ejecutarse: son imagenes.
+php_flag engine off
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteRule \.(php|phtml|php[0-9]|phar|cgi|pl|py|sh|htaccess)$ - [F,L]
+</IfModule>

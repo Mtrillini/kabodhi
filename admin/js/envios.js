@@ -46,7 +46,7 @@ function renderTabla(tarifas) {
       <td>
         <div style="display:flex;gap:0.4rem;">
           <button class="btn btn-secondary btn-sm" onclick="openModal(${t.id})">Editar</button>
-          <button class="btn btn-danger btn-sm" onclick="deleteTarifa(${t.id}, '${escHtml(t.descripcion)}')">✕</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteTarifa(${t.id})">✕</button>
         </div>
       </td>
     </tr>
@@ -128,7 +128,10 @@ async function saveTarifa() {
 }
 window.saveTarifa = saveTarifa;
 
-async function deleteTarifa(id, desc) {
+async function deleteTarifa(id) {
+  // La descripcion se resuelve aca, no se interpola en el onclick (ver productos.js).
+  const tarifa = allTarifas.find(x => parseInt(x.id) === parseInt(id));
+  const desc   = tarifa ? tarifa.descripcion : '#' + id;
   if (!confirm(`¿Eliminar la tarifa "${desc}"?`)) return;
   try {
     const res  = await fetch(API_URL + '/envios/' + id, { method: 'DELETE', credentials: 'include' });

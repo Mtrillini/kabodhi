@@ -22,6 +22,12 @@ class PedidoController {
             }
         }
 
+        if (!filter_var(trim($body['email']), FILTER_VALIDATE_EMAIL)) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'El email no es válido.']);
+            return;
+        }
+
         if (empty($body['items']) || !is_array($body['items'])) {
             http_response_code(400);
             echo json_encode(['success' => false, 'message' => 'El carrito está vacío.']);

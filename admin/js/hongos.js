@@ -53,7 +53,7 @@ function renderTabla(hongos) {
       <td>
         <div style="display:flex;gap:0.4rem;">
           <button class="btn btn-secondary btn-sm" onclick="openModal(${h.id})">Editar</button>
-          <button class="btn btn-danger btn-sm" onclick="deleteHongo(${h.id}, '${escHtml(h.nombre)}')">✕</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteHongo(${h.id})">✕</button>
         </div>
       </td>
     </tr>`).join('');
@@ -177,7 +177,10 @@ async function saveHongo() {
 window.saveHongo = saveHongo;
 
 // ---- Delete ----
-async function deleteHongo(id, nombre) {
+async function deleteHongo(id) {
+  // El nombre se resuelve aca, no se interpola en el onclick (ver productos.js).
+  const hongo  = allHongos.find(x => parseInt(x.id) === parseInt(id));
+  const nombre = hongo ? hongo.nombre : '#' + id;
   if (!confirm(`¿Eliminar "${nombre}"? Se quita del inicio de forma permanente.`)) return;
   try {
     const res  = await fetch(API_URL + '/hongos/' + id, { method: 'DELETE', credentials: 'include' });

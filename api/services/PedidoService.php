@@ -22,9 +22,11 @@ class PedidoService {
                 throw new InvalidArgumentException("Item inválido en el carrito.");
             }
 
-            $producto = $productoService->getById($id);
+            // Solo activos: un producto dado de baja no se vende, aunque el
+            // cliente mande su id a mano.
+            $producto = $productoService->getById($id, false);
             if (!$producto) {
-                throw new RuntimeException("Producto #{$id} no encontrado.");
+                throw new RuntimeException("El producto #{$id} no está disponible.");
             }
 
             $disponible = $this->stockService->getDisponible($id);
@@ -302,9 +304,14 @@ class PedidoService {
             throw new RuntimeException("Pedido #{$id} no encontrado.");
         }
 
+        // FILTER_VALIDATE_URL acepta esquemas como javascript://x%0aalert(1),
+        // y este link termina como href en el mail del cliente.
         $url = trim((string)($data['tracking_url'] ?? ''));
-        if ($url !== '' && !filter_var($url, FILTER_VALIDATE_URL)) {
-            throw new InvalidArgumentException('El link de seguimiento no es una URL válida.');
+        if ($url !== '') {
+            $esquema = strtolower((string)parse_url($url, PHP_URL_SCHEME));
+            if (!filter_var($url, FILTER_VALIDATE_URL) || !in_array($esquema, ['http', 'https'], true)) {
+                throw new InvalidArgumentException('El link de seguimiento debe ser una URL http:// o https://.');
+            }
         }
 
         $stmt = $this->db->prepare(
