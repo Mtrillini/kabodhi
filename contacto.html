@@ -67,14 +67,14 @@
       <div class="contact-info__item">
         <div class="contact-info__label">Email</div>
         <div class="contact-info__value">
-          <a href="mailto:hola@kabodhi.com">hola@kabodhi.com</a>
+          <a id="info-email" href="#">&nbsp;</a>
         </div>
       </div>
 
       <div class="contact-info__item">
         <div class="contact-info__label">WhatsApp</div>
         <div class="contact-info__value">
-          <a href="https://wa.me/5491100000000" target="_blank" rel="noopener">+54 11 0000-0000</a>
+          <a id="info-whatsapp" href="#" target="_blank" rel="noopener">&nbsp;</a>
         </div>
       </div>
 
@@ -110,10 +110,32 @@
 
   <div id="footer"></div>
 
-  <script src="js/config.js?v=33"></script>
-  <script src="js/main.js?v=38"></script>
-  <script src="js/carrito.js?v=58"></script>
+  <script src="js/config.js?v=34"></script>
+  <script src="js/main.js?v=39"></script>
+  <script src="js/carrito.js?v=59"></script>
   <script>
+    // El email y el WhatsApp salen de la configuracion (Ajustes > Configuracion),
+    // no escritos a mano: el numero que habia aca era un placeholder.
+    (async () => {
+      if (typeof configLista !== 'undefined') await configLista;
+
+      const mail = document.getElementById('info-email');
+      if (mail && CONTACTO_EMAIL) {
+        mail.href = 'mailto:' + CONTACTO_EMAIL;
+        mail.textContent = CONTACTO_EMAIL;
+      }
+
+      const wa = document.getElementById('info-whatsapp');
+      if (wa && WHATSAPP_NUMERO) {
+        wa.href = 'https://wa.me/' + WHATSAPP_NUMERO;
+        // 541171003392 -> +54 11 7100-3392
+        const n = WHATSAPP_NUMERO;
+        wa.textContent = n.length >= 12
+          ? `+${n.slice(0,2)} ${n.slice(2,4)} ${n.slice(4,8)}-${n.slice(8)}`
+          : '+' + n;
+      }
+    })();
+
     async function handleContact(e) {
       e.preventDefault();
       const nombre  = document.getElementById('c-nombre').value.trim();

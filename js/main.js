@@ -72,6 +72,26 @@ function getNavbarHTML() {
 }
 
 // ---- Footer HTML ----
+/**
+ * Email y WhatsApp del footer, desde la configuracion de la tienda.
+ * Antes estaban escritos a mano y el telefono era un placeholder
+ * (+54 11 0000-0000) que se veia en todas las paginas.
+ */
+async function rellenarContactoFooter() {
+  if (typeof configLista !== 'undefined') await configLista;
+
+  const mail = document.getElementById('footer-email');
+  if (mail) mail.textContent = CONTACTO_EMAIL || '';
+
+  const wa = document.getElementById('footer-whatsapp');
+  if (wa && WHATSAPP_NUMERO) {
+    const n = WHATSAPP_NUMERO;
+    wa.textContent = n.length >= 12
+      ? `+${n.slice(0, 2)} ${n.slice(2, 4)} ${n.slice(4, 8)}-${n.slice(8)}`
+      : '+' + n;
+  }
+}
+
 function getFooterHTML() {
   return `
     <footer class="footer">
@@ -94,8 +114,8 @@ function getFooterHTML() {
 
         <div>
           <div class="footer__heading">Contacto</div>
-          <p class="footer__contact-item">hola@kabodhi.com</p>
-          <p class="footer__contact-item">+54 11 0000-0000</p>
+          <p class="footer__contact-item" id="footer-email"></p>
+          <p class="footer__contact-item" id="footer-whatsapp"></p>
           <p class="footer__contact-item">Buenos Aires, Argentina</p>
           <div class="footer__heading" style="margin-top:1.5rem;">Redes</div>
           <a href="https://instagram.com/kabodhi" class="footer__contact-item" target="_blank" rel="noopener noreferrer">@kabodhi</a>
@@ -332,6 +352,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const footerEl = document.getElementById('footer');
   if (footerEl) {
     footerEl.innerHTML = getFooterHTML();
+    rellenarContactoFooter();
   }
 
   updateCartBadge();
