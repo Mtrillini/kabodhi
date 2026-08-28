@@ -171,6 +171,7 @@ function cerrar(id) { document.getElementById(id).classList.remove('open'); }
 
 function openNuevo() {
   document.getElementById('nuevo-form').reset();
+  document.getElementById('f-rol').value = 'admin';
   abrir('modal-nuevo');
   document.getElementById('f-username').focus();
 }
@@ -212,7 +213,7 @@ async function crearUsuario() {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, email, password }),
+      body: JSON.stringify({ username, email, password, rol: document.getElementById('f-rol').value }),
     });
     const json = await res.json();
     if (!json.success) throw new Error(json.message || 'Error al crear el usuario.');

@@ -22,6 +22,7 @@
         <span class="topbar__title">Usuarios del panel</span>
       </div>
       <div class="topbar__actions">
+        <button id="btn-nuevo-usuario" class="btn btn-secondary">+ Nuevo usuario</button>
         <button id="btn-invitar" class="btn btn-primary">+ Invitar</button>
       </div>
     </div>
@@ -137,10 +138,19 @@
             <input type="email" id="f-email" class="form-input" required autocomplete="off" placeholder="diego@kabodhi.com">
           </div>
           <div class="form-group">
+            <label class="form-label" for="f-rol">Rol *</label>
+            <select id="f-rol" class="form-select">
+              <option value="admin">Operador — catálogo y pedidos</option>
+              <option value="super">Principal — acceso total</option>
+            </select>
+          </div>
+
+          <div class="form-group">
             <label class="form-label" for="f-password">Contraseña *</label>
             <input type="password" id="f-password" class="form-input" required autocomplete="new-password">
             <p style="font-size:0.7rem;color:var(--taupe);margin-top:0.35rem;">
               Mínimo 8 caracteres, combinando letras y números.
+              Se la tenés que pasar vos a esa persona.
             </p>
           </div>
         </form>
@@ -188,6 +198,6 @@
   <script src="js/layout.js?v=2"></script>
   <script src="js/demo.js?v=1"></script>
   <script src="js/auth.js?v=2"></script>
-  <script src="js/usuarios.js?v=2"></script>
+  <script src="js/usuarios.js?v=3"></script>
 </body>
 </html>
