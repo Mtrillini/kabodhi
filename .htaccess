@@ -18,7 +18,8 @@ Options -Indexes
 
 <IfModule mod_rewrite.c>
   RewriteEngine On
-  RewriteBase /hongos/
+  # Sin RewriteBase fijo: Apache toma el directorio donde esta este .htaccess.
+  # Asi las mismas reglas sirven en la raiz de un dominio y en un subdirectorio.
 
   # No reescribir archivos o carpetas existentes
   RewriteCond %{REQUEST_FILENAME} -f [OR]
@@ -26,8 +27,8 @@ Options -Indexes
   RewriteRule ^ - [L]
 
   # Redirigir URLs con .html a URL limpia (preserva query string)
-  RewriteRule ^([a-z][a-z0-9-]*)\.html$ /hongos/$1 [R=301,L,QSA]
+  RewriteRule ^([a-z][a-z0-9-]*)\.html$ $1 [R=301,L,QSA]
 
-  # URLs limpias: /productos → productos.html
+  # URLs limpias: /productos -> productos.html
   RewriteRule ^([a-z][a-z0-9-]*)/?$ $1.html [L]
 </IfModule>
