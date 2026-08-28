@@ -157,7 +157,7 @@ function modalGoTo(i) {
   if (!modalImgs.length) return;
   modalImgIdx = (i + modalImgs.length) % modalImgs.length;
   const main = document.getElementById('modal-img');
-  if (main) main.src = modalImgs[modalImgIdx];
+  if (main && modalImgs[modalImgIdx]) main.src = modalImgs[modalImgIdx];
   document.querySelectorAll('#modal-thumbs img').forEach((t, ti) => {
     t.style.border = '2px solid ' + (ti === modalImgIdx ? '#1C3A4F' : 'transparent');
   });
@@ -177,7 +177,10 @@ function abrirModal(id) {
   modalImgs = imgs;
   modalImgIdx = 0;
   const mainImg = document.getElementById('modal-img');
-  mainImg.src = imgs[0] || '';
+  // src="" hace que el navegador pida la propia pagina como si fuera imagen.
+  // Si el producto no tiene foto, se quita el atributo en vez de vaciarlo.
+  if (imgs[0]) mainImg.src = imgs[0];
+  else mainImg.removeAttribute('src');
   mainImg.alt = p.nombre;
 
   // Flechas de navegación dentro del modal (se inyectan una vez por apertura)
