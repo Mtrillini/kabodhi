@@ -12,15 +12,16 @@ class UsuarioController {
     }
 
     public function index(): void {
-        Auth::requireAdmin();
+        Auth::requireSuper();
         $stmt = $this->db->query(
-            "SELECT id, username, email, created_at FROM admin_users ORDER BY username ASC"
+            "SELECT id, username, email, rol, created_at FROM admin_users
+             ORDER BY (rol = 'super') DESC, username ASC"
         );
         echo json_encode(['success' => true, 'data' => $stmt->fetchAll()]);
     }
 
     public function store(): void {
-        Auth::requireAdmin();
+        Auth::requireSuper();
 
         $body     = json_decode(file_get_contents('php://input'), true) ?? [];
         $username = trim($body['username'] ?? '');
@@ -53,19 +54,22 @@ class UsuarioController {
             return;
         }
 
+        $rol = in_array($body['rol'] ?? 'admin', ['super', 'admin'], true) ? $body['rol'] : 'admin';
+
         $stmt = $this->db->prepare(
-            "INSERT INTO admin_users (username, email, password_hash) VALUES (:username, :email, :hash)"
+            "INSERT INTO admin_users (username, email, rol, password_hash) VALUES (:username, :email, :rol, :hash)"
         );
         $stmt->execute([
             ':username' => $username,
             ':email'    => $email,
+            ':rol'      => $rol,
             ':hash'     => password_hash($password, PASSWORD_BCRYPT, ['cost' => 12]),
         ]);
 
         http_response_code(201);
         echo json_encode([
             'success' => true,
-            'data'    => ['id' => (int)$this->db->lastInsertId(), 'username' => $username, 'email' => $email],
+            'data'    => ['id' => (int)$this->db->lastInsertId(), 'username' => $username, 'email' => $email, 'rol' => $rol],
             'message' => 'Usuario creado.',
         ]);
     }
@@ -73,6 +77,14 @@ class UsuarioController {
     /** Cambio de contraseña. Requiere la actual si es la del propio usuario. */
     public function updatePassword(int $id): void {
         Auth::requireAdmin();
+
+        // Cambiar la contrasena de OTRO usuario es cosa del super; la propia
+        // la cambia cualquiera.
+        if ((int)($_SESSION['admin_id'] ?? 0) !== $id && !Auth::isSuper()) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Solo podés cambiar tu propia contraseña.']);
+            return;
+        }
 
         $usuario = $this->getById($id);
         if (!$usuario) {
@@ -112,7 +124,7 @@ class UsuarioController {
     }
 
     public function destroy(int $id): void {
-        Auth::requireAdmin();
+        Auth::requireSuper();
 
         if (!$this->getById($id)) {
             http_response_code(404);
@@ -129,7 +141,20 @@ class UsuarioController {
         // Nunca dejar el panel sin ningun usuario capaz de entrar.
         if ((int)$this->db->query("SELECT COUNT(*) FROM admin_users")->fetchColumn() <= 1) {
             http_response_code(409);
-            echo json_encode(['success' => false, 'message' => 'No se puede eliminar el único usuario administrador.']);
+            echo json_encode(['success' => false, 'message' => 'No se puede eliminar el único usuario del panel.']);
+            return;
+        }
+
+        // Ni sin ningun super: sin el nadie podria volver a gestionar usuarios.
+        $stmt = $this->db->prepare("SELECT rol FROM admin_users WHERE id = :id");
+        $stmt->execute([':id' => $id]);
+        if ($stmt->fetchColumn() === 'super'
+            && (int)$this->db->query("SELECT COUNT(*) FROM admin_users WHERE rol = 'super'")->fetchColumn() <= 1) {
+            http_response_code(409);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Es el único administrador principal. Nombrá otro antes de eliminarlo.',
+            ]);
             return;
         }
 
@@ -140,10 +165,15 @@ class UsuarioController {
     // ---- Helpers ----
 
     private function getById(int $id): ?array {
-        $stmt = $this->db->prepare("SELECT id, username, email FROM admin_users WHERE id = :id");
+        $stmt = $this->db->prepare("SELECT id, username, email, rol FROM admin_users WHERE id = :id");
         $stmt->execute([':id' => $id]);
         $row = $stmt->fetch();
         return $row !== false ? $row : null;
+    }
+
+    /** Igual que validarPassword, accesible desde InvitacionController. */
+    public static function validarPasswordPublica(string $password): ?string {
+        return self::validarPassword($password);
     }
 
     /** Devuelve el mensaje de error, o null si la contraseña sirve. */

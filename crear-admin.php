@@ -43,8 +43,10 @@ if (!$error && !$yaExiste && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = 'Combiná letras y números.';
     } else {
         try {
+            // El primero es siempre super: es quien despues invita al resto.
             $stmt = $db->prepare(
-                "INSERT INTO admin_users (username, email, password_hash) VALUES (:u, :e, :h)"
+                "INSERT INTO admin_users (username, email, rol, password_hash)
+                 VALUES (:u, :e, 'super', :h)"
             );
             $stmt->execute([
                 ':u' => $username,
@@ -108,7 +110,8 @@ $esc = fn(?string $t): string => htmlspecialchars((string)$t, ENT_QUOTES, 'UTF-8
 
     <?php if ($exito): ?>
       <div class="aviso aviso--ok">
-        <strong>Usuario creado.</strong><br>
+        <strong>Usuario creado como administrador principal.</strong><br>
+        Desde el panel, en Usuarios, vas a poder invitar a otras personas.<br><br>
         Ya podés entrar en <a href="admin/login.html">/admin/login.html</a>.
         <br><br>
         <strong>Borrá este archivo del servidor</strong> (<code>crear-admin.php</code>).

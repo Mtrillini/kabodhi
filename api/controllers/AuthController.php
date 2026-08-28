@@ -97,7 +97,7 @@ class AuthController {
         }
 
         $stmt = $this->db->prepare(
-            "SELECT id, username, email, password_hash FROM admin_users WHERE username = :username OR email = :email LIMIT 1"
+            "SELECT id, username, email, rol, password_hash FROM admin_users WHERE username = :username OR email = :email LIMIT 1"
         );
         $stmt->execute([':username' => $username, ':email' => $username]);
         $admin = $stmt->fetch();
@@ -117,6 +117,7 @@ class AuthController {
         $_SESSION['admin_id']       = $admin['id'];
         $_SESSION['admin_username'] = $admin['username'];
         $_SESSION['admin_email']    = $admin['email'];
+        $_SESSION['admin_rol']      = $admin['rol'];
 
         echo json_encode([
             'success' => true,
@@ -125,6 +126,7 @@ class AuthController {
                 'id'       => $admin['id'],
                 'username' => $admin['username'],
                 'email'    => $admin['email'],
+                'rol'      => $admin['rol'],
             ],
         ]);
     }
@@ -154,7 +156,7 @@ class AuthController {
                 'success'       => true,
                 'authenticated' => true,
                 'modo_dev'      => true,
-                'admin'         => ['id' => 0, 'username' => 'dev', 'email' => ''],
+                'admin'         => ['id' => 0, 'username' => 'dev', 'email' => '', 'rol' => 'super'],
             ]);
             return;
         }
@@ -167,6 +169,7 @@ class AuthController {
                     'id'       => $_SESSION['admin_id'],
                     'username' => $_SESSION['admin_username'] ?? '',
                     'email'    => $_SESSION['admin_email']    ?? '',
+                    'rol'      => $_SESSION['admin_rol']      ?? 'admin',
                 ],
             ]);
         } else {

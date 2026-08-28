@@ -18,6 +18,9 @@ const SIDEBAR_SECCIONES = [
   },
   {
     label: 'Ajustes',
+    // Solo para el administrador principal: un operador trabaja con el
+    // catalogo y los pedidos, no con usuarios ni con la configuracion.
+    soloSuper: true,
     links: [
       { page: 'configuracion', href: 'configuracion.html', icon: '⚙', text: 'Configuración' },
       { page: 'usuarios',      href: 'usuarios.html',      icon: '☺', text: 'Usuarios' },
@@ -37,7 +40,11 @@ function renderSidebar() {
 
   const actual = sidebar.dataset.page || '';
 
-  const nav = SIDEBAR_SECCIONES.map((seccion, i) => `
+  const esSuper = !window.ADMIN_ACTUAL || window.ADMIN_ACTUAL.rol === 'super';
+
+  const nav = SIDEBAR_SECCIONES
+    .filter(seccion => !seccion.soloSuper || esSuper)
+    .map((seccion, i) => `
     <div class="sidebar__nav-label"${i > 0 ? ' style="margin-top:1.5rem;"' : ''}>${seccion.label}</div>
     ${seccion.links.map(l => `
       <a href="${l.href}"${l.blank ? ' target="_blank"' : ''}
@@ -65,3 +72,7 @@ function renderSidebar() {
 // Se registra antes que el listener de auth.js (layout.js se carga primero),
 // asi el sidebar ya existe cuando auth.js engancha el logout y el hamburger.
 document.addEventListener('DOMContentLoaded', renderSidebar);
+
+// checkAuth() resuelve despues y recien ahi se conoce el rol: se vuelve a
+// dibujar para esconder lo que el operador no debe ver.
+window.renderSidebar = renderSidebar;

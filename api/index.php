@@ -213,6 +213,33 @@ if ($seg0 === 'categorias') {
     exit;
 }
 
+// --- INVITACIONES ---
+if ($seg0 === 'invitaciones') {
+    require_once __DIR__ . '/controllers/UsuarioController.php';
+    require_once __DIR__ . '/controllers/InvitacionController.php';
+    $ctrl = new InvitacionController();
+
+    // Estas dos no piden sesion: las protege el token del link.
+    if ($seg1 === 'verificar') {
+        if ($method === 'GET') $ctrl->verificar();
+        else { http_response_code(405); echo json_encode(['success' => false, 'message' => 'Método no permitido.']); }
+    } elseif ($seg1 === 'registrar') {
+        if ($method === 'POST') $ctrl->registrar();
+        else { http_response_code(405); echo json_encode(['success' => false, 'message' => 'Método no permitido.']); }
+    } elseif ($seg1 === '' || $seg1 === null) {
+        if ($method === 'GET')       $ctrl->index();
+        elseif ($method === 'POST')  $ctrl->store();
+        else { http_response_code(405); echo json_encode(['success' => false, 'message' => 'Método no permitido.']); }
+    } elseif (is_numeric($seg1)) {
+        if ($method === 'DELETE') $ctrl->destroy((int)$seg1);
+        else { http_response_code(405); echo json_encode(['success' => false, 'message' => 'Método no permitido.']); }
+    } else {
+        http_response_code(404);
+        echo json_encode(['success' => false, 'message' => 'Ruta no encontrada.']);
+    }
+    exit;
+}
+
 // --- USUARIOS ADMIN ---
 if ($seg0 === 'usuarios') {
     require_once __DIR__ . '/controllers/UsuarioController.php';

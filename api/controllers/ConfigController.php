@@ -13,7 +13,9 @@ class ConfigController {
     }
 
     public function update(): void {
-        Auth::requireAdmin();
+        // El WhatsApp, el mail de contacto y el umbral de envio gratis los
+        // define el dueño de la tienda, no quien la opera dia a dia.
+        Auth::requireSuper();
 
         $body = json_decode(file_get_contents('php://input'), true) ?? [];
 

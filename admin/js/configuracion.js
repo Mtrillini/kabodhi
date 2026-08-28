@@ -65,7 +65,7 @@ async function guardarConfig() {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
-  if (!await checkAuth()) return;
+  if (!await requireSuper()) return;
   fetchConfig();
   document.getElementById('btn-guardar')?.addEventListener('click', guardarConfig);
 });

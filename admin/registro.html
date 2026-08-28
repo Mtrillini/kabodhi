@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex">
+  <title>Crear tu acceso — KABODHI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/admin.css?v=2">
+</head>
+<body>
+
+  <div class="login-page">
+    <div class="login-card">
+      <div class="login-logo">KABODHI</div>
+      <div class="login-subtitle">Crear tu acceso</div>
+
+      <div id="estado" style="font-size:0.8rem;color:var(--taupe);text-align:center;padding:1.5rem 0;">
+        Verificando la invitación...
+      </div>
+
+      <form id="registro-form" style="display:none;" onsubmit="event.preventDefault();" novalidate>
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input type="email" id="f-email" class="form-input" disabled>
+          <p style="font-size:0.68rem;color:var(--taupe);margin-top:0.35rem;">
+            Es el email al que se envió la invitación.
+          </p>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="f-username">Elegí tu usuario</label>
+          <input type="text" id="f-username" class="form-input" required autocomplete="username" autofocus>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="f-password">Elegí tu contraseña</label>
+          <input type="password" id="f-password" class="form-input" required autocomplete="new-password">
+          <p style="font-size:0.68rem;color:var(--taupe);margin-top:0.35rem;">
+            Mínimo 8 caracteres, combinando letras y números.
+          </p>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="f-password2">Repetir contraseña</label>
+          <input type="password" id="f-password2" class="form-input" required autocomplete="new-password">
+        </div>
+
+        <div id="error" style="color:#c07b7b;font-size:0.75rem;margin-bottom:1rem;display:none;text-align:center;"></div>
+
+        <button type="submit" id="btn-crear" class="btn btn-primary"
+                style="width:100%;justify-content:center;padding:0.85rem;">
+          Crear mi acceso
+        </button>
+      </form>
+
+      <p style="text-align:center;margin-top:2rem;font-size:0.68rem;color:var(--taupe);">
+        &larr; <a href="../index.html" style="color:var(--taupe);">Volver a la tienda</a>
+      </p>
+    </div>
+  </div>
+
+  <script src="js/config.js?v=2"></script>
+  <script src="js/auth.js?v=2"></script>
+  <script>
+    const token = new URLSearchParams(location.search).get('token') || '';
+
+    const estado = document.getElementById('estado');
+    const form   = document.getElementById('registro-form');
+    const errorEl = document.getElementById('error');
+
+    function fallar(mensaje) {
+      estado.innerHTML = `<strong style="color:#c07b7b;">${mensaje}</strong><br><br>
+        Pedile al administrador que te genere una invitación nueva.`;
+      form.style.display = 'none';
+    }
+
+    // Se valida el token antes de mostrar el formulario, para no pedirle
+    // datos a alguien cuyo link ya venció.
+    (async () => {
+      if (!token) { fallar('Falta el código de invitación en el link.'); return; }
+
+      try {
+        const res  = await fetch(API_URL + '/invitaciones/verificar?token=' + encodeURIComponent(token));
+        const json = await res.json();
+        if (!json.success) { fallar(json.message); return; }
+
+        document.getElementById('f-email').value = json.data.email;
+        estado.style.display = 'none';
+        form.style.display = '';
+        document.getElementById('f-username').focus();
+      } catch {
+        fallar('No pudimos verificar la invitación.');
+      }
+    })();
+
+    form.addEventListener('submit', async () => {
+      const username  = document.getElementById('f-username').value.trim();
+      const password  = document.getElementById('f-password').value;
+      const password2 = document.getElementById('f-password2').value;
+
+      const mostrarError = (m) => { errorEl.textContent = m; errorEl.style.display = 'block'; };
+      errorEl.style.display = 'none';
+
+      if (!username)              return mostrarError('Elegí un nombre de usuario.');
+      if (password !== password2) return mostrarError('Las contraseñas no coinciden.');
+
+      const btn = document.getElementById('btn-crear');
+      btn.disabled = true;
+      btn.textContent = 'Creando...';
+
+      try {
+        const res = await fetch(API_URL + '/invitaciones/registrar', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token, username, password }),
+        });
+        const json = await res.json();
+        if (!json.success) throw new Error(json.message);
+
+        estado.innerHTML = `<strong>¡Listo!</strong><br><br>Ya podés
+          <a href="login.html" style="color:var(--negro);">ingresar al panel</a> con tu usuario.`;
+        estado.style.display = '';
+        form.style.display = 'none';
+      } catch (err) {
+        mostrarError(err.message || 'No se pudo completar el registro.');
+        btn.disabled = false;
+        btn.textContent = 'Crear mi acceso';
+      }
+    });
+  </script>
+</body>
+</html>

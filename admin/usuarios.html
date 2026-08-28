@@ -22,7 +22,7 @@
         <span class="topbar__title">Usuarios del panel</span>
       </div>
       <div class="topbar__actions">
-        <button id="btn-nuevo-usuario" class="btn btn-primary">+ Nuevo Usuario</button>
+        <button id="btn-invitar" class="btn btn-primary">+ Invitar</button>
       </div>
     </div>
 
@@ -30,8 +30,9 @@
       <div class="panel">
         <div class="panel__header" style="padding:1rem 1.5rem;border-bottom:1px solid var(--champagne);">
           <p style="font-size:0.78rem;color:var(--taupe);">
-            Todos los usuarios tienen los mismos permisos: quien entra acá administra la tienda entera.
-            No podés eliminar tu propio usuario.
+            <strong>Principal</strong> ve y edita todo, incluidos usuarios y la configuración de la tienda.
+            <strong>Operador</strong> trabaja con productos, categorías, hongos, pedidos y envíos.
+            Para sumar a alguien se le manda un link de invitación y esa persona elige su propia contraseña.
           </p>
         </div>
         <div class="table-wrap">
@@ -40,15 +41,80 @@
               <tr>
                 <th>Usuario</th>
                 <th>Email</th>
+                <th>Rol</th>
                 <th>Alta</th>
                 <th>Acciones</th>
               </tr>
             </thead>
             <tbody id="usuarios-tbody">
-              <tr><td colspan="4" class="loading">Cargando...</td></tr>
+              <tr><td colspan="5" class="loading">Cargando...</td></tr>
             </tbody>
           </table>
         </div>
+      </div>
+      <div class="panel" style="margin-top:1.5rem;">
+        <div class="panel__header" style="padding:1rem 1.5rem;border-bottom:1px solid var(--champagne);">
+          <span class="panel__title">Invitaciones pendientes</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Email</th>
+                <th>Rol</th>
+                <th>Vence</th>
+                <th>Link</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="invitaciones-tbody">
+              <tr><td colspan="5" class="loading">Cargando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: invitar -->
+  <div class="modal-overlay" id="modal-invitar">
+    <div class="modal">
+      <div class="modal__header">
+        <span class="modal__title">Invitar a alguien</span>
+        <button class="modal__close" data-cerrar="modal-invitar">✕</button>
+      </div>
+      <div class="modal__body">
+        <form id="invitar-form" onsubmit="event.preventDefault();">
+          <div class="form-group">
+            <label class="form-label" for="f-inv-email">Email *</label>
+            <input type="email" id="f-inv-email" class="form-input" required autocomplete="off"
+                   placeholder="cliente@sudominio.com">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="f-inv-rol">Rol</label>
+            <select id="f-inv-rol" class="form-select">
+              <option value="admin">Operador — catálogo y pedidos</option>
+              <option value="super">Principal — acceso total</option>
+            </select>
+          </div>
+          <p style="font-size:0.72rem;color:var(--taupe);">
+            Se genera un link que vence en 7 días y sirve una sola vez.
+            Pasáselo a esa persona: ahí elige su usuario y su contraseña.
+          </p>
+        </form>
+
+        <div id="invitacion-lista" style="display:none;margin-top:1.25rem;padding:1rem;background:var(--crema);border-radius:var(--radius);">
+          <div style="font-size:0.7rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--taupe);margin-bottom:0.5rem;">
+            Link de invitación
+          </div>
+          <input type="text" id="f-inv-link" class="form-input" readonly
+                 style="font-size:0.72rem;font-family:monospace;">
+          <button class="btn btn-secondary btn-sm" id="btn-copiar" style="margin-top:0.6rem;">Copiar link</button>
+        </div>
+      </div>
+      <div class="modal__footer">
+        <button class="btn btn-secondary" data-cerrar="modal-invitar">Cerrar</button>
+        <button class="btn btn-primary" id="btn-generar">Generar link</button>
       </div>
     </div>
   </div>
@@ -119,9 +185,9 @@
   </div>
 
   <script src="js/config.js?v=1"></script>
-  <script src="js/layout.js?v=1"></script>
+  <script src="js/layout.js?v=2"></script>
   <script src="js/demo.js?v=1"></script>
-  <script src="js/auth.js?v=1"></script>
-  <script src="js/usuarios.js?v=1"></script>
+  <script src="js/auth.js?v=2"></script>
+  <script src="js/usuarios.js?v=2"></script>
 </body>
 </html>

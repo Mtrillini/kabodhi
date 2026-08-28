@@ -3,6 +3,28 @@
 // ============================================================
 
 /**
+ * Para las pantallas que son solo del administrador principal. El backend ya
+ * las rechaza; esto evita que un operador vea una pantalla rota si entra por
+ * la URL directa.
+ */
+async function requireSuper() {
+  if (!await checkAuth()) return false;
+
+  if (window.ADMIN_ACTUAL && window.ADMIN_ACTUAL.rol !== 'super') {
+    document.querySelector('.main')?.insertAdjacentHTML('afterbegin', `
+      <div style="margin:2rem;padding:1.5rem;background:#fff;border-radius:4px;
+                  font-family:var(--font);font-size:0.85rem;color:var(--taupe);
+                  box-shadow:var(--shadow);">
+        Esta sección es solo para el administrador principal.
+        <a href="dashboard.html" style="color:var(--negro);">Volver al panel</a>.
+      </div>`);
+    document.querySelector('.content')?.remove();
+    return false;
+  }
+  return true;
+}
+
+/**
  * Respaldo: si el panel corre sin PHP y ademas demo.js no cargo, no hay forma
  * de responder la API. Se explica en vez de encadenar errores de conexion.
  */
@@ -45,6 +67,10 @@ async function checkAuth() {
     // Admin de la sesion actual, para las pantallas que lo necesitan
     // (ej: usuarios.js, que no deja borrarse a uno mismo).
     window.ADMIN_ACTUAL = json.admin || null;
+
+    // El sidebar se dibujo antes de saber el rol: se rehace para ocultar
+    // Ajustes cuando el usuario es operador.
+    if (typeof window.renderSidebar === 'function') window.renderSidebar();
 
     if (json.modo_dev) mostrarAvisoModoDev();
 

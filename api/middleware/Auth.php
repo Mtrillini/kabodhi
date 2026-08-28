@@ -34,4 +34,33 @@ class Auth {
     public static function isAdmin(): bool {
         return self::devSinLogin() || !empty($_SESSION['admin_id']);
     }
+
+    /** Rol de la sesion actual: 'super' | 'admin' | null. */
+    public static function rol(): ?string {
+        if (self::devSinLogin() && empty($_SESSION['admin_id'])) {
+            return 'super';
+        }
+        return $_SESSION['admin_rol'] ?? null;
+    }
+
+    public static function isSuper(): bool {
+        return self::rol() === 'super';
+    }
+
+    /**
+     * Para lo que solo maneja el dueño de la tienda: usuarios, invitaciones y
+     * configuracion. Un admin operativo trabaja con el catalogo y los pedidos.
+     */
+    public static function requireSuper(): void {
+        self::requireAdmin();
+
+        if (!self::isSuper()) {
+            http_response_code(403);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Esta sección es solo para el administrador principal.',
+            ]);
+            exit;
+        }
+    }
 }
