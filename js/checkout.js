@@ -73,6 +73,13 @@ function validateField(input) {
       valid = false;
       msg = 'Ingresá un email válido.';
     }
+  } else if (input.id === 'dni' && value !== '') {
+    // DNI argentino: 7 u 8 digitos, escrito con o sin puntos.
+    const digitos = value.replace(/\D+/g, '');
+    if (digitos.length < 7 || digitos.length > 8) {
+      valid = false;
+      msg = 'El DNI tiene 7 u 8 números.';
+    }
   } else if (input.id === 'telefono' && value !== '') {
     const telRgx = /^[\d\s\+\-\(\)]{7,}$/;
     if (!telRgx.test(value)) {
@@ -137,6 +144,8 @@ async function submitCheckout(e) {
     apellido:  document.getElementById('apellido')?.value.trim()  || '',
     email:     document.getElementById('email')?.value.trim()     || '',
     telefono:  document.getElementById('telefono')?.value.trim()  || '',
+    // Solo digitos: la mitad de la gente lo escribe con puntos.
+    dni:       (document.getElementById('dni')?.value || '').replace(/\D+/g, ''),
     direccion: buildDireccion(),
     items:     carrito.items.map(item => ({
       id:         item.id,

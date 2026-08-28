@@ -54,13 +54,14 @@ class PedidoService {
         $this->db->beginTransaction();
         try {
             $stmt = $this->db->prepare(
-                "INSERT INTO pedidos (cliente_nombre, cliente_email, cliente_telefono, cliente_direccion, envio_costo, envio_descripcion, total, estado)
-                 VALUES (:nombre, :email, :telefono, :direccion, :envio_costo, :envio_descripcion, :total, 'pendiente')"
+                "INSERT INTO pedidos (cliente_nombre, cliente_email, cliente_telefono, cliente_dni, cliente_direccion, envio_costo, envio_descripcion, total, estado)
+                 VALUES (:nombre, :email, :telefono, :dni, :direccion, :envio_costo, :envio_descripcion, :total, 'pendiente')"
             );
             $stmt->execute([
                 ':nombre'            => $clienteData['nombre'],
                 ':email'             => $clienteData['email'],
                 ':telefono'          => $clienteData['telefono']  ?? null,
+                ':dni'               => $clienteData['dni']       ?? null,
                 ':direccion'         => $clienteData['direccion'] ?? null,
                 ':envio_costo'       => $envioCosto,
                 ':envio_descripcion' => $envioDescripcion,

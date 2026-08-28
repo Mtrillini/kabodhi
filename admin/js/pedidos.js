@@ -144,6 +144,7 @@ function renderTabla(pedidos) {
         <div style="margin-top:1rem;display:flex;gap:0.5rem;flex-wrap:wrap;">
           ${p.mp_payment_id ? `<div style="font-size:0.72rem;color:var(--taupe);">MP Payment: ${p.mp_payment_id}</div>` : ''}
           ${p.cliente_telefono ? `<div style="font-size:0.72rem;color:var(--taupe);">Tel: ${escHtml(p.cliente_telefono)}</div>` : ''}
+          ${p.cliente_dni ? `<div style="font-size:0.72rem;color:var(--taupe);">DNI: ${escHtml(p.cliente_dni)}</div>` : ''}
           ${p.cliente_direccion ? `<div style="font-size:0.72rem;color:var(--taupe);">Dir: ${escHtml(p.cliente_direccion)}</div>` : ''}
         </div>
 
@@ -403,7 +404,7 @@ function exportarCSV() {
     return;
   }
 
-  const cabecera = ['#', 'Cliente', 'Email', 'Teléfono', 'Dirección', 'Envío', 'Total',
+  const cabecera = ['#', 'Cliente', 'Email', 'Teléfono', 'DNI', 'Dirección', 'Envío', 'Total',
                     'Estado', 'Fecha', 'Transporte', 'Seguimiento'];
 
   const filas = pedidosVisibles.map(p => [
@@ -411,6 +412,7 @@ function exportarCSV() {
     p.cliente_nombre,
     p.cliente_email,
     p.cliente_telefono,
+    p.cliente_dni,
     p.cliente_direccion,
     p.envio_costo,
     p.total,
@@ -516,6 +518,7 @@ async function imprimirRemito(id) {
     <div><strong>${escHtml(pedido.cliente_nombre)}</strong></div>
     <div>${escHtml(pedido.cliente_email)}</div>
     ${pedido.cliente_telefono ? `<div>Tel: ${escHtml(pedido.cliente_telefono)}</div>` : ''}
+    ${pedido.cliente_dni ? `<div>DNI: ${escHtml(pedido.cliente_dni)}</div>` : ''}
   </div>
 
   ${pedido.cliente_direccion ? `

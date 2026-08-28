@@ -28,6 +28,15 @@ class PedidoController {
             return;
         }
 
+        // DNI argentino: 7 u 8 digitos. Llega ya sin puntos desde el checkout,
+        // pero se vuelve a limpiar por si el pedido entra por otra via.
+        $dni = preg_replace('/\D+/', '', (string)($body['dni'] ?? ''));
+        if ($dni === '' || strlen($dni) < 7 || strlen($dni) > 8) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'El DNI tiene que tener 7 u 8 números.']);
+            return;
+        }
+
         if (empty($body['items']) || !is_array($body['items'])) {
             http_response_code(400);
             echo json_encode(['success' => false, 'message' => 'El carrito está vacío.']);
@@ -39,6 +48,7 @@ class PedidoController {
             'email'     => trim($body['email']),
             'telefono'  => trim($body['telefono']  ?? ''),
             'direccion' => trim($body['direccion']  ?? ''),
+            'dni'       => $dni,
         ];
 
         // Solo el CP es dato del cliente; el costo lo calcula PedidoService.

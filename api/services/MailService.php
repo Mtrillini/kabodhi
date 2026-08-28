@@ -197,13 +197,15 @@ class MailService {
         $cliente  = self::esc($pedido['cliente_nombre']   ?? '');
         $email    = self::esc($pedido['cliente_email']    ?? '');
         $telefono = self::esc($pedido['cliente_telefono'] ?? '');
+        $dni      = self::esc($pedido['cliente_dni']      ?? '');
 
         $contenido = "
             <p>Entró el pedido <strong>#{$pedidoId}</strong>.</p>
             <p>
               <strong>Cliente:</strong> {$cliente}<br>
               <strong>Email:</strong> {$email}<br>
-              " . ($telefono ? "<strong>Teléfono:</strong> {$telefono}" : '') . "
+              " . ($telefono ? "<strong>Teléfono:</strong> {$telefono}<br>" : '') . "
+              " . ($dni ? "<strong>DNI:</strong> {$dni}" : '') . "
             </p>
             " . self::bloqueResumen($pedido, 'Detalle') . "
             " . self::bloqueEntrega($pedido) . "
