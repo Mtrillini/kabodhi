@@ -12,18 +12,39 @@ class AuthController {
         $this->db = Database::getInstance();
     }
 
+    /**
+     * IP del visitante. Detras de un proxy o CDN (Hostinger sirve por hcdn)
+     * REMOTE_ADDR es siempre la del proxy, igual para todo el mundo, asi que
+     * se prefiere el primer valor de X-Forwarded-For, que es el cliente.
+     * Solo se usa para el registro: el bloqueo NO se apoya en este dato,
+     * porque el encabezado lo controla quien hace la peticion.
+     */
     private function ip(): string {
+        $xff = $_SERVER['HTTP_X_FORWARDED_FOR'] ?? '';
+        if ($xff !== '') {
+            $primera = trim(explode(',', $xff)[0]);
+            if (filter_var($primera, FILTER_VALIDATE_IP)) {
+                return substr($primera, 0, 45);
+            }
+        }
         return substr((string)($_SERVER['REMOTE_ADDR'] ?? 'desconocida'), 0, 45);
     }
 
-    /** Fallidos recientes de esta IP. Se reinicia con un login exitoso. */
-    private function intentosFallidos(): int {
+    /**
+     * Fallidos recientes contra ESTE usuario. Se reinicia al entrar bien.
+     *
+     * Antes se contaba por IP, pero detras del CDN todos comparten la misma:
+     * cualquier rafaga de intentos dejaba afuera al administrador legitimo.
+     * Contar por usuario es ademas la defensa que importa, porque no se puede
+     * esquivar rotando IPs.
+     */
+    private function intentosFallidos(string $username): int {
         $stmt = $this->db->prepare(
             "SELECT COUNT(*) FROM login_intentos
-             WHERE ip = :ip AND exito = 0
+             WHERE usuario = :usuario AND exito = 0
                AND created_at > DATE_SUB(NOW(), INTERVAL :ventana MINUTE)"
         );
-        $stmt->bindValue(':ip', $this->ip());
+        $stmt->bindValue(':usuario', mb_substr($username, 0, 200));
         $stmt->bindValue(':ventana', self::VENTANA_MIN, PDO::PARAM_INT);
         $stmt->execute();
         return (int)$stmt->fetchColumn();
@@ -39,10 +60,10 @@ class AuthController {
                 ':exito'   => $exito ? 1 : 0,
             ]);
 
-            // Un login correcto limpia el historial de fallos de esa IP.
-            if ($exito) {
-                $this->db->prepare("DELETE FROM login_intentos WHERE ip = :ip AND exito = 0")
-                         ->execute([':ip' => $this->ip()]);
+            // Un login correcto limpia los fallos acumulados de ese usuario.
+            if ($exito && $usuario !== null) {
+                $this->db->prepare("DELETE FROM login_intentos WHERE usuario = :usuario AND exito = 0")
+                         ->execute([':usuario' => mb_substr($usuario, 0, 200)]);
             }
         } catch (Throwable $e) {
             error_log('AuthController::registrarIntento: ' . $e->getMessage());
@@ -66,7 +87,7 @@ class AuthController {
             return;
         }
 
-        if ($this->intentosFallidos() >= self::MAX_INTENTOS) {
+        if ($this->intentosFallidos($username) >= self::MAX_INTENTOS) {
             http_response_code(429);
             echo json_encode([
                 'success' => false,
