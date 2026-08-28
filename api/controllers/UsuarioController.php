@@ -54,7 +54,11 @@ class UsuarioController {
             return;
         }
 
-        $rol = in_array($body['rol'] ?? 'admin', ['super', 'admin'], true) ? $body['rol'] : 'admin';
+        // Se resuelve el valor UNA vez: el ternario anterior evaluaba
+        // $body['rol'] en la rama verdadera, asi que sin esa clave devolvia
+        // null y el INSERT reventaba contra una columna NOT NULL.
+        $rol = $body['rol'] ?? 'admin';
+        if (!in_array($rol, ['super', 'admin'], true)) $rol = 'admin';
 
         $stmt = $this->db->prepare(
             "INSERT INTO admin_users (username, email, rol, password_hash) VALUES (:username, :email, :rol, :hash)"

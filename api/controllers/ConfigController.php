@@ -13,9 +13,10 @@ class ConfigController {
     }
 
     public function update(): void {
-        // El WhatsApp, el mail de contacto y el umbral de envio gratis los
-        // define el dueño de la tienda, no quien la opera dia a dia.
-        Auth::requireSuper();
+        // La configuracion es parte de la operacion diaria: el operador cambia
+        // el WhatsApp, los textos de Nosotros o el umbral de envio gratis.
+        // Lo que queda reservado al principal es la gestion de usuarios.
+        Auth::requireAdmin();
 
         $body = json_decode(file_get_contents('php://input'), true) ?? [];
 

@@ -104,6 +104,7 @@ CREATE TABLE `pedidos` (
     `cliente_nombre`    VARCHAR(200) NOT NULL,
     `cliente_email`     VARCHAR(200) NOT NULL,
     `cliente_telefono`  VARCHAR(50) NULL,
+    `cliente_dni`       VARCHAR(20) NULL,
     `cliente_direccion` TEXT NULL,
     `envio_costo`       DECIMAL(10,2) NOT NULL DEFAULT 0.00,
     `envio_descripcion` VARCHAR(300) NULL,

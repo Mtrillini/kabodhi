@@ -19,12 +19,10 @@ const SIDEBAR_SECCIONES = [
   },
   {
     label: 'Ajustes',
-    // Solo para el administrador principal: un operador trabaja con el
-    // catalogo y los pedidos, no con usuarios ni con la configuracion.
-    soloSuper: true,
     links: [
       { page: 'configuracion', href: 'configuracion.html', icon: '⚙', text: 'Configuración' },
-      { page: 'usuarios',      href: 'usuarios.html',      icon: '☺', text: 'Usuarios' },
+      // Solo el principal administra quien entra al panel.
+      { page: 'usuarios', href: 'usuarios.html', icon: '☺', text: 'Usuarios', soloSuper: true },
     ],
   },
   {
@@ -44,7 +42,8 @@ function renderSidebar() {
   const esSuper = !window.ADMIN_ACTUAL || window.ADMIN_ACTUAL.rol === 'super';
 
   const nav = SIDEBAR_SECCIONES
-    .filter(seccion => !seccion.soloSuper || esSuper)
+    .map(seccion => ({ ...seccion, links: seccion.links.filter(l => !l.soloSuper || esSuper) }))
+    .filter(seccion => seccion.links.length)
     .map((seccion, i) => `
     <div class="sidebar__nav-label"${i > 0 ? ' style="margin-top:1.5rem;"' : ''}>${seccion.label}</div>
     ${seccion.links.map(l => `
