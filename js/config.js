@@ -20,9 +20,16 @@ if (isLocal) {
 }
 const API_URL = APP_BASE + '/api/index.php';
 
-// En hosting estatico (Netlify/GitHub Pages) no corre PHP: se usan datos horneados
-// y las acciones (checkout/contacto) van por WhatsApp / mail.
-const IS_STATIC  = !isLocal;
+// Sin PHP (GitHub Pages, Netlify) se usan los datos horneados y las acciones
+// van por WhatsApp / mail.
+//
+// Antes esto era `!isLocal`, asi que CUALQUIER dominio contaba como estatico:
+// en un hosting con PHP la tienda leia data/*.json en vez de la base, el
+// carrito ofrecia WhatsApp en lugar del checkout y no se calculaba el envio.
+// Ahora solo son estaticos los hosts que efectivamente no corren PHP; si en
+// alguno de los otros la API no responde, fetchDatos igual cae al JSON.
+const isNetlify = window.location.hostname.endsWith('netlify.app');
+const IS_STATIC = isGitHubPages || isNetlify;
 
 // Base de los JSON horneados (rutas relativas para que anden en cualquier host)
 const DATA_BASE = 'data/';
