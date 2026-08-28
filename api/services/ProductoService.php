@@ -175,10 +175,35 @@ class ProductoService {
                  ->execute([':url' => $urls[0], ':id' => $productoId]);
     }
 
-    public function delete(int $id): bool {
-        $stmt = $this->db->prepare("UPDATE productos SET activo = 0 WHERE id = :id");
+    /**
+     * Borra el producto de verdad si nunca se vendio.
+     *
+     * Si aparece en algun pedido no se puede: pedido_items lo referencia con
+     * ON DELETE RESTRICT, y borrarlo destruiria el historial de esa venta. En
+     * ese caso queda inactivo, que lo saca de la tienda sin romper los pedidos.
+     *
+     * @return string 'eliminado' | 'desactivado'
+     */
+    public function delete(int $id): string {
+        $stmt = $this->db->prepare("SELECT COUNT(*) FROM pedido_items WHERE producto_id = :id");
         $stmt->execute([':id' => $id]);
-        return $stmt->rowCount() > 0;
+        $enPedidos = (int)$stmt->fetchColumn();
+
+        if ($enPedidos > 0) {
+            $this->db->prepare("UPDATE productos SET activo = 0 WHERE id = :id")->execute([':id' => $id]);
+            return 'desactivado';
+        }
+
+        // producto_imagenes cae solo por la foreign key en cascada.
+        $this->db->prepare("DELETE FROM productos WHERE id = :id")->execute([':id' => $id]);
+        return 'eliminado';
+    }
+
+    /** Cuantos pedidos incluyen este producto. */
+    public function vecesVendido(int $id): int {
+        $stmt = $this->db->prepare("SELECT COUNT(DISTINCT pedido_id) FROM pedido_items WHERE producto_id = :id");
+        $stmt->execute([':id' => $id]);
+        return (int)$stmt->fetchColumn();
     }
 
     public function checkStock(int $id, int $cantidad): bool {

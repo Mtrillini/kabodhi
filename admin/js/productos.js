@@ -103,7 +103,7 @@ function renderTabla(productos) {
       <td>
         <div style="display:flex;gap:0.4rem;">
           <button class="btn btn-secondary btn-sm" onclick="openModal(${p.id})" title="Editar">Editar</button>
-          <button class="btn btn-danger btn-sm" onclick="deleteProducto(${p.id})" title="Eliminar">✕</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteProducto(${p.id})" title="Eliminar (si ya se vendió, queda desactivado)">✕</button>
         </div>
       </td>
     </tr>`;
@@ -288,12 +288,16 @@ async function deleteProducto(id) {
   // no escapa comillas, y un nombre con ' permitiria inyectar JS.
   const producto = allProductos.find(x => parseInt(x.id) === parseInt(id));
   const nombre   = producto ? producto.nombre : '#' + id;
-  if (!confirm(`¿Eliminar "${nombre}"? El producto quedará inactivo.`)) return;
+  if (!confirm(`¿Eliminar "${nombre}"?
+
+Si nunca se vendió, se borra definitivamente. Si ya figura en algún pedido, se desactiva para no romper ese historial.`)) return;
   try {
     const res  = await fetch(API_URL + '/productos/' + id, { method: 'DELETE', credentials: 'include' });
     const json = await res.json();
     if (!json.success) throw new Error(json.message || 'Error al eliminar.');
-    showToast('Producto eliminado.', 'success');
+
+    // Cuando queda desactivado hay que explicar por que sigue en la lista.
+    showToast(json.message || 'Producto eliminado.', json.resultado === 'eliminado' ? 'success' : 'info');
     fetchProductos();
   } catch (err) {
     showToast(err.message, 'error');

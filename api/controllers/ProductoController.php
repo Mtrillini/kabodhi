@@ -93,7 +93,15 @@ class ProductoController {
             return;
         }
 
-        $this->service->delete($id);
-        echo json_encode(['success' => true, 'message' => 'Producto eliminado correctamente.']);
+        $pedidos   = $this->service->vecesVendido($id);
+        $resultado = $this->service->delete($id);
+
+        echo json_encode([
+            'success'   => true,
+            'resultado' => $resultado,
+            'message'   => $resultado === 'eliminado'
+                ? 'Producto eliminado.'
+                : "El producto ya figura en {$pedidos} pedido(s), así que no se puede borrar sin perder ese historial. Quedó desactivado y fuera de la tienda.",
+        ]);
     }
 }
