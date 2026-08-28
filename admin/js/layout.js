@@ -67,6 +67,9 @@ function renderSidebar() {
       </button>
     </div>
   `;
+
+  // El innerHTML de arriba tira los listeners: hay que volver a engancharlos.
+  if (typeof window.enlazarSidebar === 'function') window.enlazarSidebar();
 }
 
 // Se registra antes que el listener de auth.js (layout.js se carga primero),

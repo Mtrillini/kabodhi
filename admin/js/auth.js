@@ -174,28 +174,43 @@ window.formatMoney = function(amount) {
   }).format(amount);
 };
 
-// ---- Sidebar hamburger (admin) ----
-document.addEventListener('DOMContentLoaded', () => {
+// ---- Sidebar: hamburger y cerrar sesion ----
+/**
+ * Se llama en cada dibujado del sidebar, no una sola vez.
+ *
+ * renderSidebar() reemplaza el innerHTML, asi que el boton de cerrar sesion
+ * al que se le habia enganchado el click deja de existir y el nuevo queda
+ * muerto. Pasaba al redibujar el sidebar tras conocer el rol.
+ */
+window.enlazarSidebar = function () {
+  const sidebar = document.getElementById('sidebar');
+  if (!sidebar) return;
+
   const hamburger = document.getElementById('hamburger-admin');
-  const sidebar   = document.getElementById('sidebar');
-
-  if (hamburger && sidebar) {
-    hamburger.addEventListener('click', () => {
-      sidebar.classList.toggle('open');
-    });
-
-    // Close on link click (mobile)
-    sidebar.querySelectorAll('.sidebar__link').forEach(link => {
-      link.addEventListener('click', () => sidebar.classList.remove('open'));
-    });
+  if (hamburger && !hamburger.dataset.enlazado) {
+    // El hamburger vive fuera del sidebar y sobrevive al redibujado:
+    // se marca para no apilar listeners en cada render.
+    hamburger.dataset.enlazado = '1';
+    hamburger.addEventListener('click', () => sidebar.classList.toggle('open'));
   }
 
-  // Logout button
+  sidebar.querySelectorAll('.sidebar__link').forEach(link => {
+    if (link.dataset.enlazado) return;
+    link.dataset.enlazado = '1';
+    link.addEventListener('click', () => sidebar.classList.remove('open'));
+  });
+
+  // El boton se recrea en cada render, asi que la marca viaja con el elemento
+  // nuevo: evita enganchar dos veces cuando render y DOMContentLoaded corren
+  // los dos, sin perder el enganche del boton recien creado.
   const logoutBtn = document.getElementById('btn-logout');
-  if (logoutBtn) {
+  if (logoutBtn && !logoutBtn.dataset.enlazado) {
+    logoutBtn.dataset.enlazado = '1';
     logoutBtn.addEventListener('click', (e) => {
       e.preventDefault();
       logout();
     });
   }
-});
+};
+
+document.addEventListener('DOMContentLoaded', () => window.enlazarSidebar());

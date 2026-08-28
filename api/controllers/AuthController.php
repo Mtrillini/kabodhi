@@ -169,7 +169,7 @@ class AuthController {
                     'id'       => $_SESSION['admin_id'],
                     'username' => $_SESSION['admin_username'] ?? '',
                     'email'    => $_SESSION['admin_email']    ?? '',
-                    'rol'      => $_SESSION['admin_rol']      ?? 'admin',
+                    'rol'      => Auth::rol() ?? 'admin',
                 ],
             ]);
         } else {
