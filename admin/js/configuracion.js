@@ -13,6 +13,11 @@ async function fetchConfig() {
     document.getElementById('f-email').value        = cfg.contacto_email     || '';
     document.getElementById('f-envio-gratis').value = parseFloat(cfg.envio_gratis_desde || 0) || 0;
 
+    document.getElementById('f-nosotros-titulo').value = cfg.nosotros_titulo || '';
+    document.getElementById('f-nosotros-texto').value  = cfg.nosotros_texto  || '';
+    document.getElementById('f-instagram').value       = cfg.instagram_usuario || '';
+    document.getElementById('f-direccion').value       = cfg.direccion         || '';
+
     renderEstado(cfg);
   } catch (err) {
     showToast(err.message, 'error');
@@ -38,6 +43,10 @@ async function guardarConfig() {
     whatsapp_numero:    document.getElementById('f-whatsapp').value.trim(),
     contacto_email:     document.getElementById('f-email').value.trim(),
     envio_gratis_desde: document.getElementById('f-envio-gratis').value || '0',
+    nosotros_titulo:    document.getElementById('f-nosotros-titulo').value.trim(),
+    nosotros_texto:     document.getElementById('f-nosotros-texto').value.trim(),
+    instagram_usuario:  document.getElementById('f-instagram').value.trim(),
+    direccion:          document.getElementById('f-direccion').value.trim(),
   };
 
   try {

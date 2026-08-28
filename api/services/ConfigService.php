@@ -11,9 +11,15 @@ class ConfigService {
 
     /** Claves editables, con su valor por defecto si la fila no existe. */
     public const DEFAULTS = [
+        // Contacto y venta
         'whatsapp_numero'    => '',
         'contacto_email'     => '',
         'envio_gratis_desde' => '0',
+        'direccion'          => '',
+        'instagram_usuario'  => '',
+        // Contenido editable de la pagina Nosotros
+        'nosotros_titulo'    => '',
+        'nosotros_texto'     => '',
     ];
 
     public function __construct() {

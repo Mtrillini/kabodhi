@@ -47,6 +47,19 @@ class ConfigController {
             $body['envio_gratis_desde'] = (string)$umbral;
         }
 
+        // El texto de Nosotros es largo: se corta a algo razonable en vez de
+        // dejar que crezca sin limite.
+        if (isset($body['nosotros_texto']) && mb_strlen($body['nosotros_texto']) > 8000) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'El texto de Nosotros no puede superar los 8000 caracteres.']);
+            return;
+        }
+
+        if (isset($body['instagram_usuario'])) {
+            // Se guarda solo el usuario, sin @ ni URL: el link se arma aparte.
+            $body['instagram_usuario'] = ltrim(trim((string)$body['instagram_usuario']), '@');
+        }
+
         $config = $this->service->saveMany($body);
         echo json_encode(['success' => true, 'data' => $config, 'message' => 'Configuración guardada.']);
     }

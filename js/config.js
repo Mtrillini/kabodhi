@@ -45,6 +45,7 @@ function datosDemo(apiPath) {
   try {
     const estado = JSON.parse(localStorage.getItem(DEMO_KEY) || 'null');
     if (!estado) return null;
+    if (apiPath === '/banners')      return { success: true, data: estado.banners || [] };
     if (apiPath === '/productos')    return { success: true, data: estado.productos.filter(p => parseInt(p.activo) === 1) };
     if (apiPath === '/hongos')       return { success: true, data: estado.hongos.filter(h => parseInt(h.activo) === 1) };
     if (apiPath === '/configuracion') return { success: true, data: estado.configuracion };
@@ -77,9 +78,13 @@ async function fetchDatos(apiPath, staticFile) {
 // Configuracion de la tienda. Se edita desde el panel admin (tabla `configuracion`)
 // y se carga al inicio; estos son solo los valores de arranque por si la API
 // todavia no respondio.
-let WHATSAPP_NUMERO   = '';
-let CONTACTO_EMAIL    = '';
+let WHATSAPP_NUMERO    = '';
+let CONTACTO_EMAIL     = '';
 let ENVIO_GRATIS_DESDE = 0;
+let INSTAGRAM_USUARIO  = '';
+let DIRECCION          = '';
+let NOSOTROS_TITULO    = '';
+let NOSOTROS_TEXTO     = '';
 
 // Promesa unica: cualquier pagina puede hacer `await configLista` antes de usar
 // WHATSAPP_NUMERO o CONTACTO_EMAIL.
@@ -90,11 +95,16 @@ const configLista = (async () => {
     WHATSAPP_NUMERO    = cfg.whatsapp_numero    || WHATSAPP_NUMERO;
     CONTACTO_EMAIL     = cfg.contacto_email     || CONTACTO_EMAIL;
     ENVIO_GRATIS_DESDE = parseFloat(cfg.envio_gratis_desde || 0);
+    INSTAGRAM_USUARIO  = cfg.instagram_usuario  || INSTAGRAM_USUARIO;
+    DIRECCION          = cfg.direccion          || DIRECCION;
+    NOSOTROS_TITULO    = cfg.nosotros_titulo    || NOSOTROS_TITULO;
+    NOSOTROS_TEXTO     = cfg.nosotros_texto     || NOSOTROS_TEXTO;
   } catch {
     /* se mantienen los valores de arranque */
   }
   return { WHATSAPP_NUMERO, CONTACTO_EMAIL, ENVIO_GRATIS_DESDE };
 })();
 
+const loadBannersData   = () => fetchDatos('/banners',   'banners.json');
 const loadProductosData = () => fetchDatos('/productos', 'productos.json');
 const loadHongosData    = () => fetchDatos('/hongos',    'hongos.json');

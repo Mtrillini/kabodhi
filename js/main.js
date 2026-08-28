@@ -83,6 +83,20 @@ async function rellenarContactoFooter() {
   const mail = document.getElementById('footer-email');
   if (mail) mail.textContent = CONTACTO_EMAIL || '';
 
+  const dir = document.getElementById('footer-direccion');
+  if (dir) dir.textContent = DIRECCION || '';
+
+  const ig = document.getElementById('footer-instagram');
+  if (ig) {
+    if (INSTAGRAM_USUARIO) {
+      ig.href = 'https://instagram.com/' + INSTAGRAM_USUARIO;
+      ig.textContent = '@' + INSTAGRAM_USUARIO;
+      ig.style.display = '';
+    } else {
+      ig.style.display = 'none';
+    }
+  }
+
   const wa = document.getElementById('footer-whatsapp');
   if (wa && WHATSAPP_NUMERO) {
     const n = WHATSAPP_NUMERO;
@@ -116,9 +130,9 @@ function getFooterHTML() {
           <div class="footer__heading">Contacto</div>
           <p class="footer__contact-item" id="footer-email"></p>
           <p class="footer__contact-item" id="footer-whatsapp"></p>
-          <p class="footer__contact-item">Buenos Aires, Argentina</p>
+          <p class="footer__contact-item" id="footer-direccion"></p>
           <div class="footer__heading" style="margin-top:1.5rem;">Redes</div>
-          <a href="https://instagram.com/kabodhi" class="footer__contact-item" target="_blank" rel="noopener noreferrer">@kabodhi</a>
+          <a href="#" class="footer__contact-item" id="footer-instagram" target="_blank" rel="noopener noreferrer"></a>
         </div>
       </div>
       </div>

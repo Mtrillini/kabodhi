@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Banners — KABODHI Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/admin.css?v=4">
+</head>
+<body>
+
+  <aside class="sidebar" id="sidebar" data-page="banners"></aside>
+
+  <div class="main">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:1rem;">
+        <button class="hamburger-admin" id="hamburger-admin" aria-label="Menú">
+          <span></span><span></span><span></span>
+        </button>
+        <span class="topbar__title">Banners del inicio</span>
+      </div>
+      <div class="topbar__actions">
+        <button id="btn-nuevo-banner" class="btn btn-primary">+ Nuevo banner</button>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="panel">
+        <div class="panel__header" style="padding:1rem 1.5rem;border-bottom:1px solid var(--champagne);">
+          <p style="font-size:0.78rem;color:var(--taupe);">
+            Son las imágenes que rotan arriba del inicio. Cada una lleva su versión de
+            escritorio y la de celular, porque el recorte que funciona en una no funciona
+            en la otra. Con las flechas cambiás el orden en que se muestran.
+          </p>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:64px;">Orden</th>
+                <th>Imagen</th>
+                <th>Descripción</th>
+                <th>Celular</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="banners-tbody">
+              <tr><td colspan="6" class="loading">Cargando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modal-overlay">
+    <div class="modal">
+      <div class="modal__header">
+        <span class="modal__title" id="modal-title">Nuevo banner</span>
+        <button class="modal__close" id="btn-close-modal">✕</button>
+      </div>
+      <div class="modal__body">
+        <form id="banner-form" onsubmit="event.preventDefault();">
+
+          <div class="form-group">
+            <label class="form-label" for="f-titulo">Descripción *</label>
+            <input type="text" id="f-titulo" class="form-input" required
+                   placeholder="KABODHI — Reishi, equilibrio y calma">
+            <p style="font-size:0.7rem;color:var(--taupe);margin-top:0.35rem;">
+              No se ve en pantalla. La leen los buscadores y quienes usan lector de pantalla.
+            </p>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Imagen de escritorio *</label>
+            <div id="preview-desktop" style="margin-bottom:0.6rem;"></div>
+            <label class="btn btn-secondary btn-sm" style="cursor:pointer;">
+              Elegir imagen
+              <input type="file" id="f-file-desktop" accept="image/jpeg,image/png,image/webp" style="display:none;">
+            </label>
+            <p style="font-size:0.7rem;color:var(--taupe);margin-top:0.35rem;">
+              Apaisada, idealmente 1920×800 o similar.
+            </p>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Imagen de celular</label>
+            <div id="preview-mobile" style="margin-bottom:0.6rem;"></div>
+            <label class="btn btn-secondary btn-sm" style="cursor:pointer;">
+              Elegir imagen
+              <input type="file" id="f-file-mobile" accept="image/jpeg,image/png,image/webp" style="display:none;">
+            </label>
+            <p style="font-size:0.7rem;color:var(--taupe);margin-top:0.35rem;">
+              Vertical, más o menos 800×1000. Si no cargás ninguna se usa la de escritorio.
+            </p>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="f-link">Link (opcional)</label>
+            <input type="text" id="f-link" class="form-input" placeholder="/productos">
+            <p style="font-size:0.7rem;color:var(--taupe);margin-top:0.35rem;">
+              A dónde lleva al hacer clic. Dejalo vacío si no querés que sea clickeable.
+            </p>
+          </div>
+
+          <div class="form-group" style="display:flex;flex-direction:row;align-items:center;gap:0.5rem;">
+            <input type="checkbox" id="f-activo" style="width:16px;height:16px;accent-color:var(--negro);" checked>
+            <label class="form-label" for="f-activo" style="margin:0;">Mostrar en el inicio</label>
+          </div>
+
+        </form>
+      </div>
+      <div class="modal__footer">
+        <button class="btn btn-secondary" id="btn-cancel-modal">Cancelar</button>
+        <button class="btn btn-primary" id="btn-save">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/config.js?v=2"></script>
+  <script src="js/layout.js?v=4"></script>
+  <script src="js/demo.js?v=1"></script>
+  <script src="js/auth.js?v=3"></script>
+  <script src="js/banners.js?v=1"></script>
+</body>
+</html>

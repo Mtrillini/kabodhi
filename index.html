@@ -170,8 +170,8 @@
   </a>
 
   <!-- Scripts -->
-  <script src="js/config.js?v=34"></script>
-  <script src="js/main.js?v=39"></script>
+  <script src="js/config.js?v=35"></script>
+  <script src="js/main.js?v=40"></script>
   <script src="js/carrito.js?v=59"></script>
   <script src="js/productos.js?v=56"></script>
   <script>
@@ -249,28 +249,78 @@
     }
 
     // ---- Hero slider ----
-    (function () {
+    // Los banners se administran desde el panel. Lo que viene en el HTML es el
+    // contenido inicial: si la API no responde, el inicio igual muestra el
+    // carrusel en vez de un hueco.
+    let heroTimer = null;
+
+    function iniciarHero() {
       const track = document.getElementById('hero-track');
       if (!track) return;
+
+      if (heroTimer) { clearInterval(heroTimer); heroTimer = null; }
+
       const total = track.children.length;
       const dots  = Array.from(document.querySelectorAll('.hero__dot'));
-      let current = 0, timer;
+      let current = 0;
 
       function goTo(i) {
         current = (i + total) % total;
         track.style.transform = `translateX(-${current * 100}%)`;
         dots.forEach((d, x) => d.classList.toggle('active', x === current));
       }
-      function startAuto() { timer = setInterval(() => goTo(current + 1), 5500); }
+      function startAuto() { heroTimer = setInterval(() => goTo(current + 1), 5500); }
 
-      dots.forEach(d => d.addEventListener('click', () => {
-        clearInterval(timer);
-        goTo(parseInt(d.dataset.i, 10));
-        startAuto();
-      }));
+      dots.forEach(d => {
+        if (d.dataset.enlazado) return;
+        d.dataset.enlazado = '1';
+        d.addEventListener('click', () => {
+          clearInterval(heroTimer);
+          goTo(parseInt(d.dataset.i, 10));
+          startAuto();
+        });
+      });
 
+      goTo(0);
       if (total > 1) startAuto();
+    }
+
+    iniciarHero();
+
+    (async () => {
+      if (typeof loadBannersData !== 'function') return;
+
+      try {
+        const json    = await loadBannersData();
+        const banners = json.data || json;
+        if (!Array.isArray(banners) || !banners.length) return;
+
+        const track = document.getElementById('hero-track');
+        if (!track) return;
+
+        track.innerHTML = banners.map(b => {
+          const desktop = b.imagen_desktop || '';
+          const mobile  = b.imagen_mobile || desktop;
+          const img = `<picture>
+                <source media="(max-width: 768px)" srcset="${escAtributo(mobile)}">
+                <img class="hero__img" src="${escAtributo(desktop)}" alt="${escAtributo(b.titulo || '')}">
+              </picture>`;
+          return `<div class="hero__slide">${
+            b.link ? `<a href="${escAtributo(b.link)}">${img}</a>` : img
+          }</div>`;
+        }).join('');
+
+        iniciarHero();
+      } catch {
+        /* se queda el carrusel que vino en el HTML */
+      }
     })();
+
+    function escAtributo(str) {
+      const d = document.createElement('div');
+      d.textContent = str || '';
+      return d.innerHTML.replace(/"/g, '&quot;');
+    }
   </script>
 </body>
 </html>
