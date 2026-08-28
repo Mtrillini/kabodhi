@@ -40,7 +40,32 @@ class Auth {
         if (self::devSinLogin() && empty($_SESSION['admin_id'])) {
             return 'super';
         }
-        return $_SESSION['admin_rol'] ?? null;
+
+        if (isset($_SESSION['admin_rol'])) {
+            return $_SESSION['admin_rol'];
+        }
+
+        // Sesion abierta ANTES de que existieran los roles: no tiene el dato
+        // guardado. Sin esto, quien ya estaba logueado al desplegar quedaba
+        // sin rol y se autoexcluia de sus propias pantallas. Se resuelve
+        // leyendolo de la base una vez.
+        if (empty($_SESSION['admin_id'])) {
+            return null;
+        }
+
+        try {
+            $stmt = Database::getInstance()->prepare("SELECT rol FROM admin_users WHERE id = :id");
+            $stmt->execute([':id' => $_SESSION['admin_id']]);
+            $rol = $stmt->fetchColumn();
+            if ($rol !== false) {
+                $_SESSION['admin_rol'] = $rol;
+                return $rol;
+            }
+        } catch (Throwable $e) {
+            error_log('Auth::rol: ' . $e->getMessage());
+        }
+
+        return null;
     }
 
     public static function isSuper(): bool {
