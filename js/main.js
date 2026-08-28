@@ -18,8 +18,8 @@ function getNavbarHTML() {
 
       <div class="navbar__logo-wrap">
         <a href="${PAGES_BASE}/" class="navbar__logo-link" aria-label="KABODHI — Inicio">
-          <img src="images/logo-circulo.png" alt="" class="navbar__logo-circle" aria-hidden="true">
-          <img src="images/logo-nombre.png" alt="KABODHI" class="navbar__logo-name">
+          <img src="images/logo-circulo.webp" alt="" class="navbar__logo-circle" aria-hidden="true">
+          <img src="images/logo-nombre.webp" alt="KABODHI" class="navbar__logo-name">
         </a>
       </div>
 
@@ -112,7 +112,7 @@ function getFooterHTML() {
       <div class="footer__top-wrap">
       <div class="footer__top">
         <div>
-          <img src="images/logo-footer-kabodhi.png" alt="KABODHI — Adaptógenos naturales para tu bienestar diario" class="footer__logo-img">
+          <img src="images/logo-footer-kabodhi.webp" alt="KABODHI — Adaptógenos naturales para tu bienestar diario" class="footer__logo-img">
         </div>
 
         <div>

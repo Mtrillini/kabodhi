@@ -1116,7 +1116,7 @@ h1, h2, h3, h4, h5, h6 {
 
 /* El fondo cubre solo la franja del logo y los datos, no la del copyright */
 .footer__top-wrap {
-  background-image: url('../images/bg-footer.png');
+  background-image: url('../images/bg-footer.webp');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -3520,7 +3520,7 @@ body { padding-top: calc(var(--nav-h) + var(--nav-arch)); }
      debajo queda el azul solido. Cuando no exista la imagen, cae al gradiente. */
   background:
     linear-gradient(180deg, rgba(35, 81, 99, 0.5) 0%, rgba(22, 62, 79, 0.6) 100%),
-    url(../images/bg-beneficios.png) center top / cover no-repeat,
+    url(../images/bg-beneficios.webp) center top / cover no-repeat,
     linear-gradient(180deg, #235163 0%, #163e4f 100%);
   color: var(--crema);
   padding: 5.5rem 2rem 6rem;
@@ -3563,7 +3563,7 @@ body { padding-top: calc(var(--nav-h) + var(--nav-arch)); }
   transform: translate(-50%, -50%);
   width: 500px;
   height: 500px;
-  background: url(../images/circulo-beneficios.png) center / contain no-repeat;
+  background: url(../images/circulo-beneficios.webp) center / contain no-repeat;
   z-index: 0;
 }
 /* Las perlas ya vienen en la imagen del circulo: ocultamos los puntos CSS */
