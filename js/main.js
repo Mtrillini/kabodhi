@@ -25,14 +25,7 @@ function getNavbarHTML() {
 
       <nav class="navbar__nav">
         <a href="${PAGES_BASE}/" class="navbar__link" data-page="index">INICIO</a>
-        <div class="navbar__dropdown">
-          <a href="${PAGES_BASE}/productos" class="navbar__link" data-page="productos">PRODUCTOS</a>
-          <div class="navbar__dropdown-menu">
-            <a href="${PAGES_BASE}/productos" class="navbar__dropdown-item">TODOS</a>
-            <a href="${PAGES_BASE}/productos?categoria=adaptogenos" class="navbar__dropdown-item">ADAPTÓGENOS</a>
-            <a href="${PAGES_BASE}/productos?categoria=blends" class="navbar__dropdown-item">BLENDS</a>
-          </div>
-        </div>
+        <a href="${PAGES_BASE}/productos" class="navbar__link" data-page="productos">PRODUCTOS</a>
         <a href="${PAGES_BASE}/nosotros" class="navbar__link" data-page="nosotros">SOBRE KABODHI</a>
         <a href="${PAGES_BASE}/contacto" class="navbar__link" data-page="contacto">CONTACTO</a>
       </nav>
@@ -62,8 +55,6 @@ function getNavbarHTML() {
     <div class="mobile-menu" id="mobile-menu">
       <a href="${PAGES_BASE}/">Inicio</a>
       <a href="${PAGES_BASE}/productos">Productos</a>
-      <a href="${PAGES_BASE}/productos?categoria=adaptogenos">Adaptógenos</a>
-      <a href="${PAGES_BASE}/productos?categoria=blends">Blends</a>
       <a href="${PAGES_BASE}/nosotros">Sobre KABODHI</a>
       <a href="${PAGES_BASE}/contacto">Contacto</a>
       <a href="${PAGES_BASE}/carrito">Carrito</a>

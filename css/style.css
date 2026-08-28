@@ -4071,13 +4071,10 @@ body { padding-top: calc(var(--nav-h) + var(--nav-arch)); }
     padding: 0.5rem 0;
   }
 
+  /* En mobile el circulo se superpone con la foto y el texto en vez de
+     enmarcarlos: se oculta y queda solo la melena. */
   .beneficios__ring {
-    width: 100%;
-    height: 0;
-    padding-bottom: 100%;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+    display: none;
   }
 
   /* Imagen achicada para que entre al lado de los textos */
