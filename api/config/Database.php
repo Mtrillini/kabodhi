@@ -16,11 +16,14 @@ class Database {
             try {
                 self::$instance = new PDO($dsn, DB_USER, DB_PASS, $options);
             } catch (PDOException $e) {
+                // El detalle va al log del servidor, no a la respuesta: el
+                // mensaje de PDO revela el usuario de la base y si se mando
+                // contrasena, y ese JSON lo ve cualquiera que pegue a la API.
+                error_log('Database: ' . $e->getMessage());
                 http_response_code(500);
                 echo json_encode([
                     'success' => false,
                     'message' => 'Error de conexión a la base de datos.',
-                    'error'   => $e->getMessage()
                 ]);
                 exit;
             }
