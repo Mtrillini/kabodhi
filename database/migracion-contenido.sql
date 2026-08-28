@@ -23,11 +23,14 @@ CREATE TABLE IF NOT EXISTS `banners` (
     `orden`           INT UNSIGNED NOT NULL DEFAULT 0,
     `activo`          TINYINT(1) NOT NULL DEFAULT 1,
     `created_at`      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    KEY `idx_orden` (`orden`)
+    KEY `idx_orden` (`orden`),
+    -- Evita que reinsertar la semilla duplique los banners.
+    UNIQUE KEY `uq_titulo` (`titulo`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Los cuatro que ya estaban en index.html.
-INSERT INTO `banners` (`titulo`, `imagen_desktop`, `imagen_mobile`, `orden`, `activo`) VALUES
+-- INSERT IGNORE + la clave unica de arriba: correr esto dos veces no duplica.
+INSERT IGNORE INTO `banners` (`titulo`, `imagen_desktop`, `imagen_mobile`, `orden`, `activo`) VALUES
     ('KABODHI — Reishi, equilibrio y calma',              'images/banner1.webp', 'images/banner1-mobile.webp', 1, 1),
     ('KABODHI — Cordyceps, energía y vitalidad',          'images/banner2.webp', 'images/banner2-mobile.webp', 2, 1),
     ('KABODHI — Melena de León, enfoque y claridad',      'images/banner3.webp', 'images/banner3-mobile.webp', 3, 1),
