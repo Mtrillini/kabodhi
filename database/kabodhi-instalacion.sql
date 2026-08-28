@@ -209,21 +209,21 @@ INSERT INTO `categorias` (`id`, `nombre`, `slug`) VALUES
 INSERT INTO `productos`
     (`id`, `categoria_id`, `marca`, `nombre`, `descripcion`, `nota_olfativa`,
      `precio`, `stock`, `stock_reservado`, `imagen_url`, `tipo`, `activo`, `destacado`) VALUES
-    (1, 1, 'Enfoque', 'Melena de Leon', 'Hericium erinaceus de doble extraccion. Acompana la claridad mental, la memoria y el foco sostenido a lo largo del dia. Ideal para jornadas de estudio o trabajo profundo.', 'Enfoque & claridad · 60 capsulas', '28900.00', 40, 0, 'images/hongo-melena-de-leon.png', 'enfoque', 1, 1),
-    (2, 1, 'Equilibrio', 'Reishi', 'Ganoderma lucidum de doble extraccion. El hongo de la calma: apoya el descanso reparador, la respuesta al estres y el equilibrio diario.', 'Equilibrio & calma · 60 capsulas', '28900.00', 45, 0, 'images/hongo-reishi.png', 'equilibrio', 1, 1),
-    (3, 1, 'Energia', 'Cordyceps', 'Cordyceps militaris de doble extraccion. Energia limpia, resistencia y rendimiento fisico. El aliado natural para entrenar y rendir.', 'Energia & vitalidad · 60 capsulas', '28900.00', 38, 0, 'images/hongo-cordyceps.png', 'energia', 1, 1),
+    (1, 1, 'Enfoque', 'Melena de Leon', 'Hericium erinaceus de doble extraccion. Acompana la claridad mental, la memoria y el foco sostenido a lo largo del dia. Ideal para jornadas de estudio o trabajo profundo.', 'Enfoque & claridad · 60 capsulas', '28900.00', 40, 0, 'images/hongo-melena-de-leon.webp', 'enfoque', 1, 1),
+    (2, 1, 'Equilibrio', 'Reishi', 'Ganoderma lucidum de doble extraccion. El hongo de la calma: apoya el descanso reparador, la respuesta al estres y el equilibrio diario.', 'Equilibrio & calma · 60 capsulas', '28900.00', 45, 0, 'images/hongo-reishi.webp', 'equilibrio', 1, 1),
+    (3, 1, 'Energia', 'Cordyceps', 'Cordyceps militaris de doble extraccion. Energia limpia, resistencia y rendimiento fisico. El aliado natural para entrenar y rendir.', 'Energia & vitalidad · 60 capsulas', '28900.00', 38, 0, 'images/hongo-cordyceps.webp', 'energia', 1, 1),
     (4, 1, 'Defensas', 'Chaga', 'Inonotus obliquus de doble extraccion. Rico en antioxidantes, acompana las defensas naturales y el bienestar general.', 'Defensas naturales · 50g polvo', '28900.00', 30, 0, 'images/prod-chaga.svg', 'defensas', 0, 1),
-    (5, 1, 'Equilibrio', 'Ashwagandha', 'Withania somnifera de doble extraccion. Raiz adaptogena que acompana el equilibrio, la resistencia y el bienestar en rutinas exigentes.', 'Equilibrio & resistencia · 50 ml', '28900.00', 26, 0, 'images/hongo-ashwagandha.png', 'equilibrio', 1, 0),
+    (5, 1, 'Equilibrio', 'Ashwagandha', 'Withania somnifera de doble extraccion. Raiz adaptogena que acompana el equilibrio, la resistencia y el bienestar en rutinas exigentes.', 'Equilibrio & resistencia · 50 ml', '28900.00', 26, 0, 'images/hongo-ashwagandha.webp', 'equilibrio', 1, 0),
     (6, 2, 'Enfoque', 'Blend Focus', 'Mezcla funcional de Melena de Leon y Cordyceps. Claridad mental y energia sostenida en una sola toma diaria.', 'Melena + Cordyceps · 50g polvo', '31900.00', 22, 0, 'images/prod-blend-focus.svg', 'enfoque', 0, 1),
     (7, 2, 'Equilibrio', 'Blend Calm', 'Mezcla funcional de Reishi y Chaga. Calma, defensas y equilibrio para cerrar el dia.', 'Reishi + Chaga · 50g polvo', '31900.00', 20, 0, 'images/prod-blend-calm.svg', 'equilibrio', 0, 0);
 
 -- Hongos destacados del home
 INSERT INTO `hongos_principales`
     (`id`, `nombre`, `subtitulo`, `descripcion`, `imagen_url`, `orden`, `activo`) VALUES
-    (2, 'Reishi', 'Equilibrio & calma', 'Tradicionalmente utilizado dentro de rutinas de bienestar orientadas al descanso, la calma y el equilibrio cotidiano.', 'images/hongo-reishi.png', 1, 1),
-    (3, 'Cordyceps', 'Energia & vitalidad', 'Una opcion pensada para acompanar rutinas activas y momentos donde buscamos energia y rendimiento.', 'images/hongo-cordyceps.png', 2, 1),
-    (4, 'Ashwagandha', 'Equilibrio & resistencia', 'Raiz adaptogena tradicionalmente utilizada para acompanar rutinas de bienestar orientadas al equilibrio y la resistencia cotidiana.', 'images/hongo-ashwagandha.png', 3, 1),
-    (5, 'Melena de Leon', 'Enfoque & claridad', 'Tradicionalmente asociado a rutinas de estudio y trabajo profundo, acompana momentos donde buscamos enfoque, memoria y claridad mental.', 'images/hongo-melena-de-leon.png', 4, 1);
+    (2, 'Reishi', 'Equilibrio & calma', 'Tradicionalmente utilizado dentro de rutinas de bienestar orientadas al descanso, la calma y el equilibrio cotidiano.', 'images/hongo-reishi.webp', 1, 1),
+    (3, 'Cordyceps', 'Energia & vitalidad', 'Una opcion pensada para acompanar rutinas activas y momentos donde buscamos energia y rendimiento.', 'images/hongo-cordyceps.webp', 2, 1),
+    (4, 'Ashwagandha', 'Equilibrio & resistencia', 'Raiz adaptogena tradicionalmente utilizada para acompanar rutinas de bienestar orientadas al equilibrio y la resistencia cotidiana.', 'images/hongo-ashwagandha.webp', 3, 1),
+    (5, 'Melena de Leon', 'Enfoque & claridad', 'Tradicionalmente asociado a rutinas de estudio y trabajo profundo, acompana momentos donde buscamos enfoque, memoria y claridad mental.', 'images/hongo-melena-de-leon.webp', 4, 1);
 
 -- Tarifas de envio por rango de codigo postal. Ajustables desde el panel.
 INSERT INTO `tarifas_envio` (`id`, `descripcion`, `cp_desde`, `cp_hasta`, `precio`, `activo`) VALUES

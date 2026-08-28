@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS `banners` (
 
 -- Los cuatro que ya estaban en index.html.
 INSERT INTO `banners` (`titulo`, `imagen_desktop`, `imagen_mobile`, `orden`, `activo`) VALUES
-    ('KABODHI — Reishi, equilibrio y calma',              'images/banner1.png', 'images/banner1-mobile.png', 1, 1),
-    ('KABODHI — Cordyceps, energía y vitalidad',          'images/banner2.png', 'images/banner2-mobile.png', 2, 1),
-    ('KABODHI — Melena de León, enfoque y claridad',      'images/banner3.png', 'images/banner3-mobile.png', 3, 1),
-    ('KABODHI — Reishi doble extracto, calma y descanso', 'images/banner4.png', 'images/banner4-mobile.png', 4, 1);
+    ('KABODHI — Reishi, equilibrio y calma',              'images/banner1.webp', 'images/banner1-mobile.webp', 1, 1),
+    ('KABODHI — Cordyceps, energía y vitalidad',          'images/banner2.webp', 'images/banner2-mobile.webp', 2, 1),
+    ('KABODHI — Melena de León, enfoque y claridad',      'images/banner3.webp', 'images/banner3-mobile.webp', 3, 1),
+    ('KABODHI — Reishi doble extracto, calma y descanso', 'images/banner4.webp', 'images/banner4-mobile.webp', 4, 1);
