@@ -81,16 +81,27 @@ class InvitacionController {
         $stmt->bindValue(':dias', self::DIAS_VALIDEZ, PDO::PARAM_INT);
         $stmt->execute();
 
+        $id   = (int)$this->db->lastInsertId();
+        $link = rtrim(APP_URL, '/') . '/admin/registro.html?token=' . $token;
+
+        // Se intenta mandar el mail, pero el link se devuelve igual: sin SMTP
+        // configurado el envio falla y la invitacion tiene que servir lo mismo,
+        // pasandola a mano.
+        $enviado = MailService::enviarInvitacion($email, $link, $rol, self::DIAS_VALIDEZ);
+
         http_response_code(201);
         echo json_encode([
             'success' => true,
-            'message' => 'Invitación creada.',
+            'message' => $enviado
+                ? "Invitación enviada a {$email}."
+                : 'Invitación creada. No se pudo enviar el mail, así que pasale el link vos.',
             'data'    => [
-                'id'    => (int)$this->db->lastInsertId(),
-                'email' => $email,
-                'rol'   => $rol,
-                'link'  => rtrim(APP_URL, '/') . '/admin/registro.html?token=' . $token,
-                'dias'  => self::DIAS_VALIDEZ,
+                'id'      => $id,
+                'email'   => $email,
+                'rol'     => $rol,
+                'link'    => $link,
+                'dias'    => self::DIAS_VALIDEZ,
+                'enviado' => $enviado,
             ],
         ]);
     }

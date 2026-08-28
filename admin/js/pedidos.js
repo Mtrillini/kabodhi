@@ -476,11 +476,11 @@ async function imprimirRemito(id) {
   * { box-sizing: border-box; }
   /* Mismas fuentes que el resto de la app: Playfair para la marca y los
      titulos, Lato para el texto. */
-  body { font-family: 'Lato', Helvetica, Arial, sans-serif; color: #1F3D2E; margin: 2.5rem; font-size: 13px; }
+  body { font-family: 'Lato', Helvetica, Arial, sans-serif; color: #1C3A4F; margin: 2.5rem; font-size: 13px; }
   h1 { font-family: 'Playfair Display', Georgia, serif; font-size: 1.6rem; margin: 0; letter-spacing: 0.15em; font-weight: 500; }
   .sub { color: #8B7966; font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; }
   .head { display: flex; justify-content: space-between; align-items: flex-start;
-          border-bottom: 2px solid #1F3D2E; padding-bottom: 1rem; margin-bottom: 1.5rem; }
+          border-bottom: 2px solid #1C3A4F; padding-bottom: 1rem; margin-bottom: 1.5rem; }
   .meta { text-align: right; font-size: 0.8rem; }
   .bloque { margin-bottom: 1.5rem; }
   .bloque h2 { font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase;
@@ -492,7 +492,7 @@ async function imprimirRemito(id) {
   .num { text-align: right; white-space: nowrap; }
   .totales { margin-left: auto; width: 280px; margin-top: 1rem; }
   .totales tr td { border: none; padding: 0.3rem 0.4rem; }
-  .totales .total td { border-top: 2px solid #1F3D2E; font-weight: 700; font-size: 1.05rem; padding-top: 0.6rem; }
+  .totales .total td { border-top: 2px solid #1C3A4F; font-weight: 700; font-size: 1.05rem; padding-top: 0.6rem; }
   .meta .num { font-family: 'Playfair Display', Georgia, serif; font-size: 1.2rem; font-weight: 500; }
   .pie { margin-top: 3rem; font-size: 0.7rem; color: #8B7966; text-align: center;
          border-top: 1px solid #eee; padding-top: 1rem; }

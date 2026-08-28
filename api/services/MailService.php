@@ -19,7 +19,7 @@ class MailService {
 
         $body = self::layout("Nuevo mensaje de contacto", "
             <p><strong>Nombre:</strong> {$nombreSafe}</p>
-            <p><strong>Email:</strong> <a href=\"mailto:{$emailSafe}\" style=\"color:#1F3D2E;\">{$emailSafe}</a></p>
+            <p><strong>Email:</strong> <a href=\"mailto:{$emailSafe}\" style=\"color:#1C3A4F;\">{$emailSafe}</a></p>
             <p><strong>Asunto:</strong> {$asuntoSafe}</p>
             <p style=\"margin-top:24px;\"><strong>Mensaje:</strong></p>
             <p style=\"white-space:pre-line;\">{$mensajeSafe}</p>
@@ -110,7 +110,7 @@ class MailService {
             <p>Hola <strong>{$nombre}</strong>,</p>
             <p>Registramos la entrega de tu pedido <strong>#{$pedidoId}</strong>. Esperamos que lo disfrutes.</p>
             <p>Si algo no llegó como esperabas, respondé este mail"
-            . ($whatsapp ? " o escribinos por <a href=\"{$whatsapp}\" style=\"color:#1F3D2E;\">WhatsApp</a>" : '')
+            . ($whatsapp ? " o escribinos por <a href=\"{$whatsapp}\" style=\"color:#1C3A4F;\">WhatsApp</a>" : '')
             . " y lo resolvemos.</p>
         ";
 
@@ -131,7 +131,7 @@ class MailService {
             <p>No pudimos procesar el pago de tu pedido <strong>#{$pedidoId}</strong>, así que quedó sin efecto.
                No se te cobró nada.</p>
             <p>Si querés volver a intentarlo o preferís coordinar de otra forma, respondé este mail"
-            . ($whatsapp ? " o escribinos por <a href=\"{$whatsapp}\" style=\"color:#1F3D2E;\">WhatsApp</a>" : '')
+            . ($whatsapp ? " o escribinos por <a href=\"{$whatsapp}\" style=\"color:#1C3A4F;\">WhatsApp</a>" : '')
             . ".</p>
         ";
 
@@ -154,6 +154,38 @@ class MailService {
 
         $body = self::layout("Pedido cancelado", $contenido, "Pedido #{$pedidoId}");
         Mailer::enviar($email, "Tu pedido #{$pedidoId} fue cancelado — KABODHI", $body, null, $pedidoId, 'pedido_cancelado');
+    }
+
+    /**
+     * Invitacion al panel. El link va en el cuerpo y tambien se le muestra a
+     * quien la genera, asi que si el mail no sale (SMTP sin configurar) igual
+     * se puede pasar por otro medio.
+     */
+    public static function enviarInvitacion(string $email, string $link, string $rol, int $dias): bool {
+        $rolTexto = $rol === 'super' ? 'administrador principal' : 'operador';
+        $linkSafe = self::esc($link);
+
+        $contenido = "
+            <p>Te invitaron a administrar la tienda de KABODHI como <strong>{$rolTexto}</strong>.</p>
+            <p>Entrá al link y elegí tu usuario y tu contraseña. Nadie más las va a ver.</p>
+            <p style=\"margin:28px 0;\">
+              <a href=\"{$linkSafe}\"
+                 style=\"display:inline-block;padding:12px 24px;background:#1C3A4F;color:#F5F1E8;
+                        text-decoration:none;border-radius:4px;font-size:14px;letter-spacing:1px;\">
+                Crear mi acceso
+              </a>
+            </p>
+            <p style=\"color:#8B7966;font-size:13px;\">
+              El link vence en {$dias} días y sirve una sola vez.
+              Si no te esperabas esta invitación, ignorá el mensaje.
+            </p>
+            <p style=\"color:#8B7966;font-size:12px;word-break:break-all;\">
+              Si el botón no funciona, copiá esta dirección:<br>{$linkSafe}
+            </p>
+        ";
+
+        $body = self::layout('Tu acceso al panel', $contenido, 'Invitación');
+        return Mailer::enviar($email, 'Te invitaron al panel de KABODHI', $body, null, null, 'invitacion');
     }
 
     /** Copia interna cuando entra un pedido nuevo. */
@@ -234,8 +266,8 @@ class MailService {
             <td style=\"padding:4px 0;text-align:right;font-size:14px;color:#8B7966;\">{$envioValor}</td>
           </tr>
           <tr>
-            <td style=\"padding:12px 0 0;border-top:2px solid #1F3D2E;font-size:16px;font-weight:bold;\">Total</td>
-            <td style=\"padding:12px 0 0;border-top:2px solid #1F3D2E;text-align:right;font-size:16px;font-weight:bold;\">
+            <td style=\"padding:12px 0 0;border-top:2px solid #1C3A4F;font-size:16px;font-weight:bold;\">Total</td>
+            <td style=\"padding:12px 0 0;border-top:2px solid #1C3A4F;text-align:right;font-size:16px;font-weight:bold;\">
               " . self::money($total) . "
             </td>
           </tr>
@@ -281,7 +313,7 @@ class MailService {
             $urlSafe = self::esc($url);
             $boton = "
               <a href=\"{$urlSafe}\"
-                 style=\"display:inline-block;margin-top:12px;padding:11px 22px;background:#1F3D2E;color:#F5F1E8;
+                 style=\"display:inline-block;margin-top:12px;padding:11px 22px;background:#1C3A4F;color:#F5F1E8;
                         text-decoration:none;border-radius:4px;font-size:13px;letter-spacing:1px;\">
                 Seguir mi envío
               </a>";
@@ -353,13 +385,13 @@ class MailService {
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
   <title>{$titleSafe}</title>
 </head>
-<body style="margin:0;padding:0;background:#F5F1E8;font-family:'Lato',Helvetica,Arial,sans-serif;color:#1F3D2E;">
+<body style="margin:0;padding:0;background:#F5F1E8;font-family:'Lato',Helvetica,Arial,sans-serif;color:#1C3A4F;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#F5F1E8;padding:40px 16px;">
     <tr>
       <td align="center">
         <table width="600" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:6px;overflow:hidden;max-width:600px;width:100%;">
           <tr>
-            <td style="background:#1F3D2E;padding:28px 32px;text-align:center;">
+            <td style="background:#1C3A4F;padding:28px 32px;text-align:center;">
               <div style="font-family:'Playfair Display',Georgia,serif;color:#F5F1E8;font-size:24px;letter-spacing:6px;font-weight:400;">KABODHI</div>
               <div style="color:#A66B3D;font-size:10px;letter-spacing:3px;text-transform:uppercase;margin-top:6px;">
                 Adaptógenos naturales
@@ -369,7 +401,7 @@ class MailService {
           <tr>
             <td style="padding:32px;font-size:15px;line-height:1.7;">
               {$etiquetaHtml}
-              <h1 style="font-family:'Playfair Display',Georgia,serif;font-size:22px;font-weight:400;margin:0 0 20px;color:#1F3D2E;">{$titleSafe}</h1>
+              <h1 style="font-family:'Playfair Display',Georgia,serif;font-size:22px;font-weight:400;margin:0 0 20px;color:#1C3A4F;">{$titleSafe}</h1>
               {$content}
             </td>
           </tr>

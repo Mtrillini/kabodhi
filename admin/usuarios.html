@@ -99,8 +99,9 @@
             </select>
           </div>
           <p style="font-size:0.72rem;color:var(--taupe);">
-            Se genera un link que vence en 7 días y sirve una sola vez.
-            Pasáselo a esa persona: ahí elige su usuario y su contraseña.
+            Le llega un mail con el link, que vence en 7 días y sirve una sola vez.
+            Ahí elige su usuario y su contraseña. Si el mail no sale, el link
+            te queda acá para pasárselo vos.
           </p>
         </form>
 
@@ -108,6 +109,7 @@
           <div style="font-size:0.7rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--taupe);margin-bottom:0.5rem;">
             Link de invitación
           </div>
+          <p id="invitacion-aviso" style="font-size:0.72rem;color:var(--taupe);margin-bottom:0.6rem;"></p>
           <input type="text" id="f-inv-link" class="form-input" readonly
                  style="font-size:0.72rem;font-family:monospace;">
           <button class="btn btn-secondary btn-sm" id="btn-copiar" style="margin-top:0.6rem;">Copiar link</button>
@@ -198,6 +200,6 @@
   <script src="js/layout.js?v=3"></script>
   <script src="js/demo.js?v=1"></script>
   <script src="js/auth.js?v=3"></script>
-  <script src="js/usuarios.js?v=3"></script>
+  <script src="js/usuarios.js?v=4"></script>
 </body>
 </html>

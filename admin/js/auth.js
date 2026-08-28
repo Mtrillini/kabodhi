@@ -32,8 +32,8 @@ function avisarSinBackend() {
   document.body.innerHTML = `
     <div style="max-width:520px;margin:14vh auto;padding:2.5rem;font-family:var(--font);
                 background:#fff;border-radius:6px;box-shadow:0 2px 12px rgba(0,0,0,0.08);text-align:center;">
-      <div style="font-family:var(--font-display);font-size:1.5rem;letter-spacing:6px;color:#1F3D2E;margin-bottom:0.5rem;">KABODHI</div>
-      <h1 style="font-size:1.1rem;font-weight:normal;color:#1F3D2E;margin:1.5rem 0 1rem;">
+      <div style="font-family:var(--font-display);font-size:1.5rem;letter-spacing:6px;color:#1C3A4F;margin-bottom:0.5rem;">KABODHI</div>
+      <h1 style="font-size:1.1rem;font-weight:normal;color:#1C3A4F;margin:1.5rem 0 1rem;">
         El panel necesita un hosting con PHP
       </h1>
       <p style="font-size:0.85rem;color:#8B7966;line-height:1.7;">
@@ -41,7 +41,7 @@ function avisarSinBackend() {
         La tienda funciona igual, pero la administración requiere PHP y MySQL.
       </p>
       <a href="../index.html"
-         style="display:inline-block;margin-top:1.5rem;padding:0.7rem 1.5rem;background:#1F3D2E;
+         style="display:inline-block;margin-top:1.5rem;padding:0.7rem 1.5rem;background:#1C3A4F;
                 color:#F5F1E8;text-decoration:none;border-radius:4px;font-size:0.8rem;letter-spacing:1px;">
         Ir a la tienda
       </a>

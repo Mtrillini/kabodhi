@@ -473,7 +473,7 @@ function demoMostrarAviso() {
   barra.id = 'aviso-demo';
   barra.style.cssText = [
     'position:fixed', 'top:0', 'left:0', 'right:0', 'z-index:9999',
-    'background:#1F3D2E', 'color:#F5F1E8', 'font-family:var(--font)',
+    'background:#1C3A4F', 'color:#F5F1E8', 'font-family:var(--font)',
     'font-size:0.7rem', 'letter-spacing:0.04em', 'padding:0.45rem 1rem',
     'display:flex', 'align-items:center', 'justify-content:center', 'gap:1rem',
     'flex-wrap:wrap',

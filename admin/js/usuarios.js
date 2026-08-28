@@ -133,7 +133,17 @@ async function generarInvitacion() {
 
     document.getElementById('f-inv-link').value = json.data.link;
     document.getElementById('invitacion-lista').style.display = '';
-    showToast(`Link generado, vence en ${json.data.dias} dias.`, 'success');
+
+    // El link se muestra siempre, haya salido el mail o no: sin SMTP
+    // configurado hay que poder pasarlo a mano.
+    const aviso = document.getElementById('invitacion-aviso');
+    if (aviso) {
+      aviso.textContent = json.data.enviado
+        ? `Le mandamos el mail a ${json.data.email}. Igual te dejamos el link por si acaso.`
+        : 'No se pudo enviar el mail (falta configurar el SMTP). Pasale este link vos.';
+    }
+
+    showToast(json.message, json.data.enviado ? 'success' : 'info');
     fetchInvitaciones();
   } catch (err) {
     showToast(err.message, 'error');

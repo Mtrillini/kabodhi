@@ -18,11 +18,33 @@ $error   = null;
 $exito   = false;
 $yaExiste = false;
 
+$sinSuper = false;
+
 try {
     $db = Database::getInstance();
     $yaExiste = (int)$db->query("SELECT COUNT(*) FROM admin_users")->fetchColumn() > 0;
+
+    // Estado sin salida: hay usuarios pero ninguno principal, asi que nadie
+    // puede gestionar usuarios ni configuracion. Pasa si el usuario se creo
+    // antes de que este script marcara al primero como super, porque la
+    // columna rol aplica 'admin' por defecto.
+    if ($yaExiste) {
+        $sinSuper = (int)$db->query("SELECT COUNT(*) FROM admin_users WHERE rol = 'super'")->fetchColumn() === 0;
+    }
 } catch (Throwable $e) {
     $error = 'No se pudo conectar a la base. Revisá los datos del .env.';
+}
+
+// Promover a principal, solo cuando no hay ninguno.
+if (!$error && $sinSuper && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['promover'])) {
+    $id = (int)$_POST['promover'];
+    try {
+        $db->prepare("UPDATE admin_users SET rol = 'super' WHERE id = :id")->execute([':id' => $id]);
+        $sinSuper = false;
+        $promovido = true;
+    } catch (Throwable $e) {
+        $error = 'No se pudo actualizar el rol.';
+    }
 }
 
 if (!$error && !$yaExiste && $_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -75,7 +97,7 @@ $esc = fn(?string $t): string => htmlspecialchars((string)$t, ENT_QUOTES, 'UTF-8
     * { box-sizing: border-box; }
     body {
       margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center;
-      background: #F5F1E8; font-family: 'Lato', Helvetica, sans-serif; color: #1F3D2E; padding: 2rem 1rem;
+      background: #F5F1E8; font-family: 'Lato', Helvetica, sans-serif; color: #1C3A4F; padding: 2rem 1rem;
     }
     .caja { background: #fff; border-radius: 6px; box-shadow: 0 20px 60px rgba(0,0,0,0.12);
             padding: 2.5rem; width: 100%; max-width: 430px; }
@@ -86,17 +108,17 @@ $esc = fn(?string $t): string => htmlspecialchars((string)$t, ENT_QUOTES, 'UTF-8
     label { display: block; font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase;
             color: #8B7966; margin-bottom: 0.35rem; }
     input { width: 100%; padding: 0.7rem 0.85rem; border: 1px solid #D8D6CD; border-radius: 4px;
-            font-family: inherit; font-size: 0.9rem; margin-bottom: 1.1rem; background: #fff; color: #1F3D2E; }
-    input:focus { outline: 2px solid #1F3D2E; outline-offset: 1px; border-color: #1F3D2E; }
-    button { width: 100%; padding: 0.85rem; background: #1F3D2E; color: #F5F1E8; border: none;
+            font-family: inherit; font-size: 0.9rem; margin-bottom: 1.1rem; background: #fff; color: #1C3A4F; }
+    input:focus { outline: 2px solid #1C3A4F; outline-offset: 1px; border-color: #1C3A4F; }
+    button { width: 100%; padding: 0.85rem; background: #1C3A4F; color: #F5F1E8; border: none;
              border-radius: 4px; font-family: inherit; font-size: 0.8rem; letter-spacing: 0.12em;
              text-transform: uppercase; cursor: pointer; }
-    button:hover { background: #16301F; }
+    button:hover { background: #132836; }
     .aviso { padding: 0.9rem 1rem; border-radius: 4px; font-size: 0.82rem; line-height: 1.6; margin-bottom: 1.5rem; }
     .aviso--error { background: #F6E4E1; color: #A32E24; }
     .aviso--ok    { background: #E0EDE6; color: #2F6B4F; }
     .pista { font-size: 0.72rem; color: #8B7966; margin: -0.7rem 0 1.1rem; }
-    a { color: #1F3D2E; }
+    a { color: #1C3A4F; }
   </style>
 </head>
 <body>
@@ -116,6 +138,31 @@ $esc = fn(?string $t): string => htmlspecialchars((string)$t, ENT_QUOTES, 'UTF-8
         <br><br>
         <strong>Borrá este archivo del servidor</strong> (<code>crear-admin.php</code>).
       </div>
+
+    <?php elseif (!empty($promovido)): ?>
+      <div class="aviso aviso--ok">
+        <strong>Listo.</strong> Ese usuario ahora es administrador principal.<br><br>
+        Cerrá sesión y volvé a entrar para que tome el cambio.
+        <br><br>
+        <strong>Borrá este archivo del servidor.</strong>
+      </div>
+
+    <?php elseif ($sinSuper): ?>
+      <div class="aviso aviso--error">
+        Hay usuarios cargados pero <strong>ninguno es administrador principal</strong>,
+        así que nadie puede gestionar usuarios ni la configuración de la tienda.
+      </div>
+      <p style="font-size:0.82rem;color:#8B7966;line-height:1.6;margin-bottom:1rem;">
+        Elegí quién pasa a ser el principal:
+      </p>
+      <?php foreach ($db->query("SELECT id, username, email FROM admin_users ORDER BY id")->fetchAll(PDO::FETCH_ASSOC) as $u): ?>
+        <form method="post" style="margin-bottom:0.6rem;">
+          <input type="hidden" name="promover" value="<?= (int)$u['id'] ?>">
+          <button type="submit" style="width:100%;text-align:left;">
+            <?= $esc($u['username']) ?> &nbsp;·&nbsp; <?= $esc($u['email']) ?>
+          </button>
+        </form>
+      <?php endforeach; ?>
 
     <?php elseif ($yaExiste): ?>
       <div class="aviso aviso--error">

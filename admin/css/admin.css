@@ -10,7 +10,7 @@
 }
 
 :root {
-  --negro: #1F3D2E;
+  --negro: #1C3A4F;      /* mismo azul de marca que css/style.css */
   --crema: #F5F1E8;
   --taupe: #8B7966;
   --champagne: #A66B3D;
@@ -397,7 +397,7 @@ tbody tr:last-child td {
 }
 
 .btn-primary:hover {
-  background-color: #2b4436;
+  background-color: #132836;
 }
 
 .btn-secondary {
