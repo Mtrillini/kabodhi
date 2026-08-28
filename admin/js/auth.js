@@ -2,7 +2,10 @@
 // KABODHI Admin — auth.js
 // ============================================================
 
-/** Aviso a pantalla completa cuando el panel se abre en un hosting sin PHP. */
+/**
+ * Respaldo: si el panel corre sin PHP y ademas demo.js no cargo, no hay forma
+ * de responder la API. Se explica en vez de encadenar errores de conexion.
+ */
 function avisarSinBackend() {
   document.body.innerHTML = `
     <div style="max-width:520px;margin:14vh auto;padding:2.5rem;font-family:var(--font);
@@ -24,11 +27,6 @@ function avisarSinBackend() {
 }
 
 async function checkAuth() {
-  if (typeof PANEL_SIN_BACKEND !== 'undefined' && PANEL_SIN_BACKEND) {
-    avisarSinBackend();
-    return false;
-  }
-
   try {
     const res = await fetch(API_URL + '/auth/check', {
       credentials: 'include',
@@ -36,6 +34,10 @@ async function checkAuth() {
     const json = await res.json();
 
     if (!json.success || !json.authenticated) {
+      if (typeof PANEL_SIN_BACKEND !== 'undefined' && PANEL_SIN_BACKEND) {
+        avisarSinBackend();
+        return false;
+      }
       window.location.href = APP_BASE + '/admin/login.html';
       return false;
     }
@@ -54,6 +56,10 @@ async function checkAuth() {
 
     return true;
   } catch {
+    if (typeof PANEL_SIN_BACKEND !== 'undefined' && PANEL_SIN_BACKEND) {
+      avisarSinBackend();
+      return false;
+    }
     window.location.href = APP_BASE + '/admin/login.html';
     return false;
   }

@@ -27,8 +27,31 @@ const IS_STATIC  = !isLocal;
 // Base de los JSON horneados (rutas relativas para que anden en cualquier host)
 const DATA_BASE = 'data/';
 
+// Datos cargados desde el panel en modo demo (sin backend). Viven en el
+// localStorage de este navegador; si existen, mandan sobre el JSON horneado,
+// para que un producto cargado en el panel se vea aca.
+const DEMO_KEY = 'kabodhi_demo_v1';
+
+function datosDemo(apiPath) {
+  const forzado = new URLSearchParams(location.search).has('demo');
+  if (!IS_STATIC && !forzado) return null;
+  try {
+    const estado = JSON.parse(localStorage.getItem(DEMO_KEY) || 'null');
+    if (!estado) return null;
+    if (apiPath === '/productos')    return { success: true, data: estado.productos.filter(p => parseInt(p.activo) === 1) };
+    if (apiPath === '/hongos')       return { success: true, data: estado.hongos.filter(h => parseInt(h.activo) === 1) };
+    if (apiPath === '/configuracion') return { success: true, data: estado.configuracion };
+  } catch {
+    /* si el estado esta corrupto, se ignora y se usa el JSON horneado */
+  }
+  return null;
+}
+
 // Trae datos: intenta la API PHP y, si no existe (estatico), cae al JSON horneado.
 async function fetchDatos(apiPath, staticFile) {
+  const demo = datosDemo(apiPath);
+  if (demo) return demo;
+
   // En estatico vamos directo al JSON (evita un 404 a la API inexistente).
   if (!IS_STATIC) {
     try {
