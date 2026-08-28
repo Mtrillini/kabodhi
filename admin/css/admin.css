@@ -17,7 +17,8 @@
   --plata: #B7AE9C;
   --blanco: #FFFFFF;
   --sidebar-width: 240px;
-  --font: 'Lato', sans-serif;
+  --font: 'Lato', sans-serif;                          /* texto */
+  --font-display: 'Playfair Display', Georgia, serif;  /* marca y titulos */
   --transition: 0.25s ease;
   --radius: 4px;
   --shadow: 0 2px 12px rgba(0,0,0,0.08);
@@ -60,7 +61,7 @@ ul { list-style: none; }
 }
 
 .sidebar__logo {
-  font-family: 'Lato', sans-serif;
+  font-family: var(--font-display);
   font-size: 1.5rem;
   font-weight: 300;
   letter-spacing: 0.25em;
@@ -177,7 +178,8 @@ ul { list-style: none; }
 }
 
 .topbar__title {
-  font-size: 1rem;
+  font-family: var(--font-display);
+  font-size: 1.15rem;
   font-weight: 500;
   color: var(--negro);
   letter-spacing: 0.04em;
@@ -250,6 +252,7 @@ ul { list-style: none; }
 }
 
 .stat-card__value {
+  font-family: var(--font-display);
   font-size: 2rem;
   font-weight: 300;
   color: var(--negro);
@@ -652,7 +655,7 @@ tbody tr:last-child td {
 }
 
 .login-logo {
-  font-family: 'Lato', sans-serif;
+  font-family: var(--font-display);
   font-size: 2rem;
   font-weight: 300;
   letter-spacing: 0.3em;

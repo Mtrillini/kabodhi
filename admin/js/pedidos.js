@@ -469,10 +469,15 @@ async function imprimirRemito(id) {
   const html = `<!DOCTYPE html>
 <html lang="es"><head><meta charset="UTF-8">
 <title>Remito #${pedido.id} — KABODHI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
 <style>
   * { box-sizing: border-box; }
-  body { font-family: Georgia, 'Times New Roman', serif; color: #1F3D2E; margin: 2.5rem; font-size: 13px; }
-  h1 { font-size: 1.6rem; margin: 0; letter-spacing: 0.15em; }
+  /* Mismas fuentes que el resto de la app: Playfair para la marca y los
+     titulos, Lato para el texto. */
+  body { font-family: 'Lato', Helvetica, Arial, sans-serif; color: #1F3D2E; margin: 2.5rem; font-size: 13px; }
+  h1 { font-family: 'Playfair Display', Georgia, serif; font-size: 1.6rem; margin: 0; letter-spacing: 0.15em; font-weight: 500; }
   .sub { color: #8B7966; font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; }
   .head { display: flex; justify-content: space-between; align-items: flex-start;
           border-bottom: 2px solid #1F3D2E; padding-bottom: 1rem; margin-bottom: 1.5rem; }
@@ -487,7 +492,8 @@ async function imprimirRemito(id) {
   .num { text-align: right; white-space: nowrap; }
   .totales { margin-left: auto; width: 280px; margin-top: 1rem; }
   .totales tr td { border: none; padding: 0.3rem 0.4rem; }
-  .totales .total td { border-top: 2px solid #1F3D2E; font-weight: bold; font-size: 1.05rem; padding-top: 0.6rem; }
+  .totales .total td { border-top: 2px solid #1F3D2E; font-weight: 700; font-size: 1.05rem; padding-top: 0.6rem; }
+  .meta .num { font-family: 'Playfair Display', Georgia, serif; font-size: 1.2rem; font-weight: 500; }
   .pie { margin-top: 3rem; font-size: 0.7rem; color: #8B7966; text-align: center;
          border-top: 1px solid #eee; padding-top: 1rem; }
   @media print { body { margin: 1.5cm; } }
@@ -499,7 +505,7 @@ async function imprimirRemito(id) {
       <div class="sub">Adaptógenos naturales</div>
     </div>
     <div class="meta">
-      <div style="font-size:1.2rem;font-weight:bold;">Remito #${pedido.id}</div>
+      <div class="num">Remito #${pedido.id}</div>
       <div class="sub">${formatDate(pedido.created_at)}</div>
       <div class="sub">Estado: ${capitalize(pedido.estado)}</div>
     </div>

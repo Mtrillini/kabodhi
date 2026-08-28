@@ -353,14 +353,14 @@ class MailService {
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
   <title>{$titleSafe}</title>
 </head>
-<body style="margin:0;padding:0;background:#F5F1E8;font-family:Helvetica,Arial,sans-serif;color:#1F3D2E;">
+<body style="margin:0;padding:0;background:#F5F1E8;font-family:'Lato',Helvetica,Arial,sans-serif;color:#1F3D2E;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#F5F1E8;padding:40px 16px;">
     <tr>
       <td align="center">
         <table width="600" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:6px;overflow:hidden;max-width:600px;width:100%;">
           <tr>
             <td style="background:#1F3D2E;padding:28px 32px;text-align:center;">
-              <div style="color:#F5F1E8;font-size:24px;letter-spacing:6px;font-weight:300;">KABODHI</div>
+              <div style="font-family:'Playfair Display',Georgia,serif;color:#F5F1E8;font-size:24px;letter-spacing:6px;font-weight:400;">KABODHI</div>
               <div style="color:#A66B3D;font-size:10px;letter-spacing:3px;text-transform:uppercase;margin-top:6px;">
                 Adaptógenos naturales
               </div>
@@ -369,7 +369,7 @@ class MailService {
           <tr>
             <td style="padding:32px;font-size:15px;line-height:1.7;">
               {$etiquetaHtml}
-              <h1 style="font-size:21px;font-weight:normal;margin:0 0 20px;color:#1F3D2E;">{$titleSafe}</h1>
+              <h1 style="font-family:'Playfair Display',Georgia,serif;font-size:22px;font-weight:400;margin:0 0 20px;color:#1F3D2E;">{$titleSafe}</h1>
               {$content}
             </td>
           </tr>

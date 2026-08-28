@@ -127,6 +127,17 @@ class AuthController {
     }
 
     public function check(): void {
+        // En modo desarrollo el panel entra sin sesion, con un admin ficticio.
+        if (Auth::devSinLogin() && empty($_SESSION['admin_id'])) {
+            echo json_encode([
+                'success'       => true,
+                'authenticated' => true,
+                'modo_dev'      => true,
+                'admin'         => ['id' => 0, 'username' => 'dev', 'email' => ''],
+            ]);
+            return;
+        }
+
         if (!empty($_SESSION['admin_id'])) {
             echo json_encode([
                 'success'       => true,

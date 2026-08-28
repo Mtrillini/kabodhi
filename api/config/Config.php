@@ -35,6 +35,11 @@ if (!defined('MP_PUBLIC_KEY'))      define('MP_PUBLIC_KEY',      '');
 if (!defined('APP_URL'))            define('APP_URL',            'https://nuvearg.com');
 if (!defined('SESSION_SECRET'))     define('SESSION_SECRET',     'nuve_secret_2024');
 
+// Acceso al panel sin login, SOLO para desarrollo. Ver Auth::devSinLogin():
+// ademas de este flag, la peticion tiene que venir de localhost, asi que aunque
+// quede prendido por error en un hosting real no abre el panel a internet.
+if (!defined('DEV_ADMIN_SIN_LOGIN')) define('DEV_ADMIN_SIN_LOGIN', 'false');
+
 // CORS allowed origins (comma-separated in .env, or wildcard)
 if (!defined('CORS_ORIGIN'))        define('CORS_ORIGIN',        '*');
 

@@ -5,9 +5,9 @@
 /** Aviso a pantalla completa cuando el panel se abre en un hosting sin PHP. */
 function avisarSinBackend() {
   document.body.innerHTML = `
-    <div style="max-width:520px;margin:14vh auto;padding:2.5rem;font-family:Lato,sans-serif;
+    <div style="max-width:520px;margin:14vh auto;padding:2.5rem;font-family:var(--font);
                 background:#fff;border-radius:6px;box-shadow:0 2px 12px rgba(0,0,0,0.08);text-align:center;">
-      <div style="font-size:1.5rem;letter-spacing:6px;color:#1F3D2E;margin-bottom:0.5rem;">KABODHI</div>
+      <div style="font-family:var(--font-display);font-size:1.5rem;letter-spacing:6px;color:#1F3D2E;margin-bottom:0.5rem;">KABODHI</div>
       <h1 style="font-size:1.1rem;font-weight:normal;color:#1F3D2E;margin:1.5rem 0 1rem;">
         El panel necesita un hosting con PHP
       </h1>
@@ -44,6 +44,8 @@ async function checkAuth() {
     // (ej: usuarios.js, que no deja borrarse a uno mismo).
     window.ADMIN_ACTUAL = json.admin || null;
 
+    if (json.modo_dev) mostrarAvisoModoDev();
+
     // Update username display if present
     const usernameEl = document.getElementById('admin-username');
     if (usernameEl && json.admin) {
@@ -55,6 +57,25 @@ async function checkAuth() {
     window.location.href = APP_BASE + '/admin/login.html';
     return false;
   }
+}
+
+/** Barra fija: el panel esta abierto sin login (solo desarrollo). */
+function mostrarAvisoModoDev() {
+  if (document.getElementById('aviso-modo-dev')) return;
+
+  const barra = document.createElement('div');
+  barra.id = 'aviso-modo-dev';
+  barra.textContent = 'MODO DESARROLLO — el panel está abierto sin login. Desactivá DEV_ADMIN_SIN_LOGIN en el .env antes de publicar.';
+  barra.style.cssText = [
+    'position:fixed', 'top:0', 'left:0', 'right:0', 'z-index:9999',
+    'background:#A66B3D', 'color:#fff', 'text-align:center',
+    'font-family:var(--font)', 'font-size:0.7rem', 'letter-spacing:0.06em',
+    'padding:0.4rem 1rem',
+  ].join(';');
+
+  document.body.appendChild(barra);
+  // Empujar el contenido para que la barra no tape la topbar.
+  document.body.style.paddingTop = '1.75rem';
 }
 
 async function login(username, password) {
