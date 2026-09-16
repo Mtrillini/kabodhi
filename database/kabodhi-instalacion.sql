@@ -36,6 +36,8 @@ DROP TABLE IF EXISTS `producto_imagenes`;
 DROP TABLE IF EXISTS `productos`;
 DROP TABLE IF EXISTS `categorias`;
 DROP TABLE IF EXISTS `hongos_principales`;
+DROP TABLE IF EXISTS `envio_historial`;
+DROP TABLE IF EXISTS `envios`;
 DROP TABLE IF EXISTS `tarifas_envio`;
 DROP TABLE IF EXISTS `configuracion`;
 DROP TABLE IF EXISTS `mail_log`;
@@ -61,6 +63,11 @@ CREATE TABLE `productos` (
     `precio`          DECIMAL(10,2) NOT NULL,
     `stock`           INT UNSIGNED NOT NULL DEFAULT 0,
     `stock_reservado` INT UNSIGNED NOT NULL DEFAULT 0,
+    -- Bulto para cotizar el envio (Correo Argentino). NULL = default de configuracion.
+    `peso_gramos`     INT UNSIGNED NULL,
+    `alto_cm`         SMALLINT UNSIGNED NULL,
+    `ancho_cm`        SMALLINT UNSIGNED NULL,
+    `largo_cm`        SMALLINT UNSIGNED NULL,
     `imagen_url`      VARCHAR(500) NULL,
     `tipo`            VARCHAR(50) NOT NULL DEFAULT 'enfoque',
     `activo`          TINYINT(1) NOT NULL DEFAULT 1,
@@ -151,6 +158,70 @@ CREATE TABLE `tarifas_envio` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 
+-- Envio de cada pedido: que cotizo Correo Argentino / la tabla, que se le
+-- cobro al cliente, tipo de entrega, sucursal, bulto, tracking y estado.
+CREATE TABLE `envios` (
+    `id`                  INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    `pedido_id`           INT UNSIGNED NOT NULL,
+    `proveedor`           ENUM('correo','tabla','sin_costo') NOT NULL DEFAULT 'tabla',
+    `tipo_entrega`        ENUM('domicilio','sucursal') NOT NULL DEFAULT 'domicilio',
+    `producto`            VARCHAR(5)   NULL,
+    `producto_nombre`     VARCHAR(150) NULL,
+    `cp_origen`           VARCHAR(10)  NULL,
+    `cp_destino`          VARCHAR(10)  NOT NULL,
+    `provincia_codigo`    CHAR(1)      NULL,
+    `sucursal_codigo`     VARCHAR(20)  NULL,
+    `sucursal_nombre`     VARCHAR(200) NULL,
+    `dest_calle`          VARCHAR(200) NULL,
+    `dest_numero`         VARCHAR(20)  NULL,
+    `dest_piso_depto`     VARCHAR(50)  NULL,
+    `dest_ciudad`         VARCHAR(150) NULL,
+    `dest_provincia`      VARCHAR(100) NULL,
+    `peso_gramos`         INT UNSIGNED      NOT NULL DEFAULT 0,
+    `alto_cm`             SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+    `ancho_cm`            SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+    `largo_cm`            SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+    `costo_cotizado`      DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    `costo_cobrado`       DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    `bonificado`          TINYINT(1)    NOT NULL DEFAULT 0,
+    `plazo_min_dias`      TINYINT UNSIGNED NULL,
+    `plazo_max_dias`      TINYINT UNSIGNED NULL,
+    `cotizacion_valida_hasta` DATETIME NULL,
+    `ext_order_id`        VARCHAR(60)  NULL,
+    `importado_at`        DATETIME     NULL,
+    `importado_respuesta` TEXT         NULL,
+    `tracking_codigo`     VARCHAR(120) NULL,
+    `tracking_url`        VARCHAR(500) NULL,
+    `estado`              ENUM('pendiente','preparando','enviado','en_traslado','en_sucursal','entregado','rechazado','devuelto','cancelado')
+                          NOT NULL DEFAULT 'pendiente',
+    `estado_at`           DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `created_at`          TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at`          TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY `uq_pedido` (`pedido_id`),
+    UNIQUE KEY `uq_ext_order` (`ext_order_id`),
+    KEY `idx_estado` (`estado`),
+    KEY `idx_proveedor` (`proveedor`),
+    KEY `idx_created` (`created_at`),
+    CONSTRAINT `fk_envio_pedido` FOREIGN KEY (`pedido_id`)
+        REFERENCES `pedidos` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+-- Cada cambio de estado del envio: quien, cuando y por que.
+CREATE TABLE `envio_historial` (
+    `id`         INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    `envio_id`   INT UNSIGNED NOT NULL,
+    `estado`     VARCHAR(20)  NOT NULL,
+    `detalle`    VARCHAR(500) NULL,
+    `origen`     ENUM('sistema','panel','correo') NOT NULL DEFAULT 'sistema',
+    `usuario_id` INT UNSIGNED NULL,
+    `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    KEY `idx_envio` (`envio_id`, `created_at`),
+    CONSTRAINT `fk_historial_envio` FOREIGN KEY (`envio_id`)
+        REFERENCES `envios` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
 -- Valores que se editan desde Ajustes > Configuracion.
 CREATE TABLE `configuracion` (
     `clave`      VARCHAR(60) NOT NULL PRIMARY KEY,
@@ -237,7 +308,17 @@ INSERT INTO `tarifas_envio` (`id`, `descripcion`, `cp_desde`, `cp_hasta`, `preci
 INSERT INTO `configuracion` (`clave`, `valor`) VALUES
     ('whatsapp_numero', '541171003392'),
     ('contacto_email', 'hola@kabodhi.com'),
-    ('envio_gratis_desde', '0');
+    ('envio_gratis_desde', '0'),
+    ('envio_modo', 'tabla'),
+    ('correo_ambiente', 'test'),
+    ('correo_cp_origen', ''),
+    ('correo_permite_sucursal', '1'),
+    ('correo_permite_expreso', '1'),
+    ('correo_tracking_url', 'https://www.correoargentino.com.ar/formularios/e-commerce?id={codigo}'),
+    ('envio_peso_default_gramos', '300'),
+    ('envio_alto_default_cm', '10'),
+    ('envio_ancho_default_cm', '15'),
+    ('envio_largo_default_cm', '20');
 
 
 SET FOREIGN_KEY_CHECKS = 1;

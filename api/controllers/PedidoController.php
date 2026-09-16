@@ -51,8 +51,20 @@ class PedidoController {
             'dni'       => $dni,
         ];
 
-        // Solo el CP es dato del cliente; el costo lo calcula PedidoService.
-        $envioData = ['cp' => (int)($body['envio_cp'] ?? 0)];
+        // Del envio, el cliente solo elige: CP, la opcion cotizada, la sucursal
+        // (si retira) y la direccion. El costo lo vuelve a calcular EnvioService.
+        $envioIn   = is_array($body['envio'] ?? null) ? $body['envio'] : [];
+        $envioData = [
+            'cp'              => (string)($envioIn['cp'] ?? $body['envio_cp'] ?? ''),
+            'opcion_id'       => (string)($envioIn['opcion_id']       ?? ''),
+            'sucursal_codigo' => (string)($envioIn['sucursal_codigo'] ?? ''),
+            'sucursal_nombre' => (string)($envioIn['sucursal_nombre'] ?? ''),
+            'calle'           => trim((string)($body['calle']      ?? '')),
+            'numero'          => trim((string)($body['numero']     ?? '')),
+            'piso_depto'      => trim((string)($body['piso_depto'] ?? '')),
+            'ciudad'          => trim((string)($body['ciudad']     ?? '')),
+            'provincia'       => trim((string)($body['provincia']  ?? '')),
+        ];
 
         try {
             $pedido = $this->pedidoService->crear($clienteData, $body['items'], $envioData);
@@ -120,6 +132,91 @@ class PedidoController {
     public function mails(int $id): void {
         Auth::requireAdmin();
         echo json_encode(['success' => true, 'data' => $this->pedidoService->getMails($id)]);
+    }
+
+    // ---------------------------------------------------------------
+    // Envio del pedido (registro, estado, importacion a Correo Argentino)
+    // ---------------------------------------------------------------
+
+    /** GET /pedidos/{id}/envio — registro del envio con su historial. */
+    public function envio(int $id): void {
+        Auth::requireAdmin();
+
+        $envio = (new EnvioService())->getByPedido($id);
+        if (!$envio) {
+            http_response_code(404);
+            echo json_encode(['success' => false, 'message' => "El pedido #{$id} no tiene envío registrado."]);
+            return;
+        }
+        echo json_encode(['success' => true, 'data' => $envio, 'estados' => EnvioService::ESTADOS]);
+    }
+
+    /** PUT /pedidos/{id}/envio/estado — {estado, detalle?} */
+    public function updateEnvioEstado(int $id): void {
+        Auth::requireAdmin();
+
+        $body    = json_decode(file_get_contents('php://input'), true) ?? [];
+        $estado  = trim((string)($body['estado'] ?? ''));
+        $detalle = trim((string)($body['detalle'] ?? ''));
+
+        if ($estado === '') {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => "El campo 'estado' es obligatorio."]);
+            return;
+        }
+
+        $this->responder(function () use ($id, $estado, $detalle) {
+            $envio = (new EnvioService())->cambiarEstado(
+                $id, $estado, $detalle !== '' ? $detalle : null, 'panel', self::usuarioId()
+            );
+            return ['data' => $envio, 'message' => 'Estado del envío actualizado.'];
+        });
+    }
+
+    /** PUT /pedidos/{id}/envio/destino — direccion estructurada / sucursal / bulto. */
+    public function updateEnvioDestino(int $id): void {
+        Auth::requireAdmin();
+
+        $body = json_decode(file_get_contents('php://input'), true) ?? [];
+        $this->responder(function () use ($id, $body) {
+            $envio = (new EnvioService())->actualizarDestino($id, $body);
+            return ['data' => $envio, 'message' => 'Datos de destino guardados.'];
+        });
+    }
+
+    /** POST /pedidos/{id}/envio/importar — crea la orden en MiCorreo. */
+    public function importarEnvio(int $id): void {
+        Auth::requireAdmin();
+
+        $this->responder(function () use ($id) {
+            $envio = (new EnvioService())->importarACorreo($id, self::usuarioId());
+            return ['data' => $envio, 'message' => 'Orden de envío creada en Correo Argentino.'];
+        });
+    }
+
+    /** Ejecuta y traduce excepciones a respuestas JSON con el codigo que corresponde. */
+    private function responder(callable $accion): void {
+        try {
+            $r = $accion();
+            echo json_encode(['success' => true] + $r);
+        } catch (InvalidArgumentException $e) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        } catch (MiCorreoException $e) {
+            http_response_code(502);
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        } catch (RuntimeException $e) {
+            http_response_code(422);
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        } catch (Throwable $e) {
+            error_log('PedidoController envio: ' . $e->getMessage());
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error interno.']);
+        }
+    }
+
+    private static function usuarioId(): ?int {
+        return !empty($_SESSION['admin_id']) ? (int)$_SESSION['admin_id'] : null;
     }
 
     public function updateTracking(int $id): void {

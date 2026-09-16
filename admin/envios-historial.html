@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pedidos — KABODHI Admin</title>
+  <title>Envíos — KABODHI Admin</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
@@ -12,7 +12,7 @@
 <body>
 
   <!-- Sidebar -->
-  <aside class="sidebar" id="sidebar" data-page="pedidos"></aside>
+  <aside class="sidebar" id="sidebar" data-page="envios-historial"></aside>
 
   <!-- Main -->
   <div class="main">
@@ -21,33 +21,37 @@
         <button class="hamburger-admin" id="hamburger-admin" aria-label="Menú">
           <span></span><span></span><span></span>
         </button>
-        <span class="topbar__title">Pedidos</span>
+        <span class="topbar__title">Envíos</span>
       </div>
       <div class="topbar__actions">
+        <a href="envios.html" class="btn btn-secondary btn-sm">Tarifas por CP</a>
         <button id="btn-exportar" class="btn btn-secondary btn-sm">↓ Exportar CSV</button>
         <button id="btn-actualizar" class="btn btn-secondary btn-sm">↺ Actualizar</button>
       </div>
     </div>
 
     <div class="content">
+
+      <div class="stats-grid" id="envios-resumen" style="margin-bottom:1.25rem;"></div>
+
       <div class="panel">
         <div class="panel__header">
           <div class="admin-search" style="display:flex;gap:0.6rem;flex-wrap:wrap;align-items:center;">
             <input
               type="search"
-              id="search-pedidos"
+              id="search-envios"
               class="search-input"
-              placeholder="Buscar por #, cliente o email..."
+              placeholder="Buscar por #, cliente, email o tracking..."
               style="min-width:220px;"
             >
             <select id="filter-estado" class="filter-select">
               <option value="">Todos los estados</option>
-              <option value="pendiente">Pendiente</option>
-              <option value="aprobado">Aprobado</option>
-              <option value="enviado">Enviado</option>
-              <option value="entregado">Entregado</option>
-              <option value="rechazado">Rechazado</option>
-              <option value="cancelado">Cancelado</option>
+            </select>
+            <select id="filter-proveedor" class="filter-select">
+              <option value="">Todos los servicios</option>
+              <option value="correo">Correo Argentino</option>
+              <option value="tabla">Tarifa de la tienda</option>
+              <option value="sin_costo">Sin costo</option>
             </select>
             <label style="font-size:0.7rem;color:var(--taupe);display:flex;align-items:center;gap:0.35rem;">
               Desde
@@ -59,31 +63,28 @@
             </label>
             <button id="btn-limpiar-filtros" class="btn btn-secondary btn-sm">Limpiar</button>
           </div>
+          <div id="resumen-filtros" style="font-size:0.72rem;color:var(--taupe);margin-top:0.6rem;"></div>
         </div>
-
-        <div id="resumen-filtros" style="padding:0.75rem 1.5rem;font-size:0.72rem;color:var(--taupe);border-bottom:1px solid var(--champagne);"></div>
 
         <div class="table-wrap">
           <table>
             <thead>
               <tr>
-                <th>#</th>
+                <th>Pedido</th>
                 <th>Cliente</th>
-                <th>Email</th>
-                <th>Total</th>
-                <th>Estado</th>
+                <th>Servicio</th>
+                <th>Destino</th>
+                <th>Cotizado</th>
+                <th>Cobrado</th>
+                <th>Estado envío</th>
+                <th>Tracking</th>
                 <th>Fecha</th>
-                <th>Acciones</th>
               </tr>
             </thead>
-            <tbody id="pedidos-tbody">
-              <tr><td colspan="7" class="loading">Cargando...</td></tr>
+            <tbody id="envios-tbody">
+              <tr><td colspan="9" class="loading">Cargando...</td></tr>
             </tbody>
           </table>
-        </div>
-
-        <div style="padding:1rem 1.5rem;font-size:0.72rem;color:var(--taupe);">
-          Hacé clic en una fila para ver el detalle del pedido.
         </div>
       </div>
     </div>
@@ -93,6 +94,6 @@
   <script src="js/layout.js?v=8"></script>
   <script src="js/demo.js?v=8"></script>
   <script src="js/auth.js?v=7"></script>
-  <script src="js/pedidos.js?v=8"></script>
+  <script src="js/envios-historial.js?v=1"></script>
 </body>
 </html>

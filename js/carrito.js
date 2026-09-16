@@ -165,8 +165,9 @@ function renderCarrito() {
   if (summaryContainer) renderSummary(carrito);
 }
 
+// La eleccion de envio la maneja js/envio.js (solo se carga en carrito y checkout).
 function getEnvioGuardado() {
-  try { return JSON.parse(localStorage.getItem('nuve_envio')) || null; } catch { return null; }
+  return window.Envio ? window.Envio.get() : null;
 }
 
 function renderSummary(carrito) {
@@ -179,6 +180,7 @@ function renderSummary(carrito) {
   const envio    = getEnvioGuardado();
   const envioTotal = envio ? parseFloat(envio.precio) : 0;
   const total    = subtotal + envioTotal;
+  const cotizacion = window.Envio ? window.Envio._cotizacion : null;
 
   container.innerHTML = `
     <div class="order-summary">
@@ -192,15 +194,16 @@ function renderSummary(carrito) {
       <div style="margin-bottom:0.8rem;">
         <div class="order-summary__row" style="margin-bottom:0.4rem;">
           <span>Envío</span>
-          <span>${envio ? fmt(envioTotal) : '—'}</span>
+          <span>${envio ? (envio.bonificado ? 'Gratis' : fmt(envioTotal)) : '—'}</span>
         </div>
-        ${envio ? `<div style="font-size:0.7rem;color:#888;margin-bottom:0.5rem;">${envio.descripcion} (CP ${envio.cp})</div>` : ''}
+        ${envio && !cotizacion ? `<div style="font-size:0.7rem;color:#888;margin-bottom:0.5rem;">${window.Envio.descripcion(envio)} (CP ${envio.cp})</div>` : ''}
         <div style="display:flex;gap:0.5rem;align-items:center;">
           <input
             type="text"
             id="cp-envio-input"
             placeholder="Tu código postal"
             maxlength="8"
+            inputmode="numeric"
             value="${envio ? envio.cp : ''}"
             style="flex:1;padding:0.75rem 0.9rem;border:1px solid #d6c6ad;border-radius:999px;font-family:inherit;font-size:0.85rem;min-height:44px;outline:none;"
           >
@@ -217,6 +220,7 @@ function renderSummary(carrito) {
           ` : ''}
         </div>
         <div id="envio-msg" style="font-size:0.72rem;color:#888;margin-top:0.3rem;min-height:1rem;"></div>
+        <div id="envio-opciones" class="envio-opciones"></div>
       </div>
 
       <div class="order-summary__divider"></div>
@@ -243,42 +247,55 @@ function renderSummary(carrito) {
   // Allow Enter key in CP input
   const cpInput = document.getElementById('cp-envio-input');
   if (cpInput) cpInput.addEventListener('keydown', e => { if (e.key === 'Enter') calcularEnvioCarrito(); });
+
+  // Si en esta pagina ya se cotizo, se vuelven a mostrar las opciones.
+  if (cotizacion && window.Envio) {
+    const box = document.getElementById('envio-opciones');
+    if (box) {
+      window.Envio.renderOpciones(box, cotizacion.opciones, envio?.opcion_id, opcion => {
+        window.Envio.elegir(cotizacion.cp, opcion);
+        renderSummary(getCarrito());
+      });
+    }
+  }
 }
 
 async function calcularEnvioCarrito() {
   const cp  = (document.getElementById('cp-envio-input')?.value || '').trim();
   const msg = document.getElementById('envio-msg');
 
-  if (IS_STATIC) {
+  if (IS_STATIC || !window.Envio) {
     if (msg) msg.textContent = 'El costo de envío lo coordinamos por WhatsApp al confirmar tu pedido.';
     return;
   }
 
-  if (!cp || !/^\d{4,}$/.test(cp)) {
-    if (msg) msg.textContent = 'Ingresá un código postal válido (mínimo 4 dígitos).';
+  if (!cp || !/^\d{4,}$/.test(cp.replace(/\D/g, ''))) {
+    if (msg) msg.textContent = 'Ingresá un código postal válido (4 dígitos).';
     return;
   }
 
   if (msg) msg.textContent = 'Calculando...';
 
   try {
-    const subtotal = getTotal();
-    const res  = await fetch(
-      API_URL + '/envios/calcular?cp=' + encodeURIComponent(cp) + '&subtotal=' + encodeURIComponent(subtotal)
-    );
-    const json = await res.json();
+    const r = await window.Envio.cotizar(cp);
 
-    if (!json.success || !json.data) {
-      localStorage.removeItem('nuve_envio');
-      if (msg) msg.textContent = 'No hay tarifas para ese código postal.';
+    if (!r.ok) {
+      window.Envio.clear();
       renderSummary(getCarrito());
+      const m = document.getElementById('envio-msg');
+      if (m) m.textContent = r.mensaje;
       return;
     }
 
-    const tarifa = json.data;
-    localStorage.setItem('nuve_envio', JSON.stringify({ cp, precio: tarifa.precio, descripcion: tarifa.descripcion }));
+    // Se preselecciona la mas barata a domicilio (o la unica), pero el
+    // cliente puede cambiarla; el checkout respeta lo elegido.
+    const previa  = window.Envio.get();
+    const elegida = r.opciones.find(o => previa && o.id === previa.opcion_id && previa.cp === r.cp) || r.opciones[0];
+    window.Envio.elegir(r.cp, elegida);
+
     renderSummary(getCarrito());
-    if (window.showToast) showToast(`Envío: ${(window.formatMoney || (v => '$' + v))(tarifa.precio)}`, 'success');
+    const m = document.getElementById('envio-msg');
+    if (m) m.textContent = r.aviso || (r.opciones.length > 1 ? 'Elegí cómo querés recibirlo:' : '');
   } catch {
     if (msg) msg.textContent = 'Error al calcular el envío.';
   }
@@ -286,7 +303,7 @@ async function calcularEnvioCarrito() {
 window.calcularEnvioCarrito = calcularEnvioCarrito;
 
 function limpiarEnvioCarrito() {
-  localStorage.removeItem('nuve_envio');
+  if (window.Envio) { window.Envio.clear(); window.Envio._cotizacion = null; }
   renderSummary(getCarrito());
 }
 window.limpiarEnvioCarrito = limpiarEnvioCarrito;
@@ -352,6 +369,17 @@ function updateCounterBadge() {
 document.addEventListener('DOMContentLoaded', () => {
   if (document.getElementById('cart-items-container')) {
     renderCarrito();
+
+    // El costo depende del peso del bulto: si cambia el carrito con un envio
+    // ya elegido, se vuelve a cotizar sin que el cliente tenga que pedirlo.
+    window.addEventListener('carrito-updated', () => {
+      const envio = getEnvioGuardado();
+      if (envio && getCarrito().items.length && document.getElementById('cp-envio-input')) {
+        calcularEnvioCarrito();
+      } else if (envio && !getCarrito().items.length && window.Envio) {
+        window.Envio.clear();
+      }
+    });
   }
   updateCounterBadge();
   window.addEventListener('carrito-updated', updateCounterBadge);

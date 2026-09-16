@@ -332,6 +332,16 @@ if ($seg0 === 'pedidos') {
                 http_response_code(405);
                 echo json_encode(['success' => false, 'message' => 'Método no permitido.']);
             }
+        } elseif ($seg2 === 'envio') {
+            // GET  /pedidos/{id}/envio
+            // PUT  /pedidos/{id}/envio/estado   | PUT /pedidos/{id}/envio/destino
+            // POST /pedidos/{id}/envio/importar
+            $seg3 = $segments[3] ?? '';
+            if ($seg3 === '' && $method === 'GET')                 $ctrl->envio($id);
+            elseif ($seg3 === 'estado'   && $method === 'PUT')     $ctrl->updateEnvioEstado($id);
+            elseif ($seg3 === 'destino'  && $method === 'PUT')     $ctrl->updateEnvioDestino($id);
+            elseif ($seg3 === 'importar' && $method === 'POST')    $ctrl->importarEnvio($id);
+            else { http_response_code(405); echo json_encode(['success' => false, 'message' => 'Método no permitido.']); }
         } else {
             // GET /pedidos/{id}
             if ($method === 'GET') {
@@ -370,6 +380,18 @@ if ($seg0 === 'envios') {
 
     if ($seg1 === 'calcular') {
         $ctrl->calcular();
+    } elseif ($seg1 === 'cotizar') {
+        if ($method === 'POST') $ctrl->cotizar();
+        else { http_response_code(405); echo json_encode(['success' => false, 'message' => 'Método no permitido.']); }
+    } elseif ($seg1 === 'sucursales') {
+        $ctrl->sucursales();
+    } elseif ($seg1 === 'provincias') {
+        $ctrl->provincias();
+    } elseif ($seg1 === 'historial') {
+        $ctrl->historial();
+    } elseif ($seg1 === 'correo' && $seg2 === 'probar') {
+        if ($method === 'POST') $ctrl->probarCorreo();
+        else { http_response_code(405); echo json_encode(['success' => false, 'message' => 'Método no permitido.']); }
     } elseif ($seg1 === '' || $seg1 === null) {
         if ($method === 'GET')       $ctrl->index();
         elseif ($method === 'POST')  $ctrl->store();

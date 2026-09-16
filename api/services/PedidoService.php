@@ -45,17 +45,21 @@ class PedidoService {
             ];
         }
 
-        // El costo de envio NO se toma del cliente: se recalcula aca a partir
-        // del CP y del subtotal real, para que nadie pueda mandar envio_costo: 0
-        // ni forzar la bonificacion por monto.
-        [$envioCosto, $envioDescripcion] = $this->resolverEnvio($envioData, $total);
-        $total += $envioCosto;
+        // El costo de envio NO se toma del cliente: se vuelve a cotizar aca
+        // (Correo Argentino o tabla segun la configuracion) a partir del CP,
+        // la opcion elegida y los items reales, para que nadie pueda mandar
+        // envio_costo: 0 ni forzar la bonificacion por monto.
+        $envioService     = new EnvioService();
+        $envio            = $envioService->resolverParaPedido($envioData, $items);
+        $envioCosto       = (float)$envio['costo_cobrado'];
+        $envioDescripcion = $envio['descripcion'];
+        $total           += $envioCosto;
 
         $this->db->beginTransaction();
         try {
             $stmt = $this->db->prepare(
-                "INSERT INTO pedidos (cliente_nombre, cliente_email, cliente_telefono, cliente_dni, cliente_direccion, envio_costo, envio_descripcion, total, estado)
-                 VALUES (:nombre, :email, :telefono, :dni, :direccion, :envio_costo, :envio_descripcion, :total, 'pendiente')"
+                "INSERT INTO pedidos (cliente_nombre, cliente_email, cliente_telefono, cliente_dni, cliente_direccion, envio_costo, envio_descripcion, transporte, total, estado)
+                 VALUES (:nombre, :email, :telefono, :dni, :direccion, :envio_costo, :envio_descripcion, :transporte, :total, 'pendiente')"
             );
             $stmt->execute([
                 ':nombre'            => $clienteData['nombre'],
@@ -65,9 +69,13 @@ class PedidoService {
                 ':direccion'         => $clienteData['direccion'] ?? null,
                 ':envio_costo'       => $envioCosto,
                 ':envio_descripcion' => $envioDescripcion,
+                ':transporte'        => $envio['proveedor'] === 'correo' ? 'Correo Argentino' : null,
                 ':total'             => $total,
             ]);
             $pedidoId = (int)$this->db->lastInsertId();
+
+            // Registro del envio: que se cotizo, que se cobro y a donde va.
+            $envioService->crearRegistro($pedidoId, $envio);
 
             $stmtItem = $this->db->prepare(
                 "INSERT INTO pedido_items (pedido_id, producto_id, cantidad, precio_unitario)
@@ -95,37 +103,13 @@ class PedidoService {
         }
     }
 
-    /**
-     * Devuelve [costo, descripcion] del envio, calculado en el servidor.
-     *
-     * @param array $envioData  Espera 'cp'. 'costo'/'descripcion' del cliente se ignoran.
-     * @param float $subtotal   Subtotal de los items ya validados.
-     */
-    private function resolverEnvio(array $envioData, float $subtotal): array {
-        $envioService = new EnvioService();
-
-        // Tienda sin tarifas configuradas: no se cobra envio.
-        if (!$envioService->hayTarifasActivas()) {
-            return [0.0, null];
-        }
-
-        $cp = (int)($envioData['cp'] ?? 0);
-        if ($cp <= 0) {
-            throw new InvalidArgumentException('Falta el código postal para calcular el envío.');
-        }
-
-        $tarifa = $envioService->calcular($cp, $subtotal);
-        if (!$tarifa) {
-            throw new RuntimeException("No hay envíos disponibles para el código postal {$cp}.");
-        }
-
-        return [(float)$tarifa['precio'], $tarifa['descripcion']];
-    }
-
     public function getAll(?string $estado = null): array {
-        $sql = "SELECT p.*, COUNT(pi.id) AS total_items
+        $sql = "SELECT p.*, COUNT(pi.id) AS total_items,
+                       e.estado AS envio_estado, e.proveedor AS envio_proveedor,
+                       e.tipo_entrega AS envio_tipo_entrega, e.importado_at AS envio_importado_at
                 FROM pedidos p
-                LEFT JOIN pedido_items pi ON pi.pedido_id = p.id";
+                LEFT JOIN pedido_items pi ON pi.pedido_id = p.id
+                LEFT JOIN envios e ON e.pedido_id = p.id";
         $params = [];
 
         if ($estado !== null && $estado !== '') {
@@ -133,7 +117,7 @@ class PedidoService {
             $params[':estado'] = $estado;
         }
 
-        $sql .= " GROUP BY p.id ORDER BY p.created_at DESC";
+        $sql .= " GROUP BY p.id, e.id ORDER BY p.created_at DESC";
 
         $stmt = $this->db->prepare($sql);
         $stmt->execute($params);
@@ -155,10 +139,17 @@ class PedidoService {
         $stmtItems->execute([':pedido_id' => $id]);
         $pedido['items'] = $stmtItems->fetchAll();
 
+        // Registro del envio (sin historial: eso lo pide el panel aparte).
+        $pedido['envio'] = (new EnvioService())->getByPedido($id, false);
+
         return $pedido;
     }
 
-    public function actualizarEstado(int $id, string $estado): ?array {
+    /**
+     * @param bool $sincronizarEnvio false cuando el cambio viene de
+     *                               EnvioService (evita el ida y vuelta).
+     */
+    public function actualizarEstado(int $id, string $estado, bool $sincronizarEnvio = true): ?array {
         $allowed = ['pendiente', 'aprobado', 'enviado', 'entregado', 'rechazado', 'cancelado'];
         if (!in_array($estado, $allowed, true)) {
             throw new InvalidArgumentException("Estado inválido: {$estado}");
@@ -188,14 +179,28 @@ class PedidoService {
 
             $this->db->commit();
 
-            $pedidoActualizado = $this->getById($id);
-            self::notificar($estado, $pedidoActualizado);
-
-            return $pedidoActualizado;
-
         } catch (Throwable $e) {
             $this->db->rollBack();
             throw $e;
+        }
+
+        // Ya esta confirmado: lo que sigue no debe deshacer el cambio de estado.
+        if ($sincronizarEnvio) {
+            $this->sincronizarEnvio($id, $estado);
+        }
+
+        $pedidoActualizado = $this->getById($id);
+        self::notificar($estado, $pedidoActualizado);
+
+        return $pedidoActualizado;
+    }
+
+    /** El envio sigue al pedido; si falla, se loguea y el pedido queda igual. */
+    private function sincronizarEnvio(int $id, string $estado): void {
+        try {
+            (new EnvioService())->sincronizarDesdePedido($id, $estado);
+        } catch (Throwable $e) {
+            error_log("PedidoService: no se pudo sincronizar el envío del pedido #{$id}: " . $e->getMessage());
         }
     }
 
@@ -277,15 +282,17 @@ class PedidoService {
 
             $this->db->commit();
 
-            $pedidoActualizado = $this->getById($id);
-            self::notificar('cancelado', $pedidoActualizado);
-
-            return $pedidoActualizado;
-
         } catch (Throwable $e) {
             $this->db->rollBack();
             throw $e;
         }
+
+        $this->sincronizarEnvio($id, 'cancelado');
+
+        $pedidoActualizado = $this->getById($id);
+        self::notificar('cancelado', $pedidoActualizado);
+
+        return $pedidoActualizado;
     }
 
     /** Mails que se le enviaron al cliente por este pedido. */
@@ -326,6 +333,9 @@ class PedidoService {
             ':url'        => self::nullSiVacio($url),
             ':id'         => $id,
         ]);
+
+        // El registro del envio guarda lo mismo (es lo que ve el historial).
+        (new EnvioService())->actualizarTracking($id, $data['tracking_codigo'] ?? null, $url);
 
         return $this->getById($id);
     }

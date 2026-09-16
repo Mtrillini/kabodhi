@@ -112,7 +112,10 @@ function renderTabla(pedidos) {
       <td>${escHtml(p.cliente_nombre)}</td>
       <td style="color:var(--taupe);">${escHtml(p.cliente_email)}</td>
       <td>${formatMoney(p.total)}</td>
-      <td><span class="badge badge--${p.estado}">${capitalize(p.estado)}</span></td>
+      <td>
+        <span class="badge badge--${p.estado}">${capitalize(p.estado)}</span>
+        ${p.envio_estado && p.envio_estado !== 'pendiente' ? `<br><span class="badge envio-badge badge--${ENVIO_BADGE[p.envio_estado] || 'pendiente'}" style="margin-top:0.25rem;font-size:0.6rem;" title="Estado del envío">${escHtml(ENVIO_ESTADOS[p.envio_estado] || p.envio_estado)}</span>` : ''}
+      </td>
       <td style="color:var(--taupe);">${formatDate(p.created_at)}</td>
       <td onclick="event.stopPropagation();">
         <div style="display:flex;gap:0.4rem;align-items:center;">
@@ -150,33 +153,35 @@ function renderTabla(pedidos) {
 
         <div style="margin-top:1.25rem;padding-top:1rem;border-top:1px solid var(--champagne);">
           <div style="font-size:0.7rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--taupe);margin-bottom:0.6rem;">
-            Seguimiento del envío
+            Envío
           </div>
-          <div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:flex-end;">
+          <div id="envio-${p.id}" style="font-size:0.78rem;color:var(--taupe);">Cargando envío...</div>
+
+          <div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:flex-end;margin-top:1rem;">
             <div style="flex:0 0 150px;">
               <label class="form-label" for="tr-transporte-${p.id}" style="font-size:0.65rem;">Transporte</label>
               <input type="text" id="tr-transporte-${p.id}" class="form-input" style="padding:0.4rem 0.6rem;font-size:0.78rem;"
-                     placeholder="Andreani" value="${escAttr(p.transporte)}">
+                     placeholder="Correo Argentino" value="${escAttr(p.transporte)}">
             </div>
             <div style="flex:0 0 170px;">
-              <label class="form-label" for="tr-codigo-${p.id}" style="font-size:0.65rem;">Código</label>
+              <label class="form-label" for="tr-codigo-${p.id}" style="font-size:0.65rem;">Código de seguimiento</label>
               <input type="text" id="tr-codigo-${p.id}" class="form-input" style="padding:0.4rem 0.6rem;font-size:0.78rem;"
                      placeholder="AR123456789" value="${escAttr(p.tracking_codigo)}">
             </div>
             <div style="flex:1 1 240px;">
-              <label class="form-label" for="tr-url-${p.id}" style="font-size:0.65rem;">Link de seguimiento</label>
+              <label class="form-label" for="tr-url-${p.id}" style="font-size:0.65rem;">Link de seguimiento <span style="font-weight:400;">(vacío = el de Correo)</span></label>
               <input type="url" id="tr-url-${p.id}" class="form-input" style="padding:0.4rem 0.6rem;font-size:0.78rem;"
                      placeholder="https://..." value="${escAttr(p.tracking_url)}">
             </div>
             <button class="btn btn-secondary btn-sm" onclick="guardarTracking(${p.id})">Guardar</button>
             <button class="btn btn-primary btn-sm" onclick="marcarEnviado(${p.id})"
-                    title="Guarda el seguimiento, marca el pedido como enviado y le manda el mail al cliente">
-              Guardar y avisar al cliente
+                    title="Guarda el seguimiento, marca el envío como despachado y le manda el mail al cliente">
+              Despachar y avisar al cliente
             </button>
           </div>
           <p style="font-size:0.68rem;color:var(--taupe);margin-top:0.5rem;">
-            El mail con el seguimiento se manda al pasar el pedido a <strong>Enviado</strong>.
-            Cargá estos datos antes para que salgan incluidos.
+            El mail con el seguimiento se manda al pasar el envío a <strong>Despachado</strong>.
+            Cargá el código antes para que salga incluido.
           </p>
         </div>
 
@@ -219,8 +224,242 @@ async function toggleDetalle(id) {
     if (itemsEl) itemsEl.innerHTML = `<div style="color:#c07b7b;font-size:0.78rem;">${err.message}</div>`;
   }
 
+  cargarEnvio(id);
   cargarMails(id);
 }
+
+// ---- Envío del pedido ----
+
+/** Estados del envio (se reemplazan por los que manda la API). */
+let ENVIO_ESTADOS = {
+  pendiente: 'Pendiente de despacho', preparando: 'En preparación', enviado: 'Despachado',
+  en_traslado: 'En traslado', en_sucursal: 'En sucursal, listo para retirar', entregado: 'Entregado',
+  rechazado: 'Rechazado por el destinatario', devuelto: 'Devuelto al remitente', cancelado: 'Cancelado',
+};
+
+const ENVIO_BADGE = {
+  pendiente: 'pendiente', preparando: 'pendiente', enviado: 'enviado', en_traslado: 'enviado',
+  en_sucursal: 'enviado', entregado: 'entregado', rechazado: 'rechazado', devuelto: 'rechazado', cancelado: 'cancelado',
+};
+
+const PROVEEDOR_LABEL = { correo: 'Correo Argentino', tabla: 'Tarifa de la tienda', sin_costo: 'Sin costo' };
+
+/** Trae el registro del envio (con historial) y lo pinta en el detalle. */
+async function cargarEnvio(id) {
+  const cont = document.getElementById('envio-' + id);
+  if (!cont) return;
+
+  try {
+    const res  = await fetch(API_URL + '/pedidos/' + id + '/envio', { credentials: 'include' });
+    const json = await res.json();
+    if (!json.success) throw new Error(json.message);
+    if (json.estados) ENVIO_ESTADOS = json.estados;
+    renderEnvio(id, json.data);
+  } catch (err) {
+    cont.innerHTML = `<span style="color:#c07b7b;">${escHtml(err.message)}</span>`;
+  }
+}
+
+function renderEnvio(id, e) {
+  const cont = document.getElementById('envio-' + id);
+  if (!cont) return;
+
+  const pedido    = allPedidos.find(p => p.id === id) || {};
+  const cotizado  = parseFloat(e.costo_cotizado || 0);
+  const cobrado   = parseFloat(e.costo_cobrado  || 0);
+  const esCorreo  = e.proveedor === 'correo';
+  const importado = !!e.importado_at;
+  const final     = ['entregado', 'devuelto', 'cancelado'].includes(e.estado);
+
+  const dato = (label, valor) => valor
+    ? `<div><span style="color:var(--taupe);">${label}:</span> ${valor}</div>` : '';
+
+  const resumen = `
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:0.3rem 1.5rem;color:var(--negro);">
+      ${dato('Servicio', escHtml(PROVEEDOR_LABEL[e.proveedor] || e.proveedor) + (e.producto_nombre ? ' · ' + escHtml(e.producto_nombre) : ''))}
+      ${dato('Entrega', e.tipo_entrega === 'sucursal'
+        ? 'Retiro en sucursal' + (e.sucursal_nombre ? ' — ' + escHtml(e.sucursal_nombre) : (e.sucursal_codigo ? ' #' + escHtml(e.sucursal_codigo) : ''))
+        : 'A domicilio')}
+      ${dato('Destino', 'CP ' + escHtml(e.cp_destino) + (e.dest_ciudad ? ', ' + escHtml(e.dest_ciudad) : '') + (e.dest_provincia ? ', ' + escHtml(e.dest_provincia) : ''))}
+      ${dato('Costo', `cotizado ${formatMoney(cotizado)} · cobrado <strong>${formatMoney(cobrado)}</strong>${e.bonificado == 1 ? ' <span class="badge badge--aprobado" style="font-size:0.6rem;">bonificado</span>' : ''}`)}
+      ${dato('Plazo', e.plazo_min_dias || e.plazo_max_dias
+        ? `${e.plazo_min_dias || e.plazo_max_dias}${e.plazo_max_dias && e.plazo_min_dias !== e.plazo_max_dias ? ' a ' + e.plazo_max_dias : ''} días hábiles` : '')}
+      ${dato('Bulto', parseInt(e.peso_gramos) > 0 ? `${e.peso_gramos} g · ${e.alto_cm}×${e.ancho_cm}×${e.largo_cm} cm` : '')}
+      ${dato('MiCorreo', importado ? `orden ${escHtml(e.ext_order_id)} · ${formatDate(e.importado_at)}` : '')}
+      ${dato('Seguimiento', e.tracking_codigo
+        ? `<span style="font-family:monospace;">${escHtml(e.tracking_codigo)}</span>${e.tracking_url_publica ? ` · <a href="${escAttr(e.tracking_url_publica)}" target="_blank" style="color:var(--negro);">ver</a>` : ''}` : '')}
+    </div>`;
+
+  const opcionesEstado = Object.entries(ENVIO_ESTADOS)
+    .map(([k, v]) => `<option value="${k}" ${e.estado === k ? 'selected' : ''}>${escHtml(v)}</option>`).join('');
+
+  const acciones = `
+    <div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:flex-end;margin-top:0.9rem;">
+      <div style="flex:0 0 auto;">
+        <span class="badge badge--${ENVIO_BADGE[e.estado] || 'pendiente'}" style="font-size:0.66rem;">${escHtml(e.estado_label || e.estado)}</span>
+        <span style="font-size:0.66rem;color:var(--taupe);margin-left:0.4rem;">${formatDate(e.estado_at)}</span>
+      </div>
+      <div style="flex:0 0 220px;">
+        <label class="form-label" for="ev-estado-${id}" style="font-size:0.65rem;">Cambiar estado del envío</label>
+        <select id="ev-estado-${id}" class="form-select" style="padding:0.4rem 0.6rem;font-size:0.78rem;">${opcionesEstado}</select>
+      </div>
+      <div style="flex:1 1 200px;">
+        <label class="form-label" for="ev-detalle-${id}" style="font-size:0.65rem;">Nota (opcional)</label>
+        <input type="text" id="ev-detalle-${id}" class="form-input" style="padding:0.4rem 0.6rem;font-size:0.78rem;" placeholder="Ej: lo retiró el cliente" maxlength="500">
+      </div>
+      <button class="btn btn-secondary btn-sm" onclick="cambiarEstadoEnvio(${id})">Actualizar</button>
+      ${!importado && !final ? `
+      <button class="btn btn-primary btn-sm" onclick="importarEnvioCorreo(${id})"
+              title="Crea la orden de envío en MiCorreo con los datos del pedido${pedido.estado !== 'aprobado' && pedido.estado !== 'enviado' ? ' (el pedido tiene que estar aprobado)' : ''}"
+              ${pedido.estado !== 'aprobado' && pedido.estado !== 'enviado' ? 'disabled' : ''}>
+        Generar envío en Correo Argentino
+      </button>` : ''}
+      <button class="btn btn-secondary btn-sm" onclick="toggleDestino(${id})">Datos de destino</button>
+    </div>
+    <p style="font-size:0.66rem;color:var(--taupe);margin-top:0.4rem;">
+      <strong>Despachado</strong> y <strong>Entregado</strong> también cambian el estado del pedido y avisan al cliente por mail;
+      <strong>En sucursal</strong> le avisa que ya puede retirarlo. Los demás son internos.
+    </p>`;
+
+  const destino = `
+    <div id="destino-${id}" hidden style="margin-top:0.9rem;padding:0.9rem;background:#faf8f4;border:1px solid var(--champagne);border-radius:6px;">
+      <div style="font-size:0.66rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--taupe);margin-bottom:0.6rem;">
+        Datos de destino (lo que se manda a Correo Argentino)
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:0.5rem;">
+        ${campoDestino(id, 'dest_calle',      'Calle',        e.dest_calle)}
+        ${campoDestino(id, 'dest_numero',     'Número',       e.dest_numero)}
+        ${campoDestino(id, 'dest_piso_depto', 'Piso / Depto', e.dest_piso_depto)}
+        ${campoDestino(id, 'dest_ciudad',     'Ciudad',       e.dest_ciudad)}
+        ${campoDestino(id, 'dest_provincia',  'Provincia',    e.dest_provincia)}
+        ${campoDestino(id, 'cp_destino',      'CP',           e.cp_destino)}
+        ${campoDestino(id, 'sucursal_codigo', 'Sucursal (código)', e.sucursal_codigo)}
+        ${campoDestino(id, 'peso_gramos',     'Peso (g)',     e.peso_gramos, 'number')}
+        ${campoDestino(id, 'alto_cm',         'Alto (cm)',    e.alto_cm,  'number')}
+        ${campoDestino(id, 'ancho_cm',        'Ancho (cm)',   e.ancho_cm, 'number')}
+        ${campoDestino(id, 'largo_cm',        'Largo (cm)',   e.largo_cm, 'number')}
+      </div>
+      <div style="margin-top:0.6rem;display:flex;gap:0.5rem;align-items:center;">
+        <button class="btn btn-secondary btn-sm" onclick="guardarDestino(${id})">Guardar destino</button>
+        <span style="font-size:0.66rem;color:var(--taupe);">Los pedidos anteriores a la integración pueden tener la calle y el número sin separar.</span>
+      </div>
+    </div>`;
+
+  const historial = (e.historial || []).length ? `
+    <div style="margin-top:0.9rem;">
+      <div style="font-size:0.66rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--taupe);margin-bottom:0.4rem;">Historial</div>
+      ${e.historial.slice().reverse().map(h => `
+        <div style="display:flex;gap:0.6rem;align-items:baseline;padding:0.25rem 0;border-bottom:1px solid #f0ece6;font-size:0.72rem;">
+          <span style="white-space:nowrap;color:var(--taupe);">${formatDate(h.created_at)}</span>
+          <span class="badge badge--${ENVIO_BADGE[h.estado] || 'pendiente'}" style="font-size:0.6rem;">${escHtml(h.estado_label || h.estado)}</span>
+          <span style="flex:1;">${escHtml(h.detalle || '')}</span>
+          <span style="white-space:nowrap;color:var(--taupe);">${h.usuario ? escHtml(h.usuario) : (h.origen === 'correo' ? 'Correo' : 'sistema')}</span>
+        </div>`).join('')}
+    </div>` : '';
+
+  cont.innerHTML = resumen + acciones + destino + historial;
+
+  // Reflejar en la lista y en los inputs de tracking.
+  const idx = allPedidos.findIndex(p => p.id === id);
+  if (idx >= 0) {
+    allPedidos[idx].envio_estado = e.estado;
+    if (e.tracking_codigo && !allPedidos[idx].tracking_codigo) {
+      allPedidos[idx].tracking_codigo = e.tracking_codigo;
+      const inp = document.getElementById('tr-codigo-' + id);
+      if (inp && !inp.value) inp.value = e.tracking_codigo;
+    }
+  }
+  const badgeEnvio = document.querySelector(`.pedido-row[data-id="${id}"] .envio-badge`);
+  if (badgeEnvio) {
+    badgeEnvio.className   = `badge envio-badge badge--${ENVIO_BADGE[e.estado] || 'pendiente'}`;
+    badgeEnvio.textContent = e.estado_label || e.estado;
+  }
+}
+
+function campoDestino(id, campo, label, valor, tipo = 'text') {
+  return `
+    <div>
+      <label class="form-label" for="dst-${campo}-${id}" style="font-size:0.62rem;">${label}</label>
+      <input type="${tipo}" id="dst-${campo}-${id}" class="form-input" style="padding:0.35rem 0.5rem;font-size:0.74rem;"
+             value="${escAttr(valor)}" ${tipo === 'number' ? 'min="0"' : ''}>
+    </div>`;
+}
+
+window.toggleDestino = (id) => {
+  const box = document.getElementById('destino-' + id);
+  if (box) box.hidden = !box.hidden;
+};
+
+window.guardarDestino = async (id) => {
+  const campos = ['dest_calle', 'dest_numero', 'dest_piso_depto', 'dest_ciudad', 'dest_provincia', 'cp_destino',
+                  'sucursal_codigo', 'peso_gramos', 'alto_cm', 'ancho_cm', 'largo_cm'];
+  const body = {};
+  campos.forEach(c => { body[c] = document.getElementById(`dst-${c}-${id}`)?.value.trim() ?? ''; });
+
+  try {
+    const res  = await fetch(API_URL + '/pedidos/' + id + '/envio/destino', {
+      method: 'PUT', credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    const json = await res.json();
+    if (!json.success) throw new Error(json.message || 'Error al guardar.');
+    showToast('Datos de destino guardados.', 'success');
+    renderEnvio(id, json.data);
+    document.getElementById('destino-' + id).hidden = false;
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+};
+
+window.cambiarEstadoEnvio = async (id) => {
+  const estado  = document.getElementById('ev-estado-' + id)?.value;
+  const detalle = document.getElementById('ev-detalle-' + id)?.value.trim() || '';
+  if (!estado) return;
+
+  try {
+    const res  = await fetch(API_URL + '/pedidos/' + id + '/envio/estado', {
+      method: 'PUT', credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ estado, detalle }),
+    });
+    const json = await res.json();
+    if (!json.success) throw new Error(json.message || 'Error al actualizar el envío.');
+
+    showToast(`Envío del pedido #${id}: ${ENVIO_ESTADOS[estado] || estado}.`, 'success');
+    renderEnvio(id, json.data);
+
+    // Despachado / entregado tambien mueven el pedido: se refresca la fila.
+    if (estado === 'enviado' || estado === 'entregado') {
+      const idx = allPedidos.findIndex(p => p.id === id);
+      if (idx >= 0) allPedidos[idx].estado = estado;
+      const badge = document.querySelector(`.pedido-row[data-id="${id}"] .badge:not(.envio-badge)`);
+      if (badge) { badge.className = `badge badge--${estado}`; badge.textContent = capitalize(estado); }
+      renderResumen();
+      cargarMails(id);
+    }
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+};
+
+window.importarEnvioCorreo = async (id) => {
+  if (!confirm(`¿Crear la orden de envío del pedido #${id} en MiCorreo (Correo Argentino)?`)) return;
+
+  const btn = document.querySelector(`#envio-${id} .btn-primary`);
+  if (btn) { btn.disabled = true; btn.textContent = 'Generando...'; }
+
+  try {
+    const res  = await fetch(API_URL + '/pedidos/' + id + '/envio/importar', { method: 'POST', credentials: 'include' });
+    const json = await res.json();
+    if (!json.success) throw new Error(json.message || 'No se pudo generar el envío.');
+    showToast(json.message, 'success');
+    renderEnvio(id, json.data);
+  } catch (err) {
+    showToast(err.message, 'error');
+    if (btn) { btn.disabled = false; btn.textContent = 'Generar envío en Correo Argentino'; }
+  }
+};
 
 /** Historial de mails del pedido, para saber que le llego al cliente. */
 async function cargarMails(id) {
@@ -390,6 +629,8 @@ async function marcarEnviado(id) {
   try {
     await persistirTracking(id, true);
     await actualizarEstado(id, 'enviado', true);
+    cargarEnvio(id);
+    cargarMails(id);
     showToast('Pedido marcado como enviado. Se le avisó al cliente.', 'success');
   } catch (err) {
     showToast(err.message, 'error');
@@ -591,7 +832,17 @@ document.addEventListener('DOMContentLoaded', async () => {
   const authenticated = await checkAuth();
   if (!authenticated) return;
 
-  fetchPedidos();
+  await fetchPedidos();
+
+  // Desde el historial de envios se llega con #pedido-N: se abre ese detalle.
+  const m = location.hash.match(/^#pedido-(\d+)$/);
+  if (m) {
+    const id = parseInt(m[1]);
+    if (document.getElementById('detalle-' + id)) {
+      toggleDetalle(id);
+      document.querySelector(`.pedido-row[data-id="${id}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }
 
   // El estado se filtra en el servidor; busqueda y fechas, en el cliente.
   document.getElementById('filter-estado')?.addEventListener('change', function () {

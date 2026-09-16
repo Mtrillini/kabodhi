@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/admin.css?v=7">
+  <link rel="stylesheet" href="css/admin.css?v=8">
 </head>
 <body>
 
@@ -66,6 +66,90 @@
 
             <div style="border-top:1px solid var(--champagne);margin:1.75rem 0 1.5rem;padding-top:1.5rem;">
               <div style="font-size:0.7rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--taupe);margin-bottom:1rem;">
+                Correo Argentino
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="f-envio-modo">Cómo se calcula el envío</label>
+                <select id="f-envio-modo" class="form-input">
+                  <option value="tabla">Tabla de tarifas por código postal</option>
+                  <option value="correo">Correo Argentino (con la tabla como respaldo)</option>
+                </select>
+                <p style="font-size:0.7rem;color:var(--taupe);margin-top:0.35rem;">
+                  Con Correo Argentino el cliente ve el precio real (Clásico, Expreso y retiro en
+                  sucursal) según el peso y las medidas de los productos. Si la API no responde,
+                  se usa la tarifa de la tabla para ese CP.
+                </p>
+              </div>
+
+              <div class="form-grid-2">
+                <div class="form-group">
+                  <label class="form-label" for="f-correo-ambiente">Ambiente</label>
+                  <select id="f-correo-ambiente" class="form-input">
+                    <option value="test">Pruebas (apitest)</option>
+                    <option value="prod">Producción</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="f-correo-cp-origen">CP de origen (desde donde despachás)</label>
+                  <input type="text" id="f-correo-cp-origen" class="form-input" inputmode="numeric" maxlength="4" placeholder="1425">
+                </div>
+              </div>
+
+              <div class="form-grid-2">
+                <div class="form-group" style="display:flex;flex-direction:row;align-items:center;gap:0.5rem;">
+                  <input type="checkbox" id="f-correo-sucursal" style="width:16px;height:16px;accent-color:var(--negro);">
+                  <label class="form-label" for="f-correo-sucursal" style="margin:0;">Ofrecer retiro en sucursal</label>
+                </div>
+                <div class="form-group" style="display:flex;flex-direction:row;align-items:center;gap:0.5rem;">
+                  <input type="checkbox" id="f-correo-expreso" style="width:16px;height:16px;accent-color:var(--negro);">
+                  <label class="form-label" for="f-correo-expreso" style="margin:0;">Ofrecer Paq.ar Expreso</label>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="f-correo-tracking-url">Link de seguimiento</label>
+                <input type="text" id="f-correo-tracking-url" class="form-input" placeholder="https://www.correoargentino.com.ar/formularios/e-commerce?id={codigo}">
+                <p style="font-size:0.7rem;color:var(--taupe);margin-top:0.35rem;">
+                  Se arma reemplazando <code>{codigo}</code> por el número de seguimiento y se manda en el mail al cliente.
+                </p>
+              </div>
+
+              <div style="font-size:0.7rem;color:var(--taupe);margin:0.5rem 0 0.75rem;">
+                Bulto por defecto para productos sin peso ni medidas cargadas:
+              </div>
+              <div class="form-grid-2">
+                <div class="form-group">
+                  <label class="form-label" for="f-peso-default">Peso (gramos)</label>
+                  <input type="number" id="f-peso-default" class="form-input" min="1" max="25000" placeholder="300">
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="f-alto-default">Alto (cm)</label>
+                  <input type="number" id="f-alto-default" class="form-input" min="1" max="150" placeholder="10">
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="f-ancho-default">Ancho (cm)</label>
+                  <input type="number" id="f-ancho-default" class="form-input" min="1" max="150" placeholder="15">
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="f-largo-default">Largo (cm)</label>
+                  <input type="number" id="f-largo-default" class="form-input" min="1" max="150" placeholder="20">
+                </div>
+              </div>
+
+              <div style="display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;margin-top:0.5rem;">
+                <button type="button" class="btn btn-secondary btn-sm" id="btn-probar-correo">Probar conexión con Correo Argentino</button>
+                <span id="correo-estado" style="font-size:0.72rem;color:var(--taupe);"></span>
+              </div>
+              <p style="font-size:0.7rem;color:var(--taupe);margin-top:0.5rem;">
+                Las credenciales de la API (usuario, contraseña y cuenta MiCorreo) van en el archivo
+                <code>.env</code> del servidor, no acá. Se piden en
+                <a href="https://integracion.correoargentino.com.ar" target="_blank" style="color:var(--negro);">integracion.correoargentino.com.ar</a>.
+              </p>
+            </div>
+
+            <div style="border-top:1px solid var(--champagne);margin:1.75rem 0 1.5rem;padding-top:1.5rem;">
+              <div style="font-size:0.7rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--taupe);margin-bottom:1rem;">
                 Página Nosotros
               </div>
 
@@ -112,9 +196,9 @@
   </div>
 
   <script src="js/config.js?v=7"></script>
-  <script src="js/layout.js?v=7"></script>
-  <script src="js/demo.js?v=7"></script>
+  <script src="js/layout.js?v=8"></script>
+  <script src="js/demo.js?v=8"></script>
   <script src="js/auth.js?v=7"></script>
-  <script src="js/configuracion.js?v=7"></script>
+  <script src="js/configuracion.js?v=8"></script>
 </body>
 </html>

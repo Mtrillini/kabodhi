@@ -175,6 +175,10 @@ async function openModal(id = null) {
         document.getElementById('f-nota').value         = p.nota_olfativa || '';
         document.getElementById('f-precio').value       = p.precio        || '';
         document.getElementById('f-stock').value        = p.stock         ?? '';
+        document.getElementById('f-peso').value         = p.peso_gramos   ?? '';
+        document.getElementById('f-alto').value         = p.alto_cm       ?? '';
+        document.getElementById('f-ancho').value        = p.ancho_cm      ?? '';
+        document.getElementById('f-largo').value        = p.largo_cm      ?? '';
         document.getElementById('f-tipo').value         = p.tipo          || 'enfoque';
         document.getElementById('f-categoria').value    = p.categoria_id  || (categorias[0]?.id ?? '');
         document.getElementById('f-activo').checked     = parseInt(p.activo)    === 1;
@@ -249,6 +253,11 @@ async function saveProducto() {
     nota_olfativa: document.getElementById('f-nota').value.trim(),
     precio,
     stock:         parseInt(document.getElementById('f-stock').value) || 0,
+    // Bulto para cotizar el envio (vacio = default de configuracion).
+    peso_gramos:   parseInt(document.getElementById('f-peso').value)  || null,
+    alto_cm:       parseInt(document.getElementById('f-alto').value)  || null,
+    ancho_cm:      parseInt(document.getElementById('f-ancho').value) || null,
+    largo_cm:      parseInt(document.getElementById('f-largo').value) || null,
     tipo:          document.getElementById('f-tipo').value,
     categoria_id:  parseInt(document.getElementById('f-categoria').value) || 1,
     activo:        document.getElementById('f-activo').checked    ? 1 : 0,

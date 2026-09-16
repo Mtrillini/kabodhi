@@ -86,9 +86,13 @@ class MailService {
         $nombre   = self::esc(self::primerNombre($pedido['cliente_nombre'] ?? ''));
         $pedidoId = (int)($pedido['id'] ?? 0);
 
+        $destino = self::esRetiroEnSucursal($pedido)
+            ? 'ya fue despachado a la sucursal de Correo Argentino que elegiste. Te avisamos cuando esté listo para retirar.'
+            : 'ya salió para tu domicilio.';
+
         $contenido = "
             <p>Hola <strong>{$nombre}</strong>,</p>
-            <p>Tu pedido <strong>#{$pedidoId}</strong> ya salió para tu domicilio.</p>
+            <p>Tu pedido <strong>#{$pedidoId}</strong> {$destino}</p>
             " . self::bloqueSeguimiento($pedido) . "
             " . self::bloqueEntrega($pedido) . "
             " . self::bloqueResumen($pedido) . "
@@ -96,6 +100,28 @@ class MailService {
 
         $body = self::layout("Tu pedido está en camino", $contenido, "Pedido #{$pedidoId}");
         Mailer::enviar($email, "Tu pedido #{$pedidoId} está en camino — KABODHI", $body, null, $pedidoId, 'pedido_enviado');
+    }
+
+    /** El paquete llego a la sucursal de Correo y el cliente ya puede retirarlo. */
+    public static function enviarPedidoEnSucursal(array $pedido): void {
+        $email = $pedido['cliente_email'] ?? '';
+        if (!$email) return;
+
+        $nombre   = self::esc(self::primerNombre($pedido['cliente_nombre'] ?? ''));
+        $pedidoId = (int)($pedido['id'] ?? 0);
+
+        $contenido = "
+            <p>Hola <strong>{$nombre}</strong>,</p>
+            <p>Tu pedido <strong>#{$pedidoId}</strong> ya está en la sucursal de Correo Argentino, listo para retirar.</p>
+            " . self::bloqueEntrega($pedido) . "
+            " . self::bloqueSeguimiento($pedido) . "
+            <p style=\"color:#8B7966;font-size:13px;\">
+              El correo lo guarda unos días; si no lo retirás en ese plazo vuelve a nuestro depósito.
+            </p>
+        ";
+
+        $body = self::layout("Tu pedido te espera en la sucursal", $contenido, "Pedido #{$pedidoId}");
+        Mailer::enviar($email, "Tu pedido #{$pedidoId} está listo para retirar — KABODHI", $body, null, $pedidoId, 'pedido_en_sucursal');
     }
 
     public static function enviarPedidoEntregado(array $pedido): void {
@@ -276,7 +302,25 @@ class MailService {
         </table>";
     }
 
+    /** El pedido es para retirar en una sucursal de Correo Argentino. */
+    private static function esRetiroEnSucursal(array $pedido): bool {
+        return ($pedido['envio']['tipo_entrega'] ?? '') === 'sucursal';
+    }
+
     private static function bloqueEntrega(array $pedido): string {
+        if (self::esRetiroEnSucursal($pedido)) {
+            $sucursal = trim((string)($pedido['envio']['sucursal_nombre'] ?? ''));
+            if ($sucursal === '') $sucursal = 'Sucursal de Correo Argentino ' . self::esc((string)($pedido['envio']['sucursal_codigo'] ?? ''));
+            return "
+            <div style=\"margin:24px 0;padding:16px;background:#F5F1E8;border-radius:4px;\">
+              <div style=\"font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#8B7966;margin-bottom:6px;\">
+                Retiro en sucursal
+              </div>
+              <div style=\"font-size:14px;\">" . self::esc($sucursal) . "</div>
+              <div style=\"font-size:12px;color:#8B7966;margin-top:6px;\">Llevá tu DNI para retirarlo.</div>
+            </div>";
+        }
+
         $direccion = trim((string)($pedido['cliente_direccion'] ?? ''));
         if ($direccion === '') return '';
 
@@ -293,6 +337,11 @@ class MailService {
         $transporte = trim((string)($pedido['transporte']      ?? ''));
         $codigo     = trim((string)($pedido['tracking_codigo'] ?? ''));
         $url        = trim((string)($pedido['tracking_url']    ?? ''));
+
+        // Sin link cargado a mano, el de Correo Argentino se arma con el codigo.
+        if ($url === '' && !empty($pedido['envio']['tracking_url_publica'])) {
+            $url = (string)$pedido['envio']['tracking_url_publica'];
+        }
 
         if ($transporte === '' && $codigo === '' && $url === '') {
             return "

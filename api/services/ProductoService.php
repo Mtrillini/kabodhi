@@ -103,8 +103,10 @@ class ProductoService {
         $imagenUrl = !empty($imagenes) ? $imagenes[0] : ($data['imagen_url'] ?? null);
 
         $stmt = $this->db->prepare(
-            "INSERT INTO productos (categoria_id, marca, nombre, descripcion, nota_olfativa, precio, stock, imagen_url, tipo, activo, destacado)
-             VALUES (:categoria_id, :marca, :nombre, :descripcion, :nota_olfativa, :precio, :stock, :imagen_url, :tipo, :activo, :destacado)"
+            "INSERT INTO productos (categoria_id, marca, nombre, descripcion, nota_olfativa, precio, stock, imagen_url, tipo, activo, destacado,
+                                    peso_gramos, alto_cm, ancho_cm, largo_cm)
+             VALUES (:categoria_id, :marca, :nombre, :descripcion, :nota_olfativa, :precio, :stock, :imagen_url, :tipo, :activo, :destacado,
+                     :peso_gramos, :alto_cm, :ancho_cm, :largo_cm)"
         );
         $stmt->execute([
             ':categoria_id'  => $data['categoria_id'],
@@ -118,6 +120,11 @@ class ProductoService {
             ':tipo'          => $data['tipo']          ?? 'enfoque',
             ':activo'        => isset($data['activo'])    ? (int)$data['activo']    : 1,
             ':destacado'     => isset($data['destacado']) ? (int)$data['destacado'] : 0,
+            // Bulto para cotizar el envio; vacio = usa el default de configuracion.
+            ':peso_gramos'   => self::medida($data['peso_gramos'] ?? null),
+            ':alto_cm'       => self::medida($data['alto_cm']     ?? null),
+            ':ancho_cm'      => self::medida($data['ancho_cm']    ?? null),
+            ':largo_cm'      => self::medida($data['largo_cm']    ?? null),
         ]);
         $id = (int)$this->db->lastInsertId();
 
@@ -132,11 +139,13 @@ class ProductoService {
         $fields = [];
         $params = [':id' => $id];
 
-        $allowed = ['categoria_id','marca','nombre','descripcion','nota_olfativa','precio','stock','imagen_url','tipo','activo','destacado'];
+        $allowed = ['categoria_id','marca','nombre','descripcion','nota_olfativa','precio','stock','imagen_url','tipo','activo','destacado',
+                    'peso_gramos','alto_cm','ancho_cm','largo_cm'];
+        $medidas = ['peso_gramos','alto_cm','ancho_cm','largo_cm'];
         foreach ($allowed as $field) {
             if (array_key_exists($field, $data)) {
                 $fields[] = "`{$field}` = :{$field}";
-                $params[":{$field}"] = $data[$field];
+                $params[":{$field}"] = in_array($field, $medidas, true) ? self::medida($data[$field]) : $data[$field];
             }
         }
 
@@ -155,6 +164,13 @@ class ProductoService {
         }
 
         return $this->getById($id);
+    }
+
+    /** Peso/medida: entero positivo o null (sin dato). */
+    private static function medida($valor): ?int {
+        if ($valor === null || $valor === '') return null;
+        $n = (int)$valor;
+        return $n > 0 ? $n : null;
     }
 
     private function syncImagenes(int $productoId, array $urls): void {

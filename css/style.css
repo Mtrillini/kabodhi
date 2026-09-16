@@ -4158,3 +4158,96 @@ body { padding-top: calc(var(--nav-h) + var(--nav-arch)); }
     aspect-ratio: 16 / 9;
   }
 }
+
+/* ============================================================
+   Envio: opciones cotizadas (carrito y checkout)
+   ============================================================ */
+.envio-opciones {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.6rem;
+}
+
+.envio-opcion {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid #DBCFBB;
+  border-radius: 10px;
+  cursor: pointer;
+  font-family: var(--font-secondary);
+  font-size: 0.8rem;
+  color: #1C3A4F;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.envio-opcion:hover { border-color: #1C3A4F; }
+
+.envio-opcion--activa {
+  border-color: #1C3A4F;
+  background: rgba(28, 58, 79, 0.05);
+}
+
+.envio-opcion input[type="radio"] {
+  accent-color: #1C3A4F;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  margin: 0;
+}
+
+.envio-opcion__texto {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.envio-opcion__nombre { font-weight: 600; }
+
+.envio-opcion__plazo {
+  font-size: 0.68rem;
+  color: var(--taupe);
+}
+
+.envio-opcion__precio {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+select.form-input {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%238B7966' stroke-width='1.5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.2rem center;
+  padding-right: 1.4rem;
+  cursor: pointer;
+}
+
+.btn-cotizar {
+  padding: 0.5rem 1.1rem;
+  background: transparent;
+  color: #1C3A4F;
+  border: 1px solid #1C3A4F;
+  border-radius: 999px;
+  font-family: var(--font-secondary);
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.2s, color 0.2s;
+}
+
+.btn-cotizar:hover {
+  background: #1C3A4F;
+  color: #EFE9DC;
+}
+
+/* El checkout alterna domicilio / sucursal con el atributo hidden: tiene que
+   ganarle al display de .form-group. */
+[hidden] { display: none !important; }

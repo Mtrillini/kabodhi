@@ -56,6 +56,58 @@ class ConfigController {
             return;
         }
 
+        // --- Envios / Correo Argentino ---
+        if (isset($body['envio_modo']) && !in_array($body['envio_modo'], ConfigService::ENVIO_MODOS, true)) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'El modo de envío tiene que ser "tabla" o "correo".']);
+            return;
+        }
+        if (isset($body['correo_ambiente']) && !in_array($body['correo_ambiente'], ConfigService::CORREO_AMBIENTES, true)) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'El ambiente de Correo Argentino tiene que ser "test" o "prod".']);
+            return;
+        }
+        if (isset($body['correo_cp_origen'])) {
+            $cp = preg_replace('/\D+/', '', (string)$body['correo_cp_origen']);
+            if ($cp !== '' && strlen($cp) !== 4) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'El CP de origen tiene que tener 4 dígitos.']);
+                return;
+            }
+            $body['correo_cp_origen'] = $cp;
+        }
+        if (($body['envio_modo'] ?? null) === 'correo' && ($body['correo_cp_origen'] ?? '') === '') {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Para cotizar con Correo Argentino hace falta el CP de origen.']);
+            return;
+        }
+        foreach (['correo_permite_sucursal', 'correo_permite_expreso'] as $flag) {
+            if (isset($body[$flag])) {
+                $body[$flag] = filter_var($body[$flag], FILTER_VALIDATE_BOOLEAN) ? '1' : '0';
+            }
+        }
+        if (isset($body['correo_tracking_url']) && $body['correo_tracking_url'] !== '') {
+            $url = trim((string)$body['correo_tracking_url']);
+            $esquema = strtolower((string)parse_url($url, PHP_URL_SCHEME));
+            if (!in_array($esquema, ['http', 'https'], true) || strpos($url, '{codigo}') === false) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'El link de seguimiento debe ser http(s) y contener {codigo}.']);
+                return;
+            }
+            $body['correo_tracking_url'] = $url;
+        }
+        foreach (['envio_peso_default_gramos' => 25000, 'envio_alto_default_cm' => 150,
+                  'envio_ancho_default_cm' => 150, 'envio_largo_default_cm' => 150] as $clave => $max) {
+            if (!isset($body[$clave])) continue;
+            $n = (int)$body[$clave];
+            if ($n < 1 || $n > $max) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => "El valor de {$clave} tiene que estar entre 1 y {$max}."]);
+                return;
+            }
+            $body[$clave] = (string)$n;
+        }
+
         if (isset($body['instagram_usuario'])) {
             // Se guarda solo el usuario, sin @ ni URL: el link se arma aparte.
             $body['instagram_usuario'] = ltrim(trim((string)$body['instagram_usuario']), '@');

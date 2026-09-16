@@ -780,3 +780,9 @@ tbody tr:last-child td {
     grid-template-columns: 1fr;
   }
 }
+
+/* Botones deshabilitados (p. ej. "Generar envío" hasta que el pedido este aprobado). */
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}

@@ -55,3 +55,12 @@ if (!defined('MAIL_SMTP_SECURE'))   define('MAIL_SMTP_SECURE',   'tls');
 
 // Email que recibe los mensajes del formulario de contacto
 if (!defined('CONTACT_EMAIL'))      define('CONTACT_EMAIL',      '');
+
+// Correo Argentino (API MiCorreo). Ver .env.example.
+if (!defined('MICORREO_USER'))        define('MICORREO_USER',        '');
+if (!defined('MICORREO_PASSWORD'))    define('MICORREO_PASSWORD',    '');
+if (!defined('MICORREO_CUSTOMER_ID')) define('MICORREO_CUSTOMER_ID', '');
+if (!defined('MICORREO_EMAIL'))       define('MICORREO_EMAIL',       '');
+if (!defined('MICORREO_CLAVE'))       define('MICORREO_CLAVE',       '');
+// Solo para pruebas: apunta el cliente a otra URL base (p. ej. un mock local).
+if (!defined('MICORREO_BASE_URL'))    define('MICORREO_BASE_URL',    '');

@@ -14,7 +14,8 @@ const SIDEBAR_SECCIONES = [
       { page: 'hongos',     href: 'hongos.html',     icon: '✦', text: 'Hongos principales' },
       { page: 'banners',    href: 'banners.html',    icon: '▤', text: 'Banners' },
       { page: 'pedidos',    href: 'pedidos.html',    icon: '◇', text: 'Pedidos' },
-      { page: 'envios',     href: 'envios.html',     icon: '◎', text: 'Envíos' },
+      { page: 'envios-historial', href: 'envios-historial.html', icon: '◎', text: 'Envíos' },
+      { page: 'envios',     href: 'envios.html',     icon: '◌', text: 'Tarifas de envío' },
     ],
   },
   {

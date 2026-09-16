@@ -296,6 +296,24 @@ async function demoResponder(ruta, metodo, cuerpo, params) {
 
   // --- envios ---
   if (s0 === 'envios') {
+    if (s1 === 'historial') {
+      const labels = { pendiente: 'Pendiente de despacho', preparando: 'En preparación', enviado: 'Despachado', en_traslado: 'En traslado',
+        en_sucursal: 'En sucursal, listo para retirar', entregado: 'Entregado', rechazado: 'Rechazado por el destinatario', devuelto: 'Devuelto al remitente', cancelado: 'Cancelado' };
+      const data = estado.pedidos.map(p => ({
+        pedido_id: p.id, cliente_nombre: p.cliente_nombre, cliente_email: p.cliente_email, pedido_estado: p.estado,
+        pedido_created_at: p.created_at, proveedor: 'tabla', tipo_entrega: 'domicilio', producto: null,
+        cp_destino: (p.cliente_direccion || '').split(',').pop().trim(), costo_cotizado: p.envio_costo || 0, costo_cobrado: p.envio_costo || 0,
+        bonificado: 0, estado: (p.envio && p.envio.estado) || 'pendiente', estado_at: (p.envio && p.envio.estado_at) || p.created_at,
+        tracking_codigo: p.tracking_codigo || null, tracking_url_publica: p.tracking_url || null,
+      }));
+      data.forEach(e => { e.estado_label = labels[e.estado] || e.estado; });
+      const cob = data.reduce((s, e) => s + parseFloat(e.costo_cobrado || 0), 0);
+      return jsonResponse({ success: true, data, estados: labels, resumen: { envios: data.length, cotizado: cob, cobrado: cob, bonificados: 0,
+        en_curso: data.filter(e => ['enviado', 'en_traslado', 'en_sucursal'].includes(e.estado)).length,
+        entregados: data.filter(e => e.estado === 'entregado').length,
+        por_despachar: data.filter(e => ['pendiente', 'preparando'].includes(e.estado)).length } });
+    }
+    if (s1 === 'correo') return error('La conexión con Correo Argentino no está disponible en la demo.', 422);
     if (s1 === 'calcular') {
       const cp = parseInt(params.get('cp')) || 0;
       const t  = estado.envios.find(x => parseInt(x.activo) === 1 && cp >= x.cp_desde && cp <= x.cp_hasta);
@@ -346,6 +364,32 @@ async function demoResponder(ruta, metodo, cuerpo, params) {
       return jsonResponse(ok(estado.pedidos.filter(p => !filtro || p.estado === filtro)));
     }
     if (id && s2 === 'mails') return jsonResponse(ok([]));
+    // Envio del pedido: en la demo se arma a partir del pedido (sin Correo).
+    if (id && s2 === 'envio') {
+      const p = estado.pedidos.find(x => parseInt(x.id) === id);
+      if (!p) return error('Pedido no encontrado.', 404);
+      if (seg[3] === 'importar') return error('Generar el envío en Correo Argentino no está disponible en la demo.', 422);
+      p.envio = p.envio || {
+        id, pedido_id: id, proveedor: 'tabla', tipo_entrega: 'domicilio', producto: null,
+        producto_nombre: p.envio_descripcion || null, cp_destino: (p.cliente_direccion || '').split(',').pop().trim(),
+        costo_cotizado: p.envio_costo || 0, costo_cobrado: p.envio_costo || 0, bonificado: 0,
+        peso_gramos: 0, alto_cm: 0, ancho_cm: 0, largo_cm: 0, estado: 'pendiente', estado_at: p.created_at,
+        historial: [{ estado: 'pendiente', detalle: 'Pedido creado.', origen: 'sistema', created_at: p.created_at }],
+      };
+      if (seg[3] === 'estado' && metodo === 'PUT') {
+        p.envio.estado = cuerpo.estado; p.envio.estado_at = new Date().toISOString().slice(0, 19).replace('T', ' ');
+        p.envio.historial.push({ estado: cuerpo.estado, detalle: cuerpo.detalle || null, origen: 'panel', usuario: 'demo', created_at: p.envio.estado_at });
+        if (cuerpo.estado === 'enviado' || cuerpo.estado === 'entregado') p.estado = cuerpo.estado;
+      } else if (seg[3] === 'destino' && metodo === 'PUT') {
+        Object.assign(p.envio, cuerpo);
+      }
+      persistir();
+      const labels = { pendiente: 'Pendiente de despacho', preparando: 'En preparación', enviado: 'Despachado', en_traslado: 'En traslado',
+        en_sucursal: 'En sucursal, listo para retirar', entregado: 'Entregado', rechazado: 'Rechazado por el destinatario', devuelto: 'Devuelto al remitente', cancelado: 'Cancelado' };
+      p.envio.estado_label = labels[p.envio.estado] || p.envio.estado;
+      p.envio.historial.forEach(h => { h.estado_label = labels[h.estado] || h.estado; });
+      return jsonResponse({ success: true, data: p.envio, estados: labels });
+    }
     if (id && metodo === 'GET') {
       const p = estado.pedidos.find(x => parseInt(x.id) === id);
       return p ? jsonResponse(ok(p)) : error('Pedido no encontrado.', 404);

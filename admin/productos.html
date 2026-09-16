@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/admin.css?v=7">
+  <link rel="stylesheet" href="css/admin.css?v=8">
 </head>
 <body>
 
@@ -113,6 +113,27 @@
               <input type="number" id="f-stock" class="form-input" min="0" placeholder="10">
             </div>
 
+            <div style="grid-column:1/-1;font-size:0.7rem;color:var(--taupe);margin-top:0.25rem;">
+              Peso y medidas del producto embalado: con esto Correo Argentino cotiza el envío.
+              Si quedan vacíos se usa el bulto por defecto de Configuración.
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="f-peso">Peso (gramos)</label>
+              <input type="number" id="f-peso" class="form-input" min="1" max="25000" placeholder="300">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="f-alto">Alto (cm)</label>
+              <input type="number" id="f-alto" class="form-input" min="1" max="150" placeholder="10">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="f-ancho">Ancho (cm)</label>
+              <input type="number" id="f-ancho" class="form-input" min="1" max="150" placeholder="15">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="f-largo">Largo (cm)</label>
+              <input type="number" id="f-largo" class="form-input" min="1" max="150" placeholder="20">
+            </div>
+
             <div class="form-group" style="grid-column:1/-1;">
               <label class="form-label">Imágenes del producto</label>
               <div id="f-imagenes-lista" style="display:flex;flex-wrap:wrap;gap:0.6rem;margin-bottom:0.8rem;"></div>
@@ -153,9 +174,9 @@
   </div>
 
   <script src="js/config.js?v=7"></script>
-  <script src="js/layout.js?v=7"></script>
-  <script src="js/demo.js?v=7"></script>
+  <script src="js/layout.js?v=8"></script>
+  <script src="js/demo.js?v=8"></script>
   <script src="js/auth.js?v=7"></script>
-  <script src="js/productos.js?v=7"></script>
+  <script src="js/productos.js?v=8"></script>
 </body>
 </html>
