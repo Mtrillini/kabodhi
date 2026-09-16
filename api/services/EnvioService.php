@@ -846,11 +846,16 @@ class EnvioService {
         try {
             $respuesta = $cliente->importarEnvio($orden);
         } catch (MiCorreoException $e) {
-            if ($e->httpCode !== 409) throw $e;
             // Ya estaba importada (un intento anterior que no llego a guardarse).
+            // Segun la doc oficial viene como 402 "La orden ya fue importada con
+            // anterioridad"; 409 se contempla por si cambia.
+            $yaImportada = $e->httpCode === 409
+                || ($e->httpCode === 402 && stripos($e->getMessage(), 'ya fue importada') !== false);
+            if (!$yaImportada) throw $e;
             $respuesta = ['message' => 'Orden ya importada previamente.', 'conflict' => true];
         }
 
+        // La doc oficial solo devuelve createdAt; si algun dia viene el tracking, se guarda.
         $tracking = self::nullSiVacio((string)($respuesta['trackingNumber'] ?? $respuesta['tracking'] ?? ''));
 
         $this->db->prepare(
@@ -911,11 +916,12 @@ class EnvioService {
             if ($ciudad === '') {
                 throw new RuntimeException('Falta la ciudad de destino. Completala en "Datos de destino".');
             }
+            // Piso y depto: la API los corta a 3 caracteres.
             $shipping['address'] = [
                 'streetName'   => $calle,
                 'streetNumber' => $numero,
-                'floor'        => $piso['piso'],
-                'apartment'    => $piso['depto'],
+                'floor'        => mb_substr($piso['piso'],  0, 3),
+                'apartment'    => mb_substr($piso['depto'], 0, 3),
                 'city'         => $ciudad,
                 'provinceCode' => $provincia,
                 'postalCode'   => MiCorreoClient::cp((string)$envio['cp_destino']),
