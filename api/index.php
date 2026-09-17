@@ -23,6 +23,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 ini_set('display_errors', '0');
 error_reporting(E_ALL);
 
+// Fechas de PHP en hora argentina: los DATETIME que arma PHP conviven con los
+// CURRENT_TIMESTAMP de la base y con lo que ve el panel.
+date_default_timezone_set('America/Argentina/Buenos_Aires');
+
 set_exception_handler(function (Throwable $e): void {
     error_log('API sin capturar: ' . $e->getMessage() . ' @ ' . $e->getFile() . ':' . $e->getLine());
     if (!headers_sent()) {
@@ -82,6 +86,7 @@ require_once __DIR__ . '/services/ProductoService.php';
 require_once __DIR__ . '/services/EnvioService.php';
 require_once __DIR__ . '/services/PedidoService.php';
 require_once __DIR__ . '/services/MercadoPagoService.php';
+require_once __DIR__ . '/services/PagoService.php';
 require_once __DIR__ . '/controllers/AuthController.php';
 require_once __DIR__ . '/controllers/ProductoController.php';
 require_once __DIR__ . '/controllers/PedidoController.php';
@@ -332,6 +337,15 @@ if ($seg0 === 'pedidos') {
                 http_response_code(405);
                 echo json_encode(['success' => false, 'message' => 'Método no permitido.']);
             }
+        } elseif ($seg2 === 'pagos') {
+            // GET  /pedidos/{id}/pagos
+            // POST /pedidos/{id}/pagos/confirmar-transferencia | sincronizar | reembolsar
+            $seg3 = $segments[3] ?? '';
+            if ($seg3 === '' && $method === 'GET')                              $ctrl->pagos($id);
+            elseif ($seg3 === 'confirmar-transferencia' && $method === 'POST') $ctrl->confirmarTransferencia($id);
+            elseif ($seg3 === 'sincronizar' && $method === 'POST')             $ctrl->sincronizarPagos($id);
+            elseif ($seg3 === 'reembolsar' && $method === 'POST')              $ctrl->reembolsar($id);
+            else { http_response_code(405); echo json_encode(['success' => false, 'message' => 'Método no permitido.']); }
         } elseif ($seg2 === 'envio') {
             // GET  /pedidos/{id}/envio
             // PUT  /pedidos/{id}/envio/estado   | PUT /pedidos/{id}/envio/destino
@@ -366,6 +380,11 @@ if ($seg0 === 'mp') {
         $ctrl->webhook();
     } elseif ($seg1 === 'payment' && $seg2 !== '') {
         $ctrl->getPayment($seg2);
+    } elseif ($seg1 === 'cuotas') {
+        $ctrl->cuotas();
+    } elseif ($seg1 === 'probar') {
+        if ($method === 'POST') $ctrl->probar();
+        else { http_response_code(405); echo json_encode(['success' => false, 'message' => 'Método no permitido.']); }
     } else {
         http_response_code(404);
         echo json_encode(['success' => false, 'message' => 'Ruta no encontrada.']);

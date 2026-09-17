@@ -108,6 +108,54 @@ class ConfigController {
             $body[$clave] = (string)$n;
         }
 
+        // --- Pagos ---
+        if (isset($body['mp_cuotas_max'])) {
+            $n = (int)$body['mp_cuotas_max'];
+            if ($n < 1 || $n > 24) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'Las cuotas máximas tienen que estar entre 1 y 24.']);
+                return;
+            }
+            $body['mp_cuotas_max'] = (string)$n;
+        }
+        foreach (['mp_excluir_efectivo', 'mp_mostrar_cuotas', 'transferencia_activa'] as $flag) {
+            if (isset($body[$flag])) {
+                $body[$flag] = filter_var($body[$flag], FILTER_VALIDATE_BOOLEAN) ? '1' : '0';
+            }
+        }
+        if (isset($body['mp_descriptor'])) {
+            // Es lo que ve el cliente en el resumen de la tarjeta: MP lo corta a 22.
+            $body['mp_descriptor'] = mb_substr(trim((string)$body['mp_descriptor']), 0, 22);
+        }
+        if (isset($body['transferencia_descuento'])) {
+            $d = (float)$body['transferencia_descuento'];
+            if ($d < 0 || $d > 50) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'El descuento por transferencia tiene que estar entre 0 y 50 %.']);
+                return;
+            }
+            $body['transferencia_descuento'] = (string)$d;
+        }
+        if (isset($body['transferencia_cbu']) && $body['transferencia_cbu'] !== '') {
+            $cbu = preg_replace('/\D+/', '', (string)$body['transferencia_cbu']);
+            if (strlen($cbu) !== 22) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'El CBU/CVU tiene 22 dígitos.']);
+                return;
+            }
+            $body['transferencia_cbu'] = $cbu;
+        }
+        if (isset($body['transferencia_cuit'])) {
+            $body['transferencia_cuit'] = preg_replace('/[^\d\-]+/', '', (string)$body['transferencia_cuit']);
+        }
+        $cbuFinal   = array_key_exists('transferencia_cbu',   $body) ? (string)$body['transferencia_cbu']   : (string)$this->service->get('transferencia_cbu', '');
+        $aliasFinal = array_key_exists('transferencia_alias', $body) ? (string)$body['transferencia_alias'] : (string)$this->service->get('transferencia_alias', '');
+        if (($body['transferencia_activa'] ?? null) === '1' && trim($cbuFinal) === '' && trim($aliasFinal) === '') {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Para activar la transferencia cargá al menos el CBU/CVU o el alias.']);
+            return;
+        }
+
         if (isset($body['instagram_usuario'])) {
             // Se guarda solo el usuario, sin @ ni URL: el link se arma aparte.
             $body['instagram_usuario'] = ltrim(trim((string)$body['instagram_usuario']), '@');

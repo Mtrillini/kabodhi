@@ -10,6 +10,22 @@ function getEnvioGuardado() {
 /** Provincias con el codigo que usa Correo Argentino (se cargan de la API). */
 let PROVINCIAS = {};
 
+/** Configuracion de pagos (cuotas, transferencia). Se carga al iniciar. */
+let PAGO_CONFIG = { mp_cuotas_max: 12, mp_mostrar_cuotas: true, transferencia: { activa: false, descuento: 0 } };
+
+function metodoPagoElegido() {
+  const el = document.querySelector('input[name="metodo-pago"]:checked');
+  const v  = el ? el.value : 'mercadopago';
+  return (v === 'transferencia' && PAGO_CONFIG.transferencia.activa) ? 'transferencia' : 'mercadopago';
+}
+
+/** Descuento por transferencia: sobre los productos, no sobre el envio (igual que el servidor). */
+function descuentoActual(subtotal) {
+  if (metodoPagoElegido() !== 'transferencia') return 0;
+  const pct = PAGO_CONFIG.transferencia.descuento || 0;
+  return pct > 0 ? Math.round(subtotal * pct) / 100 : 0;
+}
+
 // ---- Render order summary in checkout ----
 function renderCheckoutSummary() {
   const container = document.getElementById('checkout-summary');
@@ -31,7 +47,8 @@ function renderCheckoutSummary() {
   const subtotal   = window.Carrito.getTotal();
   const envio      = getEnvioGuardado();
   const envioTotal = envio ? parseFloat(envio.precio) : 0;
-  const total      = subtotal + envioTotal;
+  const descuento  = descuentoActual(subtotal);
+  const total      = subtotal - descuento + envioTotal;
 
   const itemsHTML = carrito.items.map(item => `
     <div class="order-summary__row">
@@ -60,13 +77,61 @@ function renderCheckoutSummary() {
         <span>${envio ? (envio.bonificado ? 'Gratis' : fmt(envioTotal)) : 'Completá el CP'}</span>
       </div>
       ${envioDetalle}
+      ${descuento > 0 ? `
+      <div class="order-summary__row" style="color:#3a7a3a;">
+        <span>Descuento por transferencia (${PAGO_CONFIG.transferencia.descuento}%)</span>
+        <span>&minus; ${fmt(descuento)}</span>
+      </div>` : ''}
       <div class="order-summary__divider"></div>
       <div class="order-summary__row order-summary__row--total">
         <span>${envio ? 'Total' : 'Total estimado'}</span>
         <span>${fmt(total)}</span>
       </div>
+      <div id="checkout-cuotas" class="order-summary__cuotas"></div>
     </div>
   `;
+
+  // Cuotas sin interes para el total (solo con Mercado Pago).
+  if (window.Pagos && metodoPagoElegido() === 'mercadopago' && PAGO_CONFIG.mp_mostrar_cuotas) {
+    Pagos.renderCuotas(document.getElementById('checkout-cuotas'), total);
+  }
+}
+
+// ---- Forma de pago ----
+async function initFormaPago() {
+  if (!window.Pagos) return;
+  PAGO_CONFIG = await Pagos.config();
+
+  const t = PAGO_CONFIG.transferencia;
+  const label = document.getElementById('pago-transferencia');
+  if (label) {
+    label.hidden = !t.activa;
+    const desc = document.getElementById('pago-transf-descuento');
+    if (desc) desc.textContent = t.descuento > 0 ? `${t.descuento}% OFF` : '';
+    const det = document.getElementById('pago-transf-detalle');
+    if (det) det.textContent = t.descuento > 0
+      ? `Un solo pago con ${t.descuento}% de descuento sobre los productos. Te mostramos los datos al confirmar.`
+      : 'Un solo pago. Te mostramos los datos al confirmar.';
+  }
+
+  const mpDet = document.getElementById('pago-mp-detalle');
+  if (mpDet && PAGO_CONFIG.mp_mostrar_cuotas) {
+    const subtotal = window.Carrito ? window.Carrito.getTotal() : 0;
+    const texto = await Pagos.textoSinInteres(subtotal);
+    mpDet.textContent = texto
+      ? `Tarjeta de crédito (${texto.replace(/ de .*$/, '')}), débito o dinero en cuenta.`
+      : 'Tarjeta de crédito, débito o dinero en cuenta.';
+  }
+
+  document.querySelectorAll('input[name="metodo-pago"]').forEach(input => {
+    input.addEventListener('change', () => {
+      document.querySelectorAll('#pago-opciones .envio-opcion').forEach(l => l.classList.remove('envio-opcion--activa'));
+      input.closest('.envio-opcion').classList.add('envio-opcion--activa');
+      const btn = document.getElementById('btn-pagar');
+      if (btn) btn.textContent = input.value === 'transferencia' ? 'CONFIRMAR PEDIDO' : 'PAGAR CON MERCADOPAGO';
+      renderCheckoutSummary();
+    });
+  });
 }
 
 // ---- Envío en el checkout ----
@@ -327,6 +392,8 @@ async function submitCheckout(e) {
       sucursal_codigo: envio.sucursal_codigo || '',
       sucursal_nombre: envio.sucursal_nombre || '',
     },
+    // El descuento por transferencia tambien lo aplica el servidor.
+    metodo_pago: metodoPagoElegido(),
   };
 
   // Combine nombre + apellido for the API
@@ -349,6 +416,17 @@ async function submitCheckout(e) {
     if (window.Carrito) window.Carrito.vaciar();
     if (window.Envio)   window.Envio.clear();
 
+    const pedidoCreado = json.data?.pedido || {};
+
+    // Transferencia: no hay pasarela; se muestran los datos bancarios.
+    if (json.data?.metodo_pago === 'transferencia') {
+      showToast('Pedido creado. Te mostramos los datos para transferir.', 'success');
+      setTimeout(() => {
+        window.location.href = `${PAGES_BASE}/checkout-resultado?status=transferencia&pedido_id=${pedidoCreado.id}&monto=${encodeURIComponent(pedidoCreado.total || '')}`;
+      }, 800);
+      return;
+    }
+
     // Redirect to MercadoPago (producción: init_point; sandbox solo como fallback)
     const initPoint = json.data?.init_point || json.data?.sandbox_init_point;
     if (initPoint) {
@@ -367,7 +445,7 @@ async function submitCheckout(e) {
     showToast(err.message || 'Error al procesar el pedido.', 'error');
     if (btn) {
       btn.disabled = false;
-      btn.textContent = 'Pagar con MercadoPago';
+      btn.textContent = metodoPagoElegido() === 'transferencia' ? 'CONFIRMAR PEDIDO' : 'PAGAR CON MERCADOPAGO';
     }
   }
 }
@@ -422,6 +500,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   await cargarProvincias();
+  await initFormaPago();
+  renderCheckoutSummary();
   document.getElementById('provincia')?.addEventListener('change', () => {
     _sucursalesProvincia = null;
     const actual = getEnvioGuardado();

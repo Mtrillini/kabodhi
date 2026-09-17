@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css?v=68">
+<link rel="stylesheet" href="css/style.css?v=70">
 </head>
 <body class="page-checkout">
 
@@ -19,6 +19,7 @@
       <h1 id="result-title" class="checkout-resultado__title"></h1>
       <p id="result-msg" class="checkout-resultado__msg"></p>
       <p id="result-pedido" class="checkout-resultado__pedido"></p>
+      <div id="result-transferencia" style="text-align:left;margin-top:1.5rem;"></div>
       <a href="index.html" class="order-summary__btn-primary" style="display:inline-block;margin-top:2rem;padding:0.9rem 2.5rem;">
         VOLVER AL INICIO
       </a>
@@ -27,9 +28,10 @@
 
   <div id="footer"></div>
 
-  <script src="js/config.js?v=35"></script>
+  <script src="js/config.js?v=36"></script>
   <script src="js/main.js?v=42"></script>
-  <script src="js/carrito.js?v=59"></script>
+  <script src="js/carrito.js?v=61"></script>
+  <script src="js/pagos.js?v=1"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       const params    = new URLSearchParams(window.location.search);
@@ -55,6 +57,12 @@
           title: 'Pago pendiente',
           msg:   'Tu pago está siendo procesado. Te notificaremos por email cuando se confirme. Gracias por tu paciencia.',
         },
+        transferencia: {
+          icon:  '◆',
+          color: '#c8b89e',
+          title: '¡Pedido recibido!',
+          msg:   'Para confirmarlo, transferí el total a la cuenta de abajo y mandanos el comprobante. Te enviamos estos datos también por mail.',
+        },
       };
 
       const config = configs[status] || configs.pending;
@@ -70,6 +78,15 @@
 
       if (status === 'success' && window.Carrito) {
         window.Carrito.vaciar();
+      }
+
+      // Transferencia: datos bancarios de la configuracion de la tienda.
+      if (status === 'transferencia' && window.Pagos) {
+        const monto = parseFloat(params.get('monto') || '');
+        Pagos.config().then(cfg => {
+          const box = document.getElementById('result-transferencia');
+          if (box) box.innerHTML = Pagos.bloqueTransferencia(cfg.transferencia, isNaN(monto) ? null : monto);
+        });
       }
     });
   </script>

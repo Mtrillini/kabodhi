@@ -750,7 +750,10 @@ class EnvioService {
         $actual = $envio['estado'];
         $nuevo  = null;
 
-        if ($estadoPedido === 'enviado' && !in_array($actual, self::ESTADOS_DESPACHADOS, true) && !in_array($actual, self::ESTADOS_FINALES, true)) {
+        if ($estadoPedido === 'aprobado' && $actual === 'cancelado') {
+            // Pago rechazado y luego reintentado con exito: el envio vuelve a la cola.
+            $nuevo = 'pendiente';
+        } elseif ($estadoPedido === 'enviado' && !in_array($actual, self::ESTADOS_DESPACHADOS, true) && !in_array($actual, self::ESTADOS_FINALES, true)) {
             $nuevo = 'enviado';
         } elseif ($estadoPedido === 'entregado' && !in_array($actual, self::ESTADOS_FINALES, true)) {
             $nuevo = 'entregado';

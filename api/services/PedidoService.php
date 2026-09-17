@@ -9,10 +9,24 @@ class PedidoService {
         $this->stockService = new StockService();
     }
 
-    public function crear(array $clienteData, array $items, array $envioData = []): array {
+    /**
+     * @param string $metodoPago 'mercadopago' | 'transferencia'. La transferencia
+     *                           tiene que estar habilitada en la configuracion y
+     *                           aplica su descuento sobre los productos (no sobre
+     *                           el envio).
+     */
+    public function crear(array $clienteData, array $items, array $envioData = [], string $metodoPago = 'mercadopago'): array {
         $total          = 0.0;
         $validatedItems = [];
         $productoService = new ProductoService();
+
+        $pagoConfig = (new ConfigService())->getPagoConfig();
+        if (!in_array($metodoPago, ['mercadopago', 'transferencia'], true)) {
+            throw new InvalidArgumentException('Forma de pago inválida.');
+        }
+        if ($metodoPago === 'transferencia' && !$pagoConfig['transferencia']['activa']) {
+            throw new RuntimeException('El pago por transferencia no está disponible en este momento.');
+        }
 
         foreach ($items as $item) {
             $id       = (int)($item['id'] ?? 0);
@@ -53,13 +67,23 @@ class PedidoService {
         $envio            = $envioService->resolverParaPedido($envioData, $items);
         $envioCosto       = (float)$envio['costo_cobrado'];
         $envioDescripcion = $envio['descripcion'];
-        $total           += $envioCosto;
+
+        // Descuento por transferencia: sobre los productos, nunca sobre el envio.
+        $descuentoPct   = 0.0;
+        $descuentoMonto = 0.0;
+        if ($metodoPago === 'transferencia' && $pagoConfig['transferencia']['descuento'] > 0) {
+            $descuentoPct   = $pagoConfig['transferencia']['descuento'];
+            $descuentoMonto = round($total * $descuentoPct / 100, 2);
+        }
+        $total = round($total - $descuentoMonto + $envioCosto, 2);
 
         $this->db->beginTransaction();
         try {
             $stmt = $this->db->prepare(
-                "INSERT INTO pedidos (cliente_nombre, cliente_email, cliente_telefono, cliente_dni, cliente_direccion, envio_costo, envio_descripcion, transporte, total, estado)
-                 VALUES (:nombre, :email, :telefono, :dni, :direccion, :envio_costo, :envio_descripcion, :transporte, :total, 'pendiente')"
+                "INSERT INTO pedidos (cliente_nombre, cliente_email, cliente_telefono, cliente_dni, cliente_direccion, envio_costo, envio_descripcion, transporte,
+                                      total, metodo_pago, descuento_pct, descuento_monto, estado)
+                 VALUES (:nombre, :email, :telefono, :dni, :direccion, :envio_costo, :envio_descripcion, :transporte,
+                         :total, :metodo_pago, :descuento_pct, :descuento_monto, 'pendiente')"
             );
             $stmt->execute([
                 ':nombre'            => $clienteData['nombre'],
@@ -71,11 +95,19 @@ class PedidoService {
                 ':envio_descripcion' => $envioDescripcion,
                 ':transporte'        => $envio['proveedor'] === 'correo' ? 'Correo Argentino' : null,
                 ':total'             => $total,
+                ':metodo_pago'       => $metodoPago,
+                ':descuento_pct'     => $descuentoPct,
+                ':descuento_monto'   => $descuentoMonto,
             ]);
             $pedidoId = (int)$this->db->lastInsertId();
 
             // Registro del envio: que se cotizo, que se cobro y a donde va.
             $envioService->crearRegistro($pedidoId, $envio);
+
+            // Transferencia: queda un pago pendiente que el admin confirma.
+            if ($metodoPago === 'transferencia') {
+                (new PagoService())->registrarTransferenciaPendiente($pedidoId, $total);
+            }
 
             $stmtItem = $this->db->prepare(
                 "INSERT INTO pedido_items (pedido_id, producto_id, cantidad, precio_unitario)

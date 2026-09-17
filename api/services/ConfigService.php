@@ -33,6 +33,19 @@ class ConfigService {
         'envio_alto_default_cm'     => '10',
         'envio_ancho_default_cm'    => '15',
         'envio_largo_default_cm'    => '20',
+        // Pagos: Mercado Pago (Checkout Pro) y transferencia bancaria.
+        'mp_cuotas_max'             => '12',
+        'mp_excluir_efectivo'       => '0',
+        'mp_mostrar_cuotas'         => '1',
+        'mp_descriptor'             => 'KABODHI',
+        'transferencia_activa'      => '0',
+        'transferencia_descuento'   => '0',
+        'transferencia_titular'     => '',
+        'transferencia_banco'       => '',
+        'transferencia_cbu'         => '',
+        'transferencia_alias'       => '',
+        'transferencia_cuit'        => '',
+        'transferencia_instrucciones' => 'Envianos el comprobante por WhatsApp o respondiendo el mail del pedido y lo confirmamos a la brevedad.',
     ];
 
     public const ENVIO_MODOS      = ['tabla', 'correo'];
@@ -69,6 +82,29 @@ class ConfigService {
     /** Umbral de envio gratis en pesos. 0 = desactivado. */
     public function getEnvioGratisDesde(): float {
         return (float)$this->get('envio_gratis_desde', '0');
+    }
+
+    /** Configuracion de pagos, tipada. */
+    public function getPagoConfig(): array {
+        $cfg = $this->getAll();
+        $descuento = (float)$cfg['transferencia_descuento'];
+        return [
+            'mp_cuotas_max'       => max(1, min(24, (int)$cfg['mp_cuotas_max'])),
+            'mp_excluir_efectivo' => (string)$cfg['mp_excluir_efectivo'] === '1',
+            'mp_mostrar_cuotas'   => (string)$cfg['mp_mostrar_cuotas'] === '1',
+            'mp_descriptor'       => trim((string)$cfg['mp_descriptor']) ?: 'KABODHI',
+            'transferencia'       => [
+                'activa'        => (string)$cfg['transferencia_activa'] === '1'
+                                   && (trim((string)$cfg['transferencia_cbu']) !== '' || trim((string)$cfg['transferencia_alias']) !== ''),
+                'descuento'     => max(0.0, min(50.0, $descuento)),
+                'titular'       => trim((string)$cfg['transferencia_titular']),
+                'banco'         => trim((string)$cfg['transferencia_banco']),
+                'cbu'           => trim((string)$cfg['transferencia_cbu']),
+                'alias'         => trim((string)$cfg['transferencia_alias']),
+                'cuit'          => trim((string)$cfg['transferencia_cuit']),
+                'instrucciones' => trim((string)$cfg['transferencia_instrucciones']),
+            ],
+        ];
     }
 
     /** Toda la configuracion de envios de una vez, ya tipada. */

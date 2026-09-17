@@ -85,6 +85,8 @@ let INSTAGRAM_USUARIO  = '';
 let DIRECCION          = '';
 let NOSOTROS_TITULO    = '';
 let NOSOTROS_TEXTO     = '';
+// Toda la configuracion publica tal cual llego (pagos, transferencia, etc.).
+let CONFIG_TIENDA      = {};
 
 // Promesa unica: cualquier pagina puede hacer `await configLista` antes de usar
 // WHATSAPP_NUMERO o CONTACTO_EMAIL.
@@ -92,6 +94,7 @@ const configLista = (async () => {
   try {
     const json = await fetchDatos('/configuracion', 'configuracion.json');
     const cfg  = json.data || json || {};
+    CONFIG_TIENDA      = cfg;
     WHATSAPP_NUMERO    = cfg.whatsapp_numero    || WHATSAPP_NUMERO;
     CONTACTO_EMAIL     = cfg.contacto_email     || CONTACTO_EMAIL;
     ENVIO_GRATIS_DESDE = parseFloat(cfg.envio_gratis_desde || 0);

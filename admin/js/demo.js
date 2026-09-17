@@ -364,6 +364,10 @@ async function demoResponder(ruta, metodo, cuerpo, params) {
       return jsonResponse(ok(estado.pedidos.filter(p => !filtro || p.estado === filtro)));
     }
     if (id && s2 === 'mails') return jsonResponse(ok([]));
+    if (id && s2 === 'pagos') {
+      if (seg[3]) return error('Las acciones de pago no están disponibles en la demo.', 422);
+      return jsonResponse({ success: true, data: [], estados: {} });
+    }
     // Envio del pedido: en la demo se arma a partir del pedido (sin Correo).
     if (id && s2 === 'envio') {
       const p = estado.pedidos.find(x => parseInt(x.id) === id);
@@ -412,6 +416,12 @@ async function demoResponder(ruta, metodo, cuerpo, params) {
       persistir();
       return jsonResponse(ok(p, { message: 'Seguimiento guardado.' }));
     }
+  }
+
+  // --- mercado pago ---
+  if (s0 === 'mp') {
+    if (s1 === 'cuotas') return jsonResponse(ok({ max_sin_interes: 0, opciones: [] }));
+    return error('Mercado Pago no está disponible en la demo.', 422);
   }
 
   // --- usuarios ---

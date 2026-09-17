@@ -210,6 +210,7 @@ function abrirModal(id) {
   document.getElementById('modal-tipo').textContent   = p.nota || '';
   document.getElementById('modal-desc').textContent   = p.descripcion;
   document.getElementById('modal-precio').textContent = fmt(p.precio);
+  if (window.Pagos) Pagos.renderCuotas(document.getElementById('modal-cuotas'), p.precio);
   document.getElementById('modal-qty').textContent    = modalQty;
 
   // Thumbnail strip

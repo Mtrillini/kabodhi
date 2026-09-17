@@ -66,6 +66,97 @@
 
             <div style="border-top:1px solid var(--champagne);margin:1.75rem 0 1.5rem;padding-top:1.5rem;">
               <div style="font-size:0.7rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--taupe);margin-bottom:1rem;">
+                Pagos — Mercado Pago
+              </div>
+
+              <div class="form-grid-2">
+                <div class="form-group">
+                  <label class="form-label" for="f-mp-cuotas">Cuotas máximas</label>
+                  <input type="number" id="f-mp-cuotas" class="form-input" min="1" max="24" placeholder="12">
+                  <p style="font-size:0.7rem;color:var(--taupe);margin-top:0.35rem;">
+                    Tope que ve el cliente en Mercado Pago. Las <strong>cuotas sin interés</strong> no se
+                    activan acá: se configuran en tu cuenta de Mercado Pago (Tu negocio → Costos → Cuotas
+                    sin interés) y la tienda las muestra sola.
+                  </p>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="f-mp-descriptor">Nombre en el resumen de la tarjeta</label>
+                  <input type="text" id="f-mp-descriptor" class="form-input" maxlength="22" placeholder="KABODHI">
+                </div>
+              </div>
+
+              <div class="form-grid-2">
+                <div class="form-group" style="display:flex;flex-direction:row;align-items:center;gap:0.5rem;">
+                  <input type="checkbox" id="f-mp-mostrar-cuotas" style="width:16px;height:16px;accent-color:var(--negro);">
+                  <label class="form-label" for="f-mp-mostrar-cuotas" style="margin:0;">Mostrar "cuotas sin interés" en la tienda</label>
+                </div>
+                <div class="form-group" style="display:flex;flex-direction:row;align-items:center;gap:0.5rem;">
+                  <input type="checkbox" id="f-mp-excluir-efectivo" style="width:16px;height:16px;accent-color:var(--negro);">
+                  <label class="form-label" for="f-mp-excluir-efectivo" style="margin:0;">No aceptar Rapipago / Pago Fácil</label>
+                </div>
+              </div>
+
+              <div style="display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;margin-top:0.25rem;">
+                <button type="button" class="btn btn-secondary btn-sm" id="btn-probar-mp">Probar conexión con Mercado Pago</button>
+                <span id="mp-estado" style="font-size:0.72rem;color:var(--taupe);"></span>
+              </div>
+              <p style="font-size:0.7rem;color:var(--taupe);margin-top:0.5rem;">
+                Las credenciales (<code>MP_ACCESS_TOKEN</code>, <code>MP_PUBLIC_KEY</code>, <code>MP_WEBHOOK_SECRET</code>) van en el
+                <code>.env</code> del servidor.
+              </p>
+            </div>
+
+            <div style="border-top:1px solid var(--champagne);margin:1.75rem 0 1.5rem;padding-top:1.5rem;">
+              <div style="font-size:0.7rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--taupe);margin-bottom:1rem;">
+                Pagos — Transferencia bancaria
+              </div>
+
+              <div class="form-grid-2">
+                <div class="form-group" style="display:flex;flex-direction:row;align-items:center;gap:0.5rem;">
+                  <input type="checkbox" id="f-transf-activa" style="width:16px;height:16px;accent-color:var(--negro);">
+                  <label class="form-label" for="f-transf-activa" style="margin:0;">Ofrecer pago por transferencia</label>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="f-transf-descuento">Descuento por transferencia (%)</label>
+                  <input type="number" id="f-transf-descuento" class="form-input" min="0" max="50" step="0.5" placeholder="0">
+                </div>
+              </div>
+
+              <div class="form-grid-2">
+                <div class="form-group">
+                  <label class="form-label" for="f-transf-titular">Titular de la cuenta</label>
+                  <input type="text" id="f-transf-titular" class="form-input" placeholder="Nombre o razón social">
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="f-transf-banco">Banco / billetera</label>
+                  <input type="text" id="f-transf-banco" class="form-input" placeholder="Banco Galicia">
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="f-transf-cbu">CBU / CVU (22 dígitos)</label>
+                  <input type="text" id="f-transf-cbu" class="form-input" inputmode="numeric" maxlength="22" placeholder="0000000000000000000000">
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="f-transf-alias">Alias</label>
+                  <input type="text" id="f-transf-alias" class="form-input" placeholder="kabodhi.tienda">
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="f-transf-cuit">CUIT / CUIL del titular</label>
+                  <input type="text" id="f-transf-cuit" class="form-input" placeholder="20-12345678-9">
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="f-transf-instrucciones">Instrucciones para el cliente</label>
+                <textarea id="f-transf-instrucciones" class="form-textarea" rows="3"></textarea>
+                <p style="font-size:0.7rem;color:var(--taupe);margin-top:0.35rem;">
+                  Se muestran al confirmar el pedido y en el mail. El pedido queda <strong>pendiente</strong> hasta que
+                  confirmes la transferencia desde Pedidos.
+                </p>
+              </div>
+            </div>
+
+            <div style="border-top:1px solid var(--champagne);margin:1.75rem 0 1.5rem;padding-top:1.5rem;">
+              <div style="font-size:0.7rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--taupe);margin-bottom:1rem;">
                 Correo Argentino
               </div>
 
@@ -197,8 +288,8 @@
 
   <script src="js/config.js?v=7"></script>
   <script src="js/layout.js?v=8"></script>
-  <script src="js/demo.js?v=8"></script>
+  <script src="js/demo.js?v=9"></script>
   <script src="js/auth.js?v=7"></script>
-  <script src="js/configuracion.js?v=8"></script>
+  <script src="js/configuracion.js?v=9"></script>
 </body>
 </html>

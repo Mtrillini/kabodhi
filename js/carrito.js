@@ -228,6 +228,7 @@ function renderSummary(carrito) {
         <span>${envio ? 'Total' : 'Total estimado'}</span>
         <span>${fmt(total)}</span>
       </div>
+      <div id="cart-cuotas" class="order-summary__cuotas"></div>
       <div class="order-summary__actions">
         ${IS_STATIC
           ? `<button onclick="pedirPorWhatsApp()" class="order-summary__btn-primary${isEmpty ? ' disabled' : ''}">
@@ -243,6 +244,9 @@ function renderSummary(carrito) {
       </div>
     </div>
   `;
+
+  // Cuotas sin interes de Mercado Pago para el total.
+  if (window.Pagos && !isEmpty && !IS_STATIC) Pagos.renderCuotas(document.getElementById('cart-cuotas'), total);
 
   // Allow Enter key in CP input
   const cpInput = document.getElementById('cp-envio-input');

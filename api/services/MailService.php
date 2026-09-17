@@ -41,9 +41,15 @@ class MailService {
         $nombre   = self::esc(self::primerNombre($pedido['cliente_nombre'] ?? ''));
         $pedidoId = (int)($pedido['id'] ?? 0);
 
+        $porTransferencia = ($pedido['metodo_pago'] ?? '') === 'transferencia';
+        $intro = $porTransferencia
+            ? 'Recibimos tu pedido. Para confirmarlo, transferí el total a la cuenta de abajo y mandanos el comprobante.'
+            : 'Recibimos tu pedido. Te escribimos de nuevo apenas se confirme el pago.';
+
         $contenido = "
             <p>Hola <strong>{$nombre}</strong>,</p>
-            <p>Recibimos tu pedido. Te escribimos de nuevo apenas se confirme el pago.</p>
+            <p>{$intro}</p>
+            " . ($porTransferencia ? self::bloqueTransferencia($pedido) : '') . "
             " . self::bloqueResumen($pedido) . "
             " . self::bloqueEntrega($pedido) . "
             <p style=\"margin-top:28px;color:#8B7966;font-size:13px;\">
@@ -277,6 +283,17 @@ class MailService {
         $envioValor = $envio > 0 ? self::money($envio) : 'Sin cargo';
         $total      = (float)($pedido['total'] ?? 0);
 
+        $descuento     = (float)($pedido['descuento_monto'] ?? 0);
+        $filaDescuento = '';
+        if ($descuento > 0) {
+            $pct = (float)($pedido['descuento_pct'] ?? 0);
+            $filaDescuento = "
+          <tr>
+            <td style=\"padding:4px 0;font-size:14px;color:#3a7a3a;\">Descuento por transferencia" . ($pct > 0 ? ' (' . rtrim(rtrim(number_format($pct, 2, ',', '.'), '0'), ',') . '%)' : '') . "</td>
+            <td style=\"padding:4px 0;text-align:right;font-size:14px;color:#3a7a3a;\">&minus; " . self::money($descuento) . "</td>
+          </tr>";
+        }
+
         return "
         <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin:24px 0;border-collapse:collapse;\">
           <tr>
@@ -288,7 +305,7 @@ class MailService {
           <tr>
             <td style=\"padding:10px 0 4px;font-size:14px;color:#8B7966;\">Subtotal</td>
             <td style=\"padding:10px 0 4px;text-align:right;font-size:14px;color:#8B7966;\">" . self::money($subtotal) . "</td>
-          </tr>
+          </tr>{$filaDescuento}
           <tr>
             <td style=\"padding:4px 0;font-size:14px;color:#8B7966;\">{$envioLabel}</td>
             <td style=\"padding:4px 0;text-align:right;font-size:14px;color:#8B7966;\">{$envioValor}</td>
@@ -300,6 +317,38 @@ class MailService {
             </td>
           </tr>
         </table>";
+    }
+
+    /** Datos bancarios para pagar por transferencia (van en el mail de pedido recibido). */
+    private static function bloqueTransferencia(array $pedido): string {
+        $t = (new ConfigService())->getPagoConfig()['transferencia'];
+        $total = self::money((float)($pedido['total'] ?? 0));
+
+        $fila = function (string $label, string $valor, bool $mono = false): string {
+            if ($valor === '') return '';
+            $estilo = $mono ? 'font-family:monospace;letter-spacing:1px;' : '';
+            return "<div style=\"font-size:14px;margin-bottom:6px;\"><strong>{$label}:</strong> <span style=\"{$estilo}\">" . self::esc($valor) . "</span></div>";
+        };
+
+        $lineas = $fila('Titular', $t['titular'])
+                . $fila('Banco', $t['banco'])
+                . $fila('CBU/CVU', $t['cbu'], true)
+                . $fila('Alias', $t['alias'], true)
+                . $fila('CUIT/CUIL', $t['cuit']);
+
+        $instrucciones = $t['instrucciones'] !== ''
+            ? "<div style=\"font-size:13px;color:#8B7966;margin-top:10px;\">" . self::esc($t['instrucciones']) . "</div>"
+            : '';
+
+        return "
+        <div style=\"margin:24px 0;padding:18px;background:#F5F1E8;border-radius:4px;\">
+          <div style=\"font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#8B7966;margin-bottom:10px;\">
+            Datos para la transferencia
+          </div>
+          <div style=\"font-size:18px;font-weight:bold;margin-bottom:12px;\">Total a transferir: {$total}</div>
+          {$lineas}{$instrucciones}
+          <div style=\"font-size:12px;color:#8B7966;margin-top:10px;\">Referencia: pedido #" . (int)($pedido['id'] ?? 0) . "</div>
+        </div>";
     }
 
     /** El pedido es para retirar en una sucursal de Correo Argentino. */

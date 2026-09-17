@@ -36,6 +36,7 @@ DROP TABLE IF EXISTS `producto_imagenes`;
 DROP TABLE IF EXISTS `productos`;
 DROP TABLE IF EXISTS `categorias`;
 DROP TABLE IF EXISTS `hongos_principales`;
+DROP TABLE IF EXISTS `pagos`;
 DROP TABLE IF EXISTS `envio_historial`;
 DROP TABLE IF EXISTS `envios`;
 DROP TABLE IF EXISTS `tarifas_envio`;
@@ -120,6 +121,11 @@ CREATE TABLE `pedidos` (
     `tracking_url`      VARCHAR(500) NULL,
     `enviado_at`        TIMESTAMP NULL,
     `total`             DECIMAL(10,2) NOT NULL,
+    -- Forma de pago y descuento por transferencia (sobre los productos).
+    `metodo_pago`       ENUM('mercadopago','transferencia') NOT NULL DEFAULT 'mercadopago',
+    `descuento_pct`     DECIMAL(5,2)  NOT NULL DEFAULT 0.00,
+    `descuento_monto`   DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    `pagado_at`         DATETIME NULL,
     `estado`            ENUM('pendiente','aprobado','enviado','entregado','rechazado','cancelado')
                         NOT NULL DEFAULT 'pendiente',
     `mp_payment_id`     VARCHAR(100) NULL,
@@ -155,6 +161,37 @@ CREATE TABLE `tarifas_envio` (
     `precio`      DECIMAL(10,2) NOT NULL,
     `activo`      TINYINT(1) NOT NULL DEFAULT 1,
     KEY `idx_rango` (`cp_desde`, `cp_hasta`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+-- Pagos de cada pedido: Mercado Pago (con medio, cuotas, comision y neto) o
+-- transferencia bancaria confirmada a mano. Puede haber varios intentos.
+CREATE TABLE `pagos` (
+    `id`               INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    `pedido_id`        INT UNSIGNED NOT NULL,
+    `proveedor`        ENUM('mercadopago','transferencia') NOT NULL,
+    `referencia`       VARCHAR(100) NULL,
+    `estado`           VARCHAR(30)  NOT NULL DEFAULT 'pending',
+    `estado_detalle`   VARCHAR(100) NULL,
+    `medio`            VARCHAR(50)  NULL,
+    `tipo`             VARCHAR(50)  NULL,
+    `cuotas`           TINYINT UNSIGNED NOT NULL DEFAULT 1,
+    `monto_cuota`      DECIMAL(10,2) NULL,
+    `monto`            DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    `comision`         DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    `neto`             DECIMAL(10,2) NULL,
+    `reembolsado`      DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    `moneda`           CHAR(3)      NOT NULL DEFAULT 'ARS',
+    `payload`          MEDIUMTEXT   NULL,
+    `aprobado_at`      DATETIME     NULL,
+    `usuario_id`       INT UNSIGNED NULL,
+    `created_at`       TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at`       TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY `uq_mp` (`proveedor`, `referencia`),
+    KEY `idx_pedido` (`pedido_id`),
+    KEY `idx_estado` (`estado`),
+    CONSTRAINT `fk_pago_pedido` FOREIGN KEY (`pedido_id`)
+        REFERENCES `pedidos` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 
@@ -318,7 +355,19 @@ INSERT INTO `configuracion` (`clave`, `valor`) VALUES
     ('envio_peso_default_gramos', '300'),
     ('envio_alto_default_cm', '10'),
     ('envio_ancho_default_cm', '15'),
-    ('envio_largo_default_cm', '20');
+    ('envio_largo_default_cm', '20'),
+    ('mp_cuotas_max', '12'),
+    ('mp_excluir_efectivo', '0'),
+    ('mp_mostrar_cuotas', '1'),
+    ('mp_descriptor', 'KABODHI'),
+    ('transferencia_activa', '0'),
+    ('transferencia_descuento', '0'),
+    ('transferencia_titular', ''),
+    ('transferencia_banco', ''),
+    ('transferencia_cbu', ''),
+    ('transferencia_alias', ''),
+    ('transferencia_cuit', ''),
+    ('transferencia_instrucciones', 'Envianos el comprobante por WhatsApp o respondiendo el mail del pedido y lo confirmamos a la brevedad.');
 
 
 SET FOREIGN_KEY_CHECKS = 1;

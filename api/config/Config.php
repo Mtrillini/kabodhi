@@ -64,3 +64,9 @@ if (!defined('MICORREO_EMAIL'))       define('MICORREO_EMAIL',       '');
 if (!defined('MICORREO_CLAVE'))       define('MICORREO_CLAVE',       '');
 // Solo para pruebas: apunta el cliente a otra URL base (p. ej. un mock local).
 if (!defined('MICORREO_BASE_URL'))    define('MICORREO_BASE_URL',    '');
+
+// Mercado Pago: clave secreta de webhooks (Tus integraciones > Webhooks >
+// Configurar notificaciones). Vacia = no se valida la firma (solo desarrollo).
+if (!defined('MP_WEBHOOK_SECRET'))    define('MP_WEBHOOK_SECRET',    '');
+// Solo para pruebas: apunta el cliente de Mercado Pago a otra URL base (mock).
+if (!defined('MP_BASE_URL'))          define('MP_BASE_URL',          '');

@@ -114,6 +114,7 @@ function renderTabla(pedidos) {
       <td>${formatMoney(p.total)}</td>
       <td>
         <span class="badge badge--${p.estado}">${capitalize(p.estado)}</span>
+        ${p.metodo_pago === 'transferencia' ? `<br><span class="badge badge--${p.estado === 'pendiente' ? 'pendiente' : 'activo'}" style="margin-top:0.25rem;font-size:0.6rem;" title="Forma de pago">${p.estado === 'pendiente' ? 'Transferencia a confirmar' : 'Transferencia'}</span>` : ''}
         ${p.envio_estado && p.envio_estado !== 'pendiente' ? `<br><span class="badge envio-badge badge--${ENVIO_BADGE[p.envio_estado] || 'pendiente'}" style="margin-top:0.25rem;font-size:0.6rem;" title="Estado del envío">${escHtml(ENVIO_ESTADOS[p.envio_estado] || p.envio_estado)}</span>` : ''}
       </td>
       <td style="color:var(--taupe);">${formatDate(p.created_at)}</td>
@@ -149,6 +150,13 @@ function renderTabla(pedidos) {
           ${p.cliente_telefono ? `<div style="font-size:0.72rem;color:var(--taupe);">Tel: ${escHtml(p.cliente_telefono)}</div>` : ''}
           ${p.cliente_dni ? `<div style="font-size:0.72rem;color:var(--taupe);">DNI: ${escHtml(p.cliente_dni)}</div>` : ''}
           ${p.cliente_direccion ? `<div style="font-size:0.72rem;color:var(--taupe);">Dir: ${escHtml(p.cliente_direccion)}</div>` : ''}
+        </div>
+
+        <div style="margin-top:1.25rem;padding-top:1rem;border-top:1px solid var(--champagne);">
+          <div style="font-size:0.7rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--taupe);margin-bottom:0.6rem;">
+            Pago
+          </div>
+          <div id="pago-${p.id}" style="font-size:0.78rem;color:var(--taupe);">Cargando pagos...</div>
         </div>
 
         <div style="margin-top:1.25rem;padding-top:1rem;border-top:1px solid var(--champagne);">
@@ -224,9 +232,149 @@ async function toggleDetalle(id) {
     if (itemsEl) itemsEl.innerHTML = `<div style="color:#c07b7b;font-size:0.78rem;">${err.message}</div>`;
   }
 
+  cargarPagos(id);
   cargarEnvio(id);
   cargarMails(id);
 }
+
+// ---- Pagos del pedido ----
+
+const PAGO_BADGE = {
+  approved: 'aprobado', pending: 'pendiente', in_process: 'pendiente', in_mediation: 'pendiente', authorized: 'pendiente',
+  rejected: 'rechazado', cancelled: 'cancelado', refunded: 'cancelado', charged_back: 'rechazado',
+};
+
+async function cargarPagos(id) {
+  const cont = document.getElementById('pago-' + id);
+  if (!cont) return;
+  try {
+    const res  = await fetch(API_URL + '/pedidos/' + id + '/pagos', { credentials: 'include' });
+    const json = await res.json();
+    if (!json.success) throw new Error(json.message);
+    renderPagos(id, json.data || []);
+  } catch (err) {
+    cont.innerHTML = `<span style="color:#c07b7b;">${escHtml(err.message)}</span>`;
+  }
+}
+
+function renderPagos(id, pagos) {
+  const cont   = document.getElementById('pago-' + id);
+  const pedido = allPedidos.find(p => p.id === id) || {};
+  if (!cont) return;
+
+  const esTransf   = pedido.metodo_pago === 'transferencia';
+  const ultimo     = pagos[0] || null;
+  const aprobado   = pagos.find(g => g.estado === 'approved');
+  const descuento  = parseFloat(pedido.descuento_monto || 0);
+
+  const cabecera = `
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:0.3rem 1.5rem;color:var(--negro);">
+      <div><span style="color:var(--taupe);">Forma de pago:</span> ${esTransf ? 'Transferencia bancaria' : 'Mercado Pago'}${descuento > 0 ? ` <span class="badge badge--aprobado" style="font-size:0.6rem;">${escHtml(String(parseFloat(pedido.descuento_pct)))}% desc. (−${formatMoney(descuento)})</span>` : ''}</div>
+      <div><span style="color:var(--taupe);">Total del pedido:</span> <strong>${formatMoney(pedido.total)}</strong>${pedido.pagado_at ? ` · pagado ${formatDate(pedido.pagado_at)}` : ''}</div>
+      ${aprobado && aprobado.proveedor === 'mercadopago' ? `
+      <div><span style="color:var(--taupe);">Medio:</span> ${escHtml(aprobado.medio_label)}${parseFloat(aprobado.monto_cuota) > 0 && aprobado.cuotas > 1 ? ` (${aprobado.cuotas} × ${formatMoney(aprobado.monto_cuota)})` : ''}</div>
+      <div><span style="color:var(--taupe);">Comisión MP:</span> ${formatMoney(aprobado.comision)} · <span style="color:var(--taupe);">neto:</span> <strong>${formatMoney(aprobado.neto ?? (aprobado.monto - aprobado.comision))}</strong>${parseFloat(aprobado.reembolsado) > 0 ? ` · reembolsado ${formatMoney(aprobado.reembolsado)}` : ''}</div>` : ''}
+    </div>`;
+
+  const lista = pagos.length ? `
+    <div style="margin-top:0.7rem;">
+      ${pagos.map(g => `
+        <div style="display:flex;gap:0.6rem;align-items:baseline;padding:0.25rem 0;border-bottom:1px solid #f0ece6;font-size:0.72rem;flex-wrap:wrap;">
+          <span style="white-space:nowrap;color:var(--taupe);">${formatDate(g.aprobado_at || g.created_at)}</span>
+          <span class="badge badge--${PAGO_BADGE[g.estado] || 'pendiente'}" style="font-size:0.6rem;">${escHtml(g.estado_label)}</span>
+          <span style="flex:1;">${escHtml(g.medio_label)}${g.estado_detalle && g.estado !== 'approved' ? ` <span style="color:var(--taupe);">(${escHtml(g.estado_detalle)})</span>` : ''}</span>
+          <span style="white-space:nowrap;">${formatMoney(g.monto)}</span>
+          <span style="white-space:nowrap;color:var(--taupe);font-family:monospace;">${g.referencia ? escHtml(g.referencia) : ''}</span>
+          ${g.usuario ? `<span style="white-space:nowrap;color:var(--taupe);">${escHtml(g.usuario)}</span>` : ''}
+        </div>`).join('')}
+    </div>` : `<div style="margin-top:0.5rem;">Todavía no hay pagos registrados.</div>`;
+
+  const puedeConfirmar = esTransf && ['pendiente', 'rechazado', 'cancelado'].includes(pedido.estado);
+  const puedeReembolsar = !!(aprobado && aprobado.proveedor === 'mercadopago' && parseFloat(aprobado.reembolsado) < parseFloat(aprobado.monto));
+
+  const acciones = `
+    <div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:flex-end;margin-top:0.9rem;">
+      ${puedeConfirmar ? `
+      <div style="flex:0 0 130px;">
+        <label class="form-label" for="pg-monto-${id}" style="font-size:0.65rem;">Monto recibido</label>
+        <input type="number" id="pg-monto-${id}" class="form-input" style="padding:0.4rem 0.6rem;font-size:0.78rem;" step="0.01" value="${escAttr(pedido.total)}">
+      </div>
+      <div style="flex:1 1 180px;">
+        <label class="form-label" for="pg-ref-${id}" style="font-size:0.65rem;">Referencia (opcional)</label>
+        <input type="text" id="pg-ref-${id}" class="form-input" style="padding:0.4rem 0.6rem;font-size:0.78rem;" placeholder="Nº de operación / comprobante" maxlength="100">
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="confirmarTransferencia(${id})">Confirmar transferencia</button>` : ''}
+      ${!esTransf ? `<button class="btn btn-secondary btn-sm" onclick="sincronizarPagos(${id})" title="Vuelve a leer los pagos de este pedido en Mercado Pago">Sincronizar con Mercado Pago</button>` : ''}
+      ${puedeReembolsar ? `<button class="btn btn-secondary btn-sm" onclick="reembolsarPago(${id}, ${parseFloat(aprobado.monto) - parseFloat(aprobado.reembolsado)})">Reembolsar</button>` : ''}
+    </div>
+    ${puedeConfirmar ? `<p style="font-size:0.66rem;color:var(--taupe);margin-top:0.4rem;">Confirmar pasa el pedido a <strong>Aprobado</strong>, descuenta el stock y le avisa al cliente por mail.</p>` : ''}`;
+
+  cont.innerHTML = cabecera + lista + acciones;
+}
+
+function refrescarPedidoLocal(id, pedido) {
+  if (!pedido) return;
+  const idx = allPedidos.findIndex(p => p.id === id);
+  if (idx >= 0) Object.assign(allPedidos[idx], pedido, { items: undefined, envio: undefined });
+  const badge = document.querySelector(`.pedido-row[data-id="${id}"] .badge:not(.envio-badge)`);
+  if (badge) { badge.className = `badge badge--${pedido.estado}`; badge.textContent = capitalize(pedido.estado); }
+  renderResumen();
+}
+
+window.confirmarTransferencia = async (id) => {
+  const monto = document.getElementById('pg-monto-' + id)?.value || '';
+  const ref   = document.getElementById('pg-ref-' + id)?.value.trim() || '';
+  if (!confirm(`¿Confirmar que se recibió la transferencia del pedido #${id}?`)) return;
+  try {
+    const res  = await fetch(API_URL + '/pedidos/' + id + '/pagos/confirmar-transferencia', {
+      method: 'POST', credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ monto, referencia: ref }),
+    });
+    const json = await res.json();
+    if (!json.success) throw new Error(json.message || 'No se pudo confirmar.');
+    showToast(json.message, 'success');
+    refrescarPedidoLocal(id, json.data.pedido);
+    cargarPagos(id); cargarMails(id); cargarEnvio(id);
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+};
+
+window.sincronizarPagos = async (id) => {
+  try {
+    const res  = await fetch(API_URL + '/pedidos/' + id + '/pagos/sincronizar', { method: 'POST', credentials: 'include' });
+    const json = await res.json();
+    if (!json.success) throw new Error(json.message || 'No se pudo sincronizar.');
+    showToast(json.message, 'success');
+    refrescarPedidoLocal(id, json.data.pedido);
+    renderPagos(id, json.data.pagos || []);
+    cargarMails(id);
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+};
+
+window.reembolsarPago = async (id, disponible) => {
+  const txt = prompt(`Monto a reembolsar (máximo ${formatMoney(disponible)}). Dejá vacío para reembolsar el total:`, '');
+  if (txt === null) return;
+  const monto = txt.trim();
+  if (!confirm(monto ? `¿Reembolsar ${formatMoney(parseFloat(monto))} del pedido #${id}?` : `¿Reembolsar el TOTAL del pedido #${id}? El pedido queda cancelado.`)) return;
+  try {
+    const res  = await fetch(API_URL + '/pedidos/' + id + '/pagos/reembolsar', {
+      method: 'POST', credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ monto }),
+    });
+    const json = await res.json();
+    if (!json.success) throw new Error(json.message || 'No se pudo reembolsar.');
+    showToast(json.message, 'success');
+    refrescarPedidoLocal(id, json.data.pedido);
+    cargarPagos(id); cargarMails(id); cargarEnvio(id);
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+};
 
 // ---- Envío del pedido ----
 

@@ -66,21 +66,27 @@ class PedidoController {
             'provincia'       => trim((string)($body['provincia']  ?? '')),
         ];
 
-        try {
-            $pedido = $this->pedidoService->crear($clienteData, $body['items'], $envioData);
+        // Forma de pago: Mercado Pago (default) o transferencia bancaria.
+        $metodoPago = (string)($body['metodo_pago'] ?? 'mercadopago');
 
-            // Create MercadoPago preference
+        try {
+            $pedido = $this->pedidoService->crear($clienteData, $body['items'], $envioData, $metodoPago);
+
+            // Mercado Pago: se crea la preferencia (link de pago). Con
+            // transferencia no hay nada que crear: el cliente paga y se confirma
+            // desde el panel.
             $mpData  = null;
             $mpError = null;
-            try {
-                $mpData = $this->mpService->crearPreferencia($pedido, $pedido['items']);
-                // Save preference id in DB
-                $db = Database::getInstance();
-                $stmt = $db->prepare("UPDATE pedidos SET mp_preference_id = :pref_id WHERE id = :id");
-                $stmt->execute([':pref_id' => $mpData['preference_id'], ':id' => $pedido['id']]);
-            } catch (Throwable $mpEx) {
-                error_log('MercadoPago preference error: ' . $mpEx->getMessage());
-                $mpError = $mpEx->getMessage();
+            if ($metodoPago === 'mercadopago') {
+                try {
+                    $mpData = $this->mpService->crearPreferencia($pedido, $pedido['items']);
+                    $db = Database::getInstance();
+                    $stmt = $db->prepare("UPDATE pedidos SET mp_preference_id = :pref_id WHERE id = :id");
+                    $stmt->execute([':pref_id' => $mpData['preference_id'], ':id' => $pedido['id']]);
+                } catch (Throwable $mpEx) {
+                    error_log('MercadoPago preference error: ' . $mpEx->getMessage());
+                    $mpError = $mpEx->getMessage();
+                }
             }
 
             http_response_code(201);
@@ -89,6 +95,7 @@ class PedidoController {
                 'message' => 'Pedido creado correctamente.',
                 'data'    => [
                     'pedido'            => $pedido,
+                    'metodo_pago'       => $metodoPago,
                     'mp_preference_id'  => $mpData['preference_id']  ?? null,
                     'init_point'        => $mpData['init_point']       ?? null,
                     'sandbox_init_point'=> $mpData['sandbox_init_point'] ?? null,
@@ -191,6 +198,54 @@ class PedidoController {
         $this->responder(function () use ($id) {
             $envio = (new EnvioService())->importarACorreo($id, self::usuarioId());
             return ['data' => $envio, 'message' => 'Orden de envío creada en Correo Argentino.'];
+        });
+    }
+
+    // ---------------------------------------------------------------
+    // Pagos del pedido
+    // ---------------------------------------------------------------
+
+    /** GET /pedidos/{id}/pagos */
+    public function pagos(int $id): void {
+        Auth::requireAdmin();
+        echo json_encode([
+            'success' => true,
+            'data'    => (new PagoService())->getByPedido($id),
+            'estados' => PagoService::ESTADOS_LABEL,
+        ]);
+    }
+
+    /** POST /pedidos/{id}/pagos/confirmar-transferencia — {monto?, referencia?} */
+    public function confirmarTransferencia(int $id): void {
+        Auth::requireAdmin();
+        $body = json_decode(file_get_contents('php://input'), true) ?? [];
+        $this->responder(function () use ($id, $body) {
+            $monto = isset($body['monto']) && $body['monto'] !== '' ? (float)$body['monto'] : null;
+            $r = (new PagoService())->confirmarTransferencia($id, $monto, (string)($body['referencia'] ?? ''), self::usuarioId());
+            return ['data' => $r, 'message' => 'Transferencia confirmada: el pedido quedó aprobado.'];
+        });
+    }
+
+    /** POST /pedidos/{id}/pagos/sincronizar — trae los pagos desde Mercado Pago. */
+    public function sincronizarPagos(int $id): void {
+        Auth::requireAdmin();
+        $this->responder(function () use ($id) {
+            $r = (new PagoService())->sincronizarConMP($id);
+            $msg = $r['encontrados'] > 0
+                ? "Se sincronizaron {$r['encontrados']} pago(s) desde Mercado Pago."
+                : 'Mercado Pago no tiene pagos para este pedido.';
+            return ['data' => $r, 'message' => $msg];
+        });
+    }
+
+    /** POST /pedidos/{id}/pagos/reembolsar — {monto?} (vacio = total) */
+    public function reembolsar(int $id): void {
+        Auth::requireAdmin();
+        $body = json_decode(file_get_contents('php://input'), true) ?? [];
+        $this->responder(function () use ($id, $body) {
+            $monto = isset($body['monto']) && $body['monto'] !== '' ? (float)$body['monto'] : null;
+            $r = (new PagoService())->reembolsar($id, $monto, self::usuarioId());
+            return ['data' => $r, 'message' => $monto === null ? 'Reembolso total realizado.' : 'Reembolso parcial realizado.'];
         });
     }
 
