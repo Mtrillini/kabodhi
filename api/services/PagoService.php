@@ -102,6 +102,23 @@ class PagoService {
         $this->db->prepare("UPDATE pedidos SET mp_payment_id = :mp, metodo_pago = 'mercadopago' WHERE id = :id")
                  ->execute([':mp' => $resumen['referencia'], ':id' => $pedidoId]);
 
+        // Un pago aprobado solo aprueba el pedido si esta en pesos y cubre el
+        // total. Con Checkout Pro el monto lo fija la preferencia, pero MP
+        // recomienda verificarlo igual: si algun dia llega un "approved" por
+        // menos plata, el pedido queda como esta y se avisa por log.
+        if ($resumen['estado'] === 'approved' && !self::pagoCubrePedido($resumen, $pedido)) {
+            error_log(sprintf(
+                'PagoService: pago MP %s aprobado por %s %s no cubre el pedido #%d (total %s ARS); no se aprueba.',
+                $resumen['referencia'], $resumen['monto'], $resumen['moneda'], $pedidoId, $pedido['total']
+            ));
+            return [
+                'pago'   => $this->getUltimo($pedidoId),
+                'pedido' => $pedido,
+                'cambio' => null,
+                'alerta' => 'El pago aprobado no coincide con el total del pedido; revisalo en Mercado Pago.',
+            ];
+        }
+
         $cambio = $this->aplicarEstado($pedido, $resumen['estado'], $resumen['aprobado_at']);
 
         return [
@@ -242,6 +259,12 @@ class PagoService {
     // -----------------------------------------------------------------
     // Internos
     // -----------------------------------------------------------------
+
+    /** El pago esta en ARS y su monto alcanza el total del pedido (tolerancia de 1 centavo). */
+    private static function pagoCubrePedido(array $resumen, array $pedido): bool {
+        return strtoupper((string)$resumen['moneda']) === 'ARS'
+            && (float)$resumen['monto'] + 0.01 >= (float)$pedido['total'];
+    }
 
     /**
      * Mueve el pedido segun el estado del pago. Devuelve el nuevo estado del

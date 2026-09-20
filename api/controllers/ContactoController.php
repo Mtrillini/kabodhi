@@ -9,6 +9,12 @@ class ContactoController {
             return;
         }
 
+        if (!RateLimiter::permitir('contacto', 5, 60)) {
+            http_response_code(429);
+            echo json_encode(['success' => false, 'message' => 'Enviaste demasiados mensajes en poco tiempo. Probá de nuevo más tarde.']);
+            return;
+        }
+
         $body    = json_decode(file_get_contents('php://input'), true) ?? [];
         $nombre  = trim($body['nombre']  ?? '');
         $email   = trim($body['email']   ?? '');

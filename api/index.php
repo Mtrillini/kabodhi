@@ -83,6 +83,7 @@ require_once __DIR__ . '/config/Database.php';
 require_once __DIR__ . '/middleware/Auth.php';
 require_once __DIR__ . '/services/ConfigService.php';
 require_once __DIR__ . '/services/StockService.php';
+require_once __DIR__ . '/services/RateLimiter.php';
 require_once __DIR__ . '/services/Mailer.php';
 require_once __DIR__ . '/services/MailService.php';
 require_once __DIR__ . '/services/ProductoService.php';

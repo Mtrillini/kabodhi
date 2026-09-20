@@ -63,6 +63,28 @@ class StockService {
         }
     }
 
+    /**
+     * Descuenta stock de un pedido que NO tenia reserva (por ejemplo uno
+     * cancelado que se vuelve a aprobar). confirmar() no sirve aca: resta de
+     * stock_reservado y le quitaria la reserva a otro pedido pendiente. Solo
+     * descuenta si hay unidades disponibles mas alla de lo reservado.
+     */
+    public function descontar(int $productoId, int $cantidad): void {
+        $stmt = $this->db->prepare(
+            "UPDATE productos
+             SET stock = stock - :cantidad
+             WHERE id = :id AND (stock - stock_reservado) >= :cantidad2"
+        );
+        $stmt->execute([':cantidad' => $cantidad, ':cantidad2' => $cantidad, ':id' => $productoId]);
+        if ($stmt->rowCount() === 0) {
+            throw new RuntimeException("Stock insuficiente para volver a aprobar el producto #{$productoId}.");
+        }
+        if ($this->getStock($productoId) === 0) {
+            $this->db->prepare("UPDATE productos SET activo = 0 WHERE id = :id")
+                     ->execute([':id' => $productoId]);
+        }
+    }
+
     public function getDisponible(int $productoId): ?int {
         $stmt = $this->db->prepare("SELECT stock, stock_reservado FROM productos WHERE id = :id");
         $stmt->execute([':id' => $productoId]);

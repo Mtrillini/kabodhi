@@ -10,6 +10,14 @@ class PedidoController {
     }
 
     public function store(): void {
+        // Limite por IP: un script no puede crear pedidos sin parar y dejar el
+        // catalogo sin stock ni usar el mail de confirmacion para spamear.
+        if (!RateLimiter::permitir('pedido', 10, 60)) {
+            http_response_code(429);
+            echo json_encode(['success' => false, 'message' => 'Hiciste demasiados pedidos en poco tiempo. Esperá unos minutos o escribinos.']);
+            return;
+        }
+
         $body = json_decode(file_get_contents('php://input'), true) ?? [];
 
         // Validate required fields
@@ -85,7 +93,9 @@ class PedidoController {
                     $stmt->execute([':pref_id' => $mpData['preference_id'], ':id' => $pedido['id']]);
                 } catch (Throwable $mpEx) {
                     error_log('MercadoPago preference error: ' . $mpEx->getMessage());
-                    $mpError = $mpEx->getMessage();
+                    // El detalle va al log; al cliente no se le muestra la
+                    // respuesta cruda de la API de MP.
+                    $mpError = 'No se pudo generar el link de pago. Escribinos y lo resolvemos.';
                 }
             }
 
@@ -240,7 +250,8 @@ class PedidoController {
 
     /** POST /pedidos/{id}/pagos/reembolsar — {monto?} (vacio = total) */
     public function reembolsar(int $id): void {
-        Auth::requireAdmin();
+        // Devolver plata es cosa del administrador principal.
+        Auth::requireSuper();
         $body = json_decode(file_get_contents('php://input'), true) ?? [];
         $this->responder(function () use ($id, $body) {
             $monto = isset($body['monto']) && $body['monto'] !== '' ? (float)$body['monto'] : null;

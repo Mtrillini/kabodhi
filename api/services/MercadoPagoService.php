@@ -150,6 +150,11 @@ class MercadoPagoService {
             'external_reference'   => (string)$pedido['id'],
             'statement_descriptor' => mb_substr($config['mp_descriptor'], 0, 22),
             'metadata'             => ['pedido_id' => (int)$pedido['id']],
+            // La preferencia vence junto con el pedido (PedidoService::vencerPendientes):
+            // asi MP no acepta un pago cuando el stock reservado ya se libero.
+            'expires'              => true,
+            'expiration_date_from' => date('Y-m-d\TH:i:s.000P'),
+            'expiration_date_to'   => date('Y-m-d\TH:i:s.000P', time() + PedidoService::VENCIMIENTO_MP_HORAS * 3600),
             'payment_methods'      => [
                 'installments'             => $config['mp_cuotas_max'],
                 'default_installments'     => 1,

@@ -43,6 +43,7 @@ DROP TABLE IF EXISTS `tarifas_envio`;
 DROP TABLE IF EXISTS `configuracion`;
 DROP TABLE IF EXISTS `mail_log`;
 DROP TABLE IF EXISTS `login_intentos`;
+DROP TABLE IF EXISTS `rate_limit`;
 DROP TABLE IF EXISTS `admin_users`;
 
 
@@ -303,6 +304,14 @@ CREATE TABLE `login_intentos` (
     KEY `idx_ip_fecha` (`ip`, `created_at`),
     KEY `idx_usuario_fecha` (`usuario`, `exito`, `created_at`),
     KEY `idx_fecha` (`created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+CREATE TABLE `rate_limit` (
+    `id`         INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    `clave`      VARCHAR(160) NOT NULL,
+    `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    KEY `idx_clave_fecha` (`clave`, `created_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 

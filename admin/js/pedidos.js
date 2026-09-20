@@ -290,7 +290,9 @@ function renderPagos(id, pagos) {
     </div>` : `<div style="margin-top:0.5rem;">Todavía no hay pagos registrados.</div>`;
 
   const puedeConfirmar = esTransf && ['pendiente', 'rechazado', 'cancelado'].includes(pedido.estado);
-  const puedeReembolsar = !!(aprobado && aprobado.proveedor === 'mercadopago' && parseFloat(aprobado.reembolsado) < parseFloat(aprobado.monto));
+  // Reembolsar es solo del administrador principal (el backend exige super).
+  const esSuper = !window.ADMIN_ACTUAL || window.ADMIN_ACTUAL.rol === 'super';
+  const puedeReembolsar = esSuper && !!(aprobado && aprobado.proveedor === 'mercadopago' && parseFloat(aprobado.reembolsado) < parseFloat(aprobado.monto));
 
   const acciones = `
     <div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:flex-end;margin-top:0.9rem;">

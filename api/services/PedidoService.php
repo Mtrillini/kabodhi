@@ -10,12 +10,22 @@ class PedidoService {
     }
 
     /**
+     * Horas que un pedido con Mercado Pago espera el pago antes de vencer.
+     * Cubre pagos en efectivo (Rapipago / Pago Facil), que MP acredita hasta
+     * 3 dias despues.
+     */
+    public const VENCIMIENTO_MP_HORAS = 72;
+    /** Dias que un pedido por transferencia espera la confirmacion del admin. */
+    private const VENCIMIENTO_TRANSFERENCIA_DIAS = 5;
+
+    /**
      * @param string $metodoPago 'mercadopago' | 'transferencia'. La transferencia
      *                           tiene que estar habilitada en la configuracion y
      *                           aplica su descuento sobre los productos (no sobre
      *                           el envio).
      */
     public function crear(array $clienteData, array $items, array $envioData = [], string $metodoPago = 'mercadopago'): array {
+        $this->vencerPendientes();
         $total          = 0.0;
         $validatedItems = [];
         $productoService = new ProductoService();
@@ -135,6 +145,55 @@ class PedidoService {
         }
     }
 
+    /**
+     * Cancela los pedidos pendientes que ya no van a pagarse y libera su
+     * reserva de stock. Sin esto, cualquiera podia crear pedidos sin pagar y
+     * dejar todo el catalogo "sin stock" para los clientes reales. Se llama
+     * al crear un pedido (no hay cron en el hosting). No manda mails: es
+     * limpieza, no una accion del cliente ni del admin.
+     */
+    public function vencerPendientes(): void {
+        try {
+            $stmt = $this->db->prepare(
+                "SELECT id FROM pedidos
+                 WHERE estado = 'pendiente'
+                   AND ((metodo_pago = 'mercadopago'   AND created_at < DATE_SUB(NOW(), INTERVAL :horas HOUR))
+                     OR (metodo_pago = 'transferencia' AND created_at < DATE_SUB(NOW(), INTERVAL :dias DAY)))
+                 LIMIT 50"
+            );
+            $stmt->bindValue(':horas', self::VENCIMIENTO_MP_HORAS, PDO::PARAM_INT);
+            $stmt->bindValue(':dias',  self::VENCIMIENTO_TRANSFERENCIA_DIAS, PDO::PARAM_INT);
+            $stmt->execute();
+            $ids = $stmt->fetchAll(PDO::FETCH_COLUMN);
+        } catch (Throwable $e) {
+            error_log('PedidoService::vencerPendientes: ' . $e->getMessage());
+            return;
+        }
+
+        foreach ($ids as $id) {
+            $id = (int)$id;
+            $this->db->beginTransaction();
+            try {
+                $stmt = $this->db->prepare("SELECT estado FROM pedidos WHERE id = :id FOR UPDATE");
+                $stmt->execute([':id' => $id]);
+                if ($stmt->fetchColumn() !== 'pendiente') {
+                    $this->db->commit();
+                    continue;
+                }
+                $items = $this->db->prepare("SELECT producto_id, cantidad FROM pedido_items WHERE pedido_id = :id");
+                $items->execute([':id' => $id]);
+                foreach ($items->fetchAll() as $item) {
+                    $this->stockService->liberarReserva((int)$item['producto_id'], (int)$item['cantidad']);
+                }
+                $this->db->prepare("UPDATE pedidos SET estado = 'cancelado' WHERE id = :id")->execute([':id' => $id]);
+                $this->db->commit();
+            } catch (Throwable $e) {
+                $this->db->rollBack();
+                error_log("PedidoService::vencerPendientes pedido #{$id}: " . $e->getMessage());
+            }
+        }
+    }
+
     public function getAll(?string $estado = null): array {
         $sql = "SELECT p.*, COUNT(pi.id) AS total_items,
                        e.estado AS envio_estado, e.proveedor AS envio_proveedor,
@@ -192,22 +251,30 @@ class PedidoService {
             throw new RuntimeException("Pedido #{$id} no encontrado.");
         }
 
-        // Idempotente: repetir el estado actual no vuelve a tocar el stock.
-        // (El panel permite reelegir el mismo estado, y el webhook de MP puede
-        //  llegar duplicado sobre un pedido ya aprobado a mano.)
-        if ($pedido['estado'] === $estado) {
-            return $pedido;
-        }
-
         $this->db->beginTransaction();
         try {
+            // Bloqueo de fila: el estado se relee con la fila tomada, asi dos
+            // webhooks duplicados (MP reenvia la misma notificacion) no pueden
+            // leer 'pendiente' a la vez y descontar el stock dos veces. El
+            // segundo espera y ya encuentra el estado nuevo.
+            $stmt = $this->db->prepare("SELECT estado FROM pedidos WHERE id = :id FOR UPDATE");
+            $stmt->execute([':id' => $id]);
+            $anterior = (string)$stmt->fetchColumn();
+
+            // Idempotente: repetir el estado actual no vuelve a tocar el stock.
+            // (El panel permite reelegir el mismo estado.)
+            if ($anterior === $estado) {
+                $this->db->commit();
+                return $this->getById($id);
+            }
+
             // enviado_at se sella la primera vez que el pedido sale.
             $sql = $estado === 'enviado'
                 ? "UPDATE pedidos SET estado = :estado, enviado_at = COALESCE(enviado_at, NOW()) WHERE id = :id"
                 : "UPDATE pedidos SET estado = :estado WHERE id = :id";
             $this->db->prepare($sql)->execute([':estado' => $estado, ':id' => $id]);
 
-            $this->aplicarEfectoStock($pedido['estado'], $estado, $pedido['items']);
+            $this->aplicarEfectoStock($anterior, $estado, $pedido['items']);
 
             $this->db->commit();
 
@@ -273,8 +340,14 @@ class PedidoService {
             $cantidad   = (int)$item['cantidad'];
 
             if ($quedaDescontado) {
-                // confirmar() descuenta del stock y limpia la reserva si existia.
-                $this->stockService->confirmar($productoId, $cantidad);
+                if ($estabaReservado) {
+                    // confirmar() descuenta del stock y limpia la reserva.
+                    $this->stockService->confirmar($productoId, $cantidad);
+                } else {
+                    // Venia de rechazado/cancelado: no tiene reserva propia, y
+                    // confirmar() le sacaria la reserva a otro pedido.
+                    $this->stockService->descontar($productoId, $cantidad);
+                }
 
             } elseif ($nuevo === 'rechazado' || $nuevo === 'cancelado') {
                 if ($estabaReservado) {
@@ -299,15 +372,20 @@ class PedidoService {
         if (!$pedido) {
             throw new RuntimeException("Pedido #{$id} no encontrado.");
         }
-        // Idempotente, igual que actualizarEstado(): reelegir "cancelado" en el
-        // panel no es un error, simplemente no hay nada que hacer.
-        if ($pedido['estado'] === 'cancelado') {
-            return $pedido;
-        }
 
         $this->db->beginTransaction();
         try {
-            $this->aplicarEfectoStock($pedido['estado'], 'cancelado', $pedido['items']);
+            // Mismo bloqueo que actualizarEstado().
+            $stmt = $this->db->prepare("SELECT estado FROM pedidos WHERE id = :id FOR UPDATE");
+            $stmt->execute([':id' => $id]);
+            $anterior = (string)$stmt->fetchColumn();
+
+            if ($anterior === 'cancelado') {
+                $this->db->commit();
+                return $this->getById($id);
+            }
+
+            $this->aplicarEfectoStock($anterior, 'cancelado', $pedido['items']);
 
             $stmt = $this->db->prepare("UPDATE pedidos SET estado = 'cancelado' WHERE id = :id");
             $stmt->execute([':id' => $id]);
