@@ -7,5 +7,7 @@ CREATE TABLE IF NOT EXISTS `login_intentos` (
     `usuario`    VARCHAR(200) NULL,
     `exito`      TINYINT(1)   NOT NULL DEFAULT 0,
     `created_at` TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    INDEX `idx_ip_fecha` (`ip`, `created_at`)
+    INDEX `idx_ip_fecha` (`ip`, `created_at`),
+    INDEX `idx_usuario_fecha` (`usuario`, `exito`, `created_at`),
+    INDEX `idx_fecha` (`created_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

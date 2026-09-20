@@ -3,6 +3,12 @@
 class AuthController {
     /** Intentos fallidos permitidos por IP dentro de la ventana. */
     private const MAX_INTENTOS = 8;
+    /**
+     * Hash de relleno para usuarios inexistentes: se verifica igual para que
+     * la respuesta tarde lo mismo exista o no la cuenta (evita enumerar
+     * usuarios midiendo tiempos). Es password_hash('x', BCRYPT, cost 12).
+     */
+    private const HASH_RELLENO = '$2y$12$cFtM/oO7KohgSXf/J.H.2ex7RDbJqBMAikOVFnAWkEF7X54STx2R2';
     /** Ventana en minutos que se mira hacia atras. */
     private const VENTANA_MIN  = 15;
 
@@ -60,6 +66,13 @@ class AuthController {
                 ':exito'   => $exito ? 1 : 0,
             ]);
 
+            // Purga de registros viejos: la tabla no tiene otra limpieza y
+            // crece con cada intento. Se hace 1 de cada 20 veces para no
+            // pagar el DELETE en todos los logins.
+            if (random_int(1, 20) === 1) {
+                $this->db->exec("DELETE FROM login_intentos WHERE created_at < DATE_SUB(NOW(), INTERVAL 1 DAY)");
+            }
+
             // Un login correcto limpia los fallos acumulados de ese usuario.
             if ($exito && $usuario !== null) {
                 $this->db->prepare("DELETE FROM login_intentos WHERE usuario = :usuario AND exito = 0")
@@ -78,8 +91,15 @@ class AuthController {
         }
 
         $body = json_decode(file_get_contents('php://input'), true) ?? [];
-        $username = trim($body['username'] ?? '');
-        $password = $body['password'] ?? '';
+        // Un array en lugar de string hacia explotar trim()/password_verify()
+        // con un 500; se trata como campo vacio.
+        $username = is_string($body['username'] ?? null) ? trim($body['username']) : '';
+        $password = is_string($body['password'] ?? null) ? $body['password'] : '';
+        if (mb_strlen($username) > 200) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Credenciales incorrectas.']);
+            return;
+        }
 
         if ($username === '' || $password === '') {
             http_response_code(400);
@@ -102,7 +122,8 @@ class AuthController {
         $stmt->execute([':username' => $username, ':email' => $username]);
         $admin = $stmt->fetch();
 
-        if (!$admin || !password_verify($password, $admin['password_hash'])) {
+        $hash = $admin ? $admin['password_hash'] : self::HASH_RELLENO;
+        if (!password_verify($password, $hash) || !$admin) {
             $this->registrarIntento($username, false);
             http_response_code(401);
             echo json_encode(['success' => false, 'message' => 'Credenciales incorrectas.']);
@@ -118,6 +139,7 @@ class AuthController {
         $_SESSION['admin_username'] = $admin['username'];
         $_SESSION['admin_email']    = $admin['email'];
         $_SESSION['admin_rol']      = $admin['rol'];
+        $_SESSION['ultimo_acceso'] = time();
 
         echo json_encode([
             'success' => true,
@@ -132,20 +154,12 @@ class AuthController {
     }
 
     public function logout(): void {
-        $_SESSION = [];
-        if (ini_get('session.use_cookies')) {
-            $params = session_get_cookie_params();
-            setcookie(
-                session_name(),
-                '',
-                time() - 42000,
-                $params['path'],
-                $params['domain'],
-                $params['secure'],
-                $params['httponly']
-            );
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'message' => 'Método no permitido.']);
+            return;
         }
-        session_destroy();
+        Auth::cerrarSesion();
         echo json_encode(['success' => true, 'message' => 'Sesión cerrada.']);
     }
 
@@ -161,7 +175,7 @@ class AuthController {
             return;
         }
 
-        if (!empty($_SESSION['admin_id'])) {
+        if (Auth::sesionValida()) {
             echo json_encode([
                 'success'       => true,
                 'authenticated' => true,

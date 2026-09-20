@@ -59,6 +59,9 @@ $esHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
     || (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https')
     || (int)($_SERVER['SERVER_PORT'] ?? 80) === 443;
 
+// El vencimiento por inactividad lo controla Auth::sesionValida() (8 horas);
+// esto evita que el recolector de PHP borre la sesion antes de ese plazo.
+ini_set('session.gc_maxlifetime', (string)(8 * 60 * 60));
 ini_set('session.use_strict_mode', '1');
 session_set_cookie_params([
     'lifetime' => 0,
