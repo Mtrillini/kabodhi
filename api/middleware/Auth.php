@@ -3,18 +3,36 @@
 class Auth {
 
     /**
-     * Bypass de login para desarrollo. Exige DOS condiciones a la vez:
+     * Bypass de login para desarrollo. Exige todas estas condiciones:
      *   1. DEV_ADMIN_SIN_LOGIN=true en el .env (que esta en .gitignore)
-     *   2. que la peticion venga de la misma maquina
-     * La segunda es la que importa: si el flag queda prendido por descuido en
-     * un hosting, el panel igual no se abre a internet.
+     *   2. APP_URL apuntando a localhost o una IP de loopback
+     *   3. REMOTE_ADDR de loopback, sin encabezados de proxy y host local
+     * APP_URL es la condicion principal porque no depende de la peticion.
+     * Las condiciones de la peticion son defensa en profundidad.
      */
     public static function devSinLogin(): bool {
         if (!defined('DEV_ADMIN_SIN_LOGIN') || strtolower((string)DEV_ADMIN_SIN_LOGIN) !== 'true') {
             return false;
         }
+        if (!defined('APP_URL')) {
+            return false;
+        }
+        $appHost = strtolower((string)parse_url(APP_URL, PHP_URL_HOST));
+        if (!in_array($appHost, ['localhost', '127.0.0.1', '::1', '[::1]'], true)) {
+            return false;
+        }
         $ip = $_SERVER['REMOTE_ADDR'] ?? '';
-        return in_array($ip, ['127.0.0.1', '::1', 'localhost'], true);
+        if (!in_array($ip, ['127.0.0.1', '::1'], true)) {
+            return false;
+        }
+        foreach (['HTTP_X_FORWARDED_FOR', 'HTTP_X_FORWARDED_HOST', 'HTTP_X_FORWARDED_PROTO', 'HTTP_X_REAL_IP', 'HTTP_FORWARDED', 'HTTP_VIA'] as $header) {
+            if (array_key_exists($header, $_SERVER)) {
+                return false;
+            }
+        }
+        $host = strtolower($_SERVER['HTTP_HOST'] ?? '');
+        $host = preg_replace('/^(\[[^\]]+\]|[^:]+):[0-9]+$/', '$1', $host);
+        return in_array($host, ['localhost', '127.0.0.1', '[::1]'], true);
     }
 
     public static function requireAdmin(): void {

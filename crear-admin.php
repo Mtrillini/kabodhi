@@ -14,6 +14,13 @@ declare(strict_types=1);
 require_once __DIR__ . '/api/config/Config.php';
 require_once __DIR__ . '/api/config/Database.php';
 
+// Solo se LEE la sesion del panel para saber si hay un admin logueado;
+// no se crea una nueva, por eso no hacen falta los parametros de cookie.
+ini_set('session.use_strict_mode', '1');
+session_name('nuve_admin_session');
+session_start();
+$adminLogueado = !empty($_SESSION['admin_id']);
+
 $error   = null;
 $exito   = false;
 $yaExiste = false;
@@ -32,17 +39,19 @@ try {
         $sinSuper = (int)$db->query("SELECT COUNT(*) FROM admin_users WHERE rol = 'super'")->fetchColumn() === 0;
     }
 } catch (Throwable $e) {
+    error_log('crear-admin: ' . $e->getMessage());
     $error = 'No se pudo conectar a la base. Revisá los datos del .env.';
 }
 
 // Promover a principal, solo cuando no hay ninguno.
-if (!$error && $sinSuper && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['promover'])) {
+if (!$error && $sinSuper && $adminLogueado && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['promover'])) {
     $id = (int)$_POST['promover'];
     try {
         $db->prepare("UPDATE admin_users SET rol = 'super' WHERE id = :id")->execute([':id' => $id]);
         $sinSuper = false;
         $promovido = true;
     } catch (Throwable $e) {
+        error_log('crear-admin: ' . $e->getMessage());
         $error = 'No se pudo actualizar el rol.';
     }
 }
@@ -77,7 +86,12 @@ if (!$error && !$yaExiste && $_SERVER['REQUEST_METHOD'] === 'POST') {
             ]);
             $exito = true;
         } catch (Throwable $e) {
-            $error = 'No se pudo crear el usuario: ' . $e->getMessage();
+            if ($e instanceof PDOException && (string)$e->getCode() === '23000') {
+                $error = 'Ya existe un usuario con ese nombre o email.';
+            } else {
+                error_log('crear-admin: ' . $e->getMessage());
+                $error = 'No se pudo crear el usuario. Revisá el log del servidor.';
+            }
         }
     }
 }
@@ -148,6 +162,16 @@ $esc = fn(?string $t): string => htmlspecialchars((string)$t, ENT_QUOTES, 'UTF-8
       </div>
 
     <?php elseif ($sinSuper): ?>
+      <?php if (!$adminLogueado): ?>
+      <div class="aviso aviso--error">
+        Hay usuarios cargados pero <strong>ninguno es administrador principal</strong>.
+      </div>
+      <p style="font-size:0.82rem;color:#8B7966;line-height:1.6;">
+        Para elegir quién pasa a ser el principal, primero
+        <a href="admin/login.html">iniciá sesión en el panel</a> con cualquiera de
+        los usuarios existentes y volvé a esta página.
+      </p>
+      <?php else: ?>
       <div class="aviso aviso--error">
         Hay usuarios cargados pero <strong>ninguno es administrador principal</strong>,
         así que nadie puede gestionar usuarios ni la configuración de la tienda.
@@ -163,6 +187,7 @@ $esc = fn(?string $t): string => htmlspecialchars((string)$t, ENT_QUOTES, 'UTF-8
           </button>
         </form>
       <?php endforeach; ?>
+      <?php endif; ?>
 
     <?php elseif ($yaExiste): ?>
       <div class="aviso aviso--error">
