@@ -9,7 +9,11 @@ class ConfigController {
 
     /** Publico: la tienda necesita el WhatsApp, el email y el umbral de envio gratis. */
     public function index(): void {
-        echo json_encode(['success' => true, 'data' => $this->service->getAll()]);
+        $data = $this->service->getAll();
+        // Derivado, no se guarda: la tienda oculta Mercado Pago en el checkout
+        // mientras el .env no tenga el access token.
+        $data['mp_disponible'] = (new MercadoPagoService())->configurado() ? '1' : '0';
+        echo json_encode(['success' => true, 'data' => $data]);
     }
 
     public function update(): void {

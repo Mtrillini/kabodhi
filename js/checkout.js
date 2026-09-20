@@ -11,12 +11,20 @@ function getEnvioGuardado() {
 let PROVINCIAS = {};
 
 /** Configuracion de pagos (cuotas, transferencia). Se carga al iniciar. */
-let PAGO_CONFIG = { mp_cuotas_max: 12, mp_mostrar_cuotas: true, transferencia: { activa: false, descuento: 0 } };
+let PAGO_CONFIG = { mp_disponible: true, mp_cuotas_max: 12, mp_mostrar_cuotas: true, transferencia: { activa: false, descuento: 0 } };
 
 function metodoPagoElegido() {
   const el = document.querySelector('input[name="metodo-pago"]:checked');
   const v  = el ? el.value : 'mercadopago';
-  return (v === 'transferencia' && PAGO_CONFIG.transferencia.activa) ? 'transferencia' : 'mercadopago';
+  if (v === 'transferencia' && PAGO_CONFIG.transferencia.activa) return 'transferencia';
+  // Si MP no esta disponible y la transferencia si, es la unica opcion.
+  if (!PAGO_CONFIG.mp_disponible && PAGO_CONFIG.transferencia.activa) return 'transferencia';
+  return 'mercadopago';
+}
+
+/** true si hay al menos una forma de pago habilitada. */
+function hayFormaDePago() {
+  return PAGO_CONFIG.mp_disponible || PAGO_CONFIG.transferencia.activa;
 }
 
 /** Descuento por transferencia: sobre los productos, no sobre el envio (igual que el servidor). */
@@ -101,6 +109,38 @@ function renderCheckoutSummary() {
 async function initFormaPago() {
   if (!window.Pagos) return;
   PAGO_CONFIG = await Pagos.config();
+
+  // Mercado Pago solo se ofrece si el servidor tiene las credenciales.
+  const labelMp = document.querySelector('#pago-opciones input[value="mercadopago"]')?.closest('.envio-opcion');
+  if (labelMp) labelMp.hidden = !PAGO_CONFIG.mp_disponible;
+
+  const btnPagar = document.getElementById('btn-pagar');
+  if (!hayFormaDePago()) {
+    // Sin ningun medio configurado no se toman pedidos: quedarian colgados
+    // con el stock reservado y sin forma de pagarlos.
+    const opciones = document.getElementById('pago-opciones');
+    if (opciones) opciones.hidden = true;
+    if (btnPagar) { btnPagar.disabled = true; btnPagar.textContent = 'COMPRAS NO DISPONIBLES'; }
+    const wa = (typeof WHATSAPP_NUMERO !== 'undefined' && WHATSAPP_NUMERO)
+      ? ` Podés coordinar tu compra por <a href="https://wa.me/${WHATSAPP_NUMERO}" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline;">WhatsApp</a>.`
+      : '';
+    opciones?.insertAdjacentHTML('afterend',
+      `<p id="pago-sin-medios" style="margin:0.5rem 0 0;padding:0.9rem 1rem;background:#F6E4E1;color:#A32E24;border-radius:4px;font-size:0.85rem;line-height:1.6;">
+         Por el momento no estamos tomando pedidos online.${wa}
+       </p>`);
+    return;
+  }
+
+  if (!PAGO_CONFIG.mp_disponible && PAGO_CONFIG.transferencia.activa) {
+    // Queda la transferencia como unica opcion, ya seleccionada.
+    const radioTransf = document.querySelector('#pago-opciones input[value="transferencia"]');
+    if (radioTransf) {
+      radioTransf.checked = true;
+      document.querySelectorAll('#pago-opciones .envio-opcion').forEach(l => l.classList.remove('envio-opcion--activa'));
+      radioTransf.closest('.envio-opcion')?.classList.add('envio-opcion--activa');
+    }
+    if (btnPagar) btnPagar.textContent = 'CONFIRMAR PEDIDO';
+  }
 
   const t = PAGO_CONFIG.transferencia;
   const label = document.getElementById('pago-transferencia');
@@ -342,6 +382,10 @@ async function submitCheckout(e) {
   const carrito = window.Carrito ? window.Carrito.get() : { items: [] };
   if (!carrito.items || carrito.items.length === 0) {
     showToast('Tu carrito está vacío.', 'error');
+    return;
+  }
+  if (!hayFormaDePago()) {
+    showToast('Por el momento no estamos tomando pedidos online.', 'error');
     return;
   }
 

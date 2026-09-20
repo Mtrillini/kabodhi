@@ -55,6 +55,8 @@ const Pagos = {
     const cbu   = (cfg.transferencia_cbu   || '').trim();
     const alias = (cfg.transferencia_alias || '').trim();
     return {
+      // Si la API no manda el dato (demo estatica), se asume disponible.
+      mp_disponible:   cfg.mp_disponible === undefined || String(cfg.mp_disponible) === '1',
       mp_cuotas_max:   parseInt(cfg.mp_cuotas_max || 12) || 12,
       mp_mostrar_cuotas: String(cfg.mp_mostrar_cuotas ?? '1') === '1',
       transferencia: {

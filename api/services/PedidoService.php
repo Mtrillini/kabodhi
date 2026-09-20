@@ -37,6 +37,11 @@ class PedidoService {
         if ($metodoPago === 'transferencia' && !$pagoConfig['transferencia']['activa']) {
             throw new RuntimeException('El pago por transferencia no está disponible en este momento.');
         }
+        // Sin access token no hay link de pago: el pedido quedaria colgado con
+        // el stock reservado y sin forma de pagarlo.
+        if ($metodoPago === 'mercadopago' && !(new MercadoPagoService())->configurado()) {
+            throw new RuntimeException('El pago con Mercado Pago no está disponible en este momento.');
+        }
 
         foreach ($items as $item) {
             $id       = (int)($item['id'] ?? 0);
