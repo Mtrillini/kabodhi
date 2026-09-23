@@ -1,18 +1,30 @@
 // ============================================================
 // KABODHI — carrito.js
 // Cart localStorage structure:
-// { items: [{id, nombre, precio, imagen_url, cantidad, stock}], updatedAt }
+// { items: [{key, id, variante_id, variante_nombre, nombre, precio,
+//            imagen_url, cantidad, stock}], updatedAt }
+//
+// `key` identifica la linea: dos aromas del mismo producto son dos lineas
+// distintas, asi que no alcanza con el id del producto.
 // ============================================================
 
 const CART_KEY = 'nuve_cart';
 
 // ---- Helpers ----
+function claveItem(productoId, varianteId) {
+  return `${parseInt(productoId)}:${parseInt(varianteId) || 0}`;
+}
+
 function getCarrito() {
   try {
     const raw = localStorage.getItem(CART_KEY);
     if (!raw) return { items: [], updatedAt: null };
     const parsed = JSON.parse(raw);
     if (!parsed || !Array.isArray(parsed.items)) return { items: [], updatedAt: null };
+    // Carritos guardados antes de las variantes: no tienen `key`.
+    parsed.items.forEach(i => {
+      if (!i.key) i.key = claveItem(i.id, i.variante_id);
+    });
     return parsed;
   } catch {
     return { items: [], updatedAt: null };
@@ -35,7 +47,8 @@ function agregarItem(producto, cantidad = 1) {
     return getCarrito();
   }
   const carrito = getCarrito();
-  const existingIdx = carrito.items.findIndex(i => i.id === producto.id);
+  const key = claveItem(producto.id, producto.variante_id);
+  const existingIdx = carrito.items.findIndex(i => i.key === key);
 
   if (existingIdx >= 0) {
     const nuevoQty = carrito.items[existingIdx].cantidad + cantidad;
@@ -43,7 +56,11 @@ function agregarItem(producto, cantidad = 1) {
     carrito.items[existingIdx].cantidad = Math.min(nuevoQty, maxStock);
   } else {
     carrito.items.push({
+      key,
       id:         producto.id,
+      // Opcion elegida (aroma, tamano); null si el producto no tiene opciones.
+      variante_id:     producto.variante_id     || null,
+      variante_nombre: producto.variante_nombre || null,
       nombre:     producto.nombre,
       marca:      producto.marca || '',
       tipo:       producto.tipo || '',
@@ -58,16 +75,20 @@ function agregarItem(producto, cantidad = 1) {
   return carrito;
 }
 
-function quitarItem(id) {
+// Las lineas se identifican por `key` (producto:variante). Se acepta tambien
+// un id de producto suelto por compatibilidad con llamadas viejas.
+function quitarItem(key) {
   const carrito = getCarrito();
-  carrito.items = carrito.items.filter(i => i.id !== parseInt(id));
+  const k = String(key).includes(':') ? String(key) : claveItem(key, 0);
+  carrito.items = carrito.items.filter(i => i.key !== k);
   guardarCarrito(carrito);
   return carrito;
 }
 
-function cambiarCantidad(id, delta) {
+function cambiarCantidad(key, delta) {
   const carrito = getCarrito();
-  const idx = carrito.items.findIndex(i => i.id === parseInt(id));
+  const k = String(key).includes(':') ? String(key) : claveItem(key, 0);
+  const idx = carrito.items.findIndex(i => i.key === k);
   if (idx < 0) return carrito;
 
   const item = carrito.items[idx];
@@ -135,7 +156,7 @@ function renderCarrito() {
   const fmt = window.formatMoney || (v => '$ ' + v.toLocaleString('es-AR'));
 
   const itemsHTML = carrito.items.map(item => `
-    <div class="cart-item" data-id="${item.id}">
+    <div class="cart-item" data-key="${item.key}">
       <div class="cart-item__img-wrap">
         <img
           class="cart-item__img"
@@ -145,18 +166,19 @@ function renderCarrito() {
       </div>
       <div class="cart-item__info">
         <div class="cart-item__name">${item.nombre}</div>
+        ${item.variante_nombre ? `<div class="cart-item__variante">${item.variante_nombre}</div>` : ''}
         ${item.marca ? `<div class="cart-item__marca">${item.marca}</div>` : ''}
         ${item.tipo  ? `<div class="cart-item__tipo">${item.tipo}</div>`   : ''}
         <div class="cart-item__price">${fmt(item.precio)} c/u</div>
       </div>
       <div class="cart-item__right">
         <div class="qty-control">
-          <button class="qty-control__btn" onclick="handleQtyChange(${item.id}, -1)" aria-label="Restar">−</button>
+          <button class="qty-control__btn" onclick="handleQtyChange('${item.key}', -1)" aria-label="Restar">−</button>
           <span class="qty-control__value">${item.cantidad}</span>
-          <button class="qty-control__btn" onclick="handleQtyChange(${item.id}, 1)" aria-label="Sumar" ${item.cantidad >= (item.stock ?? 999) ? 'disabled style="opacity:0.4;cursor:not-allowed;"' : ''}>+</button>
+          <button class="qty-control__btn" onclick="handleQtyChange('${item.key}', 1)" aria-label="Sumar" ${item.cantidad >= (item.stock ?? 999) ? 'disabled style="opacity:0.4;cursor:not-allowed;"' : ''}>+</button>
         </div>
         <div class="cart-item__subtotal">${fmt(item.precio * item.cantidad)}</div>
-        <button class="cart-item__remove" onclick="handleRemove(${item.id})">Eliminar</button>
+        <button class="cart-item__remove" onclick="handleRemove('${item.key}')">Eliminar</button>
       </div>
     </div>
   `).join('');
@@ -327,7 +349,7 @@ window.pedirPorWhatsApp = async function () {
   }
 
   const fmt = window.formatMoney || (v => '$' + v);
-  const lineas = carrito.items.map(it => `• ${it.cantidad} x ${it.nombre} — ${fmt(it.precio * it.cantidad)}`);
+  const lineas = carrito.items.map(it => `• ${it.cantidad} x ${it.nombre}${it.variante_nombre ? " — " + it.variante_nombre : ""} — ${fmt(it.precio * it.cantidad)}`);
   const texto =
     '¡Hola KABODHI! Quiero hacer este pedido:\n\n' +
     lineas.join('\n') +
@@ -336,13 +358,13 @@ window.pedirPorWhatsApp = async function () {
 };
 
 // ---- Event handlers ----
-function handleQtyChange(id, delta) {
-  cambiarCantidad(id, delta);
+function handleQtyChange(key, delta) {
+  cambiarCantidad(key, delta);
   renderCarrito();
 }
 
-function handleRemove(id) {
-  quitarItem(id);
+function handleRemove(key) {
+  quitarItem(key);
   renderCarrito();
   showToast('Producto eliminado del carrito.', 'info');
 }

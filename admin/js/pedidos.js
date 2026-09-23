@@ -9,6 +9,13 @@ let allPedidos      = [];   // lo que devolvio la API (ya filtrado por estado)
 let pedidosVisibles = [];   // lo que se ve tras aplicar busqueda y fechas
 let openDetailId    = null;
 
+// Nombre de una linea del pedido, con la opcion elegida si la hubo
+// (los pedidos anteriores a las variantes no la tienen).
+function nombreItem(item) {
+  const base = item.producto_nombre || 'Producto #' + item.producto_id;
+  return item.variante_nombre ? `${base} — ${item.variante_nombre}` : base;
+}
+
 // ---- Fetch ----
 async function fetchPedidos(estado = '') {
   try {
@@ -671,7 +678,7 @@ function renderDetalle(id, pedido) {
   itemsEl.innerHTML = pedido.items.map(item => `
     <div class="detail-item">
       <span>
-        ${escHtml(item.producto_nombre || 'Producto #' + item.producto_id)}
+        ${escHtml(nombreItem(item))}
         <span style="color:var(--taupe);"> × ${item.cantidad}</span>
       </span>
       <span>${formatMoney(item.precio_unitario * item.cantidad)}</span>
@@ -852,7 +859,7 @@ async function imprimirRemito(id) {
 
   const filas = (pedido.items || []).map(i => `
     <tr>
-      <td>${escHtml(i.producto_nombre || 'Producto #' + i.producto_id)}</td>
+      <td>${escHtml(nombreItem(i))}</td>
       <td class="num">${i.cantidad}</td>
       <td class="num">${formatMoney(i.precio_unitario)}</td>
       <td class="num">${formatMoney(i.precio_unitario * i.cantidad)}</td>

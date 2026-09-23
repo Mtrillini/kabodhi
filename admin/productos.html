@@ -111,6 +111,19 @@
             <div class="form-group">
               <label class="form-label" for="f-stock">Stock</label>
               <input type="number" id="f-stock" class="form-input" min="0" placeholder="10">
+              <div id="f-stock-aviso" style="display:none;font-size:0.68rem;color:var(--taupe);margin-top:0.3rem;">
+                Este producto se vende por opciones: el stock se lleva abajo, en cada una.
+              </div>
+            </div>
+
+            <div class="form-group" style="grid-column:1/-1;">
+              <label class="form-label">Opciones (aromas, tamaños, colores)</label>
+              <div style="font-size:0.7rem;color:var(--taupe);margin-bottom:0.7rem;">
+                Dejá la lista vacía si el producto se vende de una sola forma. Si cargás opciones,
+                el cliente elige una al comprar y el stock se descuenta de esa opción.
+              </div>
+              <div id="f-variantes-lista" style="display:flex;flex-direction:column;gap:0.6rem;margin-bottom:0.8rem;"></div>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="addVariante()">+ Agregar opción</button>
             </div>
 
             <div style="grid-column:1/-1;font-size:0.7rem;color:var(--taupe);margin-top:0.25rem;">
@@ -177,6 +190,6 @@
   <script src="js/layout.js?v=8"></script>
   <script src="js/demo.js?v=9"></script>
   <script src="js/auth.js?v=7"></script>
-  <script src="js/productos.js?v=8"></script>
+  <script src="js/productos.js?v=9"></script>
 </body>
 </html>

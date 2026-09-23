@@ -64,9 +64,16 @@ class ProductoService {
             foreach ($allImgs as $img) {
                 $imgMap[$img['producto_id']][] = ['id' => $img['id'], 'url' => $img['url']];
             }
+
+            // La tienda solo ve las opciones publicadas; el panel las ve todas.
+            $varMap = $this->variantesPorProducto(array_column($productos, 'id'), !$incluirInactivos);
+
             foreach ($productos as &$p) {
-                $p['imagenes'] = $imgMap[$p['id']] ?? [];
+                $p['imagenes']  = $imgMap[$p['id']] ?? [];
+                $p['variantes'] = $varMap[$p['id']] ?? [];
+                $p = self::conStockDeVariantes($p);
             }
+            unset($p);
         }
 
         return $productos;
@@ -95,7 +102,60 @@ class ProductoService {
         $imgStmt->execute([':id' => $id]);
         $result['imagenes'] = $imgStmt->fetchAll();
 
-        return $result;
+        $variantes = $this->variantesPorProducto([$id], !$incluirInactivos);
+        $result['variantes'] = $variantes[$id] ?? [];
+
+        return self::conStockDeVariantes($result);
+    }
+
+    /**
+     * Variantes de varios productos, indexadas por producto_id.
+     *
+     * @param bool $soloActivas la tienda publica no debe ofrecer una opcion
+     *                          dada de baja; el panel si tiene que verla.
+     */
+    private function variantesPorProducto(array $productoIds, bool $soloActivas): array {
+        $productoIds = array_values(array_unique(array_map('intval', $productoIds)));
+        if (empty($productoIds)) return [];
+
+        $marcas = implode(',', array_fill(0, count($productoIds), '?'));
+        $sql = "SELECT id, producto_id, nombre, sku, precio, stock, stock_reservado, imagen_url,
+                       peso_gramos, alto_cm, ancho_cm, largo_cm, activo, orden,
+                       GREATEST(0, stock - stock_reservado) AS stock_disponible
+                FROM producto_variantes
+                WHERE producto_id IN ({$marcas})"
+             . ($soloActivas ? " AND activo = 1" : "")
+             . " ORDER BY orden ASC, id ASC";
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($productoIds);
+
+        $out = [];
+        foreach ($stmt->fetchAll() as $v) {
+            $out[(int)$v['producto_id']][] = $v;
+        }
+        return $out;
+    }
+
+    /**
+     * Con variantes, el stock del producto es la suma de las opciones: es lo
+     * unico que la tienda y el panel tienen que mirar, y evita que alguien
+     * edite `productos.stock` creyendo que se vende de ahi.
+     */
+    private static function conStockDeVariantes(array $producto): array {
+        if (empty($producto['variantes'])) {
+            return $producto;
+        }
+        $stock = 0; $reservado = 0; $disponible = 0;
+        foreach ($producto['variantes'] as $v) {
+            $stock      += (int)$v['stock'];
+            $reservado  += (int)$v['stock_reservado'];
+            $disponible += (int)$v['stock_disponible'];
+        }
+        $producto['stock']            = $stock;
+        $producto['stock_reservado']  = $reservado;
+        $producto['stock_disponible'] = $disponible;
+        return $producto;
     }
 
     public function create(array $data): array {
@@ -131,6 +191,9 @@ class ProductoService {
         if (!empty($imagenes)) {
             $this->syncImagenes($id, $imagenes);
         }
+        if (array_key_exists('variantes', $data)) {
+            $this->syncVariantes($id, (array)$data['variantes']);
+        }
 
         return $this->getById($id);
     }
@@ -162,8 +225,109 @@ class ProductoService {
         if (array_key_exists('imagenes', $data)) {
             $this->syncImagenes($id, $data['imagenes']);
         }
+        // Solo si el formulario las mando: un update parcial no debe borrarlas.
+        if (array_key_exists('variantes', $data)) {
+            $this->syncVariantes($id, (array)$data['variantes']);
+        }
 
         return $this->getById($id);
+    }
+
+    /**
+     * Guarda la lista de variantes tal como vino del panel: las que traen id
+     * se actualizan, las nuevas se insertan y las que ya no estan se quitan.
+     *
+     * `stock_reservado` no se toca nunca desde aca: lo maneja StockService con
+     * los pedidos pendientes.
+     */
+    private function syncVariantes(int $productoId, array $variantes): void {
+        $stmt = $this->db->prepare("SELECT id FROM producto_variantes WHERE producto_id = :id");
+        $stmt->execute([':id' => $productoId]);
+        $existentes = array_map('intval', $stmt->fetchAll(PDO::FETCH_COLUMN));
+
+        $columnas = "nombre = :nombre, sku = :sku, precio = :precio, stock = :stock,
+                     imagen_url = :imagen_url, peso_gramos = :peso_gramos, alto_cm = :alto_cm,
+                     ancho_cm = :ancho_cm, largo_cm = :largo_cm, activo = :activo, orden = :orden";
+
+        $update = $this->db->prepare(
+            "UPDATE producto_variantes SET {$columnas} WHERE id = :id AND producto_id = :producto_id"
+        );
+        $insert = $this->db->prepare(
+            "INSERT INTO producto_variantes
+                (producto_id, nombre, sku, precio, stock, imagen_url, peso_gramos, alto_cm, ancho_cm, largo_cm, activo, orden)
+             VALUES
+                (:producto_id, :nombre, :sku, :precio, :stock, :imagen_url, :peso_gramos, :alto_cm, :ancho_cm, :largo_cm, :activo, :orden)"
+        );
+
+        $vistas = [];
+        foreach (array_values($variantes) as $i => $v) {
+            $nombre = trim((string)($v['nombre'] ?? ''));
+            if ($nombre === '') continue;   // fila vacia del formulario
+
+            $campos = [
+                ':nombre'      => mb_substr($nombre, 0, 120),
+                ':sku'         => self::textoONull($v['sku'] ?? null, 60),
+                ':precio'      => self::precioONull($v['precio'] ?? null),
+                ':stock'       => max(0, (int)($v['stock'] ?? 0)),
+                ':imagen_url'  => self::textoONull($v['imagen_url'] ?? null, 500),
+                ':peso_gramos' => self::medida($v['peso_gramos'] ?? null),
+                ':alto_cm'     => self::medida($v['alto_cm']     ?? null),
+                ':ancho_cm'    => self::medida($v['ancho_cm']    ?? null),
+                ':largo_cm'    => self::medida($v['largo_cm']    ?? null),
+                ':activo'      => isset($v['activo']) ? (int)(bool)$v['activo'] : 1,
+                ':orden'       => $i,
+            ];
+
+            $varianteId = (int)($v['id'] ?? 0);
+            if ($varianteId > 0 && in_array($varianteId, $existentes, true)) {
+                $update->execute($campos + [':id' => $varianteId, ':producto_id' => $productoId]);
+                $vistas[] = $varianteId;
+            } else {
+                $insert->execute($campos + [':producto_id' => $productoId]);
+                $vistas[] = (int)$this->db->lastInsertId();
+            }
+        }
+
+        foreach (array_diff($existentes, $vistas) as $varianteId) {
+            $this->quitarVariante((int)$varianteId);
+        }
+    }
+
+    /**
+     * Una variante que ya se vendio (o que tiene unidades reservadas por un
+     * pedido pendiente) no se borra: se da de baja. Borrarla dejaria el
+     * pedido sin referencia y liberaria una reserva que sigue viva.
+     */
+    private function quitarVariante(int $varianteId): void {
+        $stmt = $this->db->prepare(
+            "SELECT (SELECT COUNT(*) FROM pedido_items WHERE variante_id = v.id) AS vendida,
+                    v.stock_reservado
+             FROM producto_variantes v WHERE v.id = :id"
+        );
+        $stmt->execute([':id' => $varianteId]);
+        $row = $stmt->fetch();
+        if ($row === false) return;
+
+        if ((int)$row['vendida'] > 0 || (int)$row['stock_reservado'] > 0) {
+            $this->db->prepare("UPDATE producto_variantes SET activo = 0 WHERE id = :id")
+                     ->execute([':id' => $varianteId]);
+            return;
+        }
+        $this->db->prepare("DELETE FROM producto_variantes WHERE id = :id")
+                 ->execute([':id' => $varianteId]);
+    }
+
+    /** Texto recortado, o null si vino vacio. */
+    private static function textoONull($valor, int $max): ?string {
+        $texto = trim((string)($valor ?? ''));
+        return $texto === '' ? null : mb_substr($texto, 0, $max);
+    }
+
+    /** Precio propio de la variante; vacio = hereda el del producto. */
+    private static function precioONull($valor): ?float {
+        if ($valor === null || $valor === '' || !is_numeric($valor)) return null;
+        $n = (float)$valor;
+        return $n > 0 ? $n : null;
     }
 
     /** Peso/medida: entero positivo o null (sin dato). */

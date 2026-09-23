@@ -60,7 +60,7 @@ function renderCheckoutSummary() {
 
   const itemsHTML = carrito.items.map(item => `
     <div class="order-summary__row">
-      <span class="order-summary__item-name">${item.nombre} <span class="order-summary__item-qty">x${item.cantidad}</span></span>
+      <span class="order-summary__item-name">${item.nombre}${item.variante_nombre ? ' — ' + item.variante_nombre : ''} <span class="order-summary__item-qty">x${item.cantidad}</span></span>
       <span>${fmt(item.precio * item.cantidad)}</span>
     </div>
   `).join('');
@@ -426,8 +426,10 @@ async function submitCheckout(e) {
     provincia:  PROVINCIAS[provinciaCod] || provinciaCod,
     direccion:  buildDireccion(envio),
     items:     carrito.items.map(item => ({
-      id:         item.id,
-      cantidad:   item.cantidad,
+      id:          item.id,
+      // Opcion elegida: el servidor descuenta el stock de esta variante.
+      variante_id: item.variante_id || null,
+      cantidad:    item.cantidad,
     })),
     // Del envio solo va lo que eligio el cliente: el costo lo recalcula el servidor.
     envio: {

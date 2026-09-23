@@ -58,19 +58,32 @@ class PedidoService {
                 throw new RuntimeException("El producto #{$id} no está disponible.");
             }
 
-            $disponible = $this->stockService->getDisponible($id);
+            // Producto con opciones (aromas, tamanos): se vende la variante,
+            // nunca el producto "pelado".
+            $variante = self::elegirVariante($producto, $item);
+            $varianteId = $variante !== null ? (int)$variante['id'] : null;
+            $etiqueta   = $variante !== null
+                ? "{$producto['nombre']} — {$variante['nombre']}"
+                : $producto['nombre'];
+
+            $disponible = $this->stockService->getDisponible($id, $varianteId);
             if ($disponible < $cantidad) {
-                throw new RuntimeException("Stock insuficiente para \"{$producto['nombre']}\". Disponible: {$disponible}.");
+                throw new RuntimeException("Stock insuficiente para \"{$etiqueta}\". Disponible: {$disponible}.");
             }
 
-            $precio = (float)$producto['precio'];
+            // La variante solo pisa el precio si tiene uno propio.
+            $precio = $variante !== null && $variante['precio'] !== null
+                ? (float)$variante['precio']
+                : (float)$producto['precio'];
             $total += $precio * $cantidad;
 
             $validatedItems[] = [
                 'producto_id'     => $id,
+                'variante_id'     => $varianteId,
+                'variante_nombre' => $variante !== null ? $variante['nombre'] : null,
                 'cantidad'        => $cantidad,
                 'precio_unitario' => $precio,
-                'nombre'          => $producto['nombre'],
+                'nombre'          => $etiqueta,
             ];
         }
 
@@ -125,17 +138,21 @@ class PedidoService {
             }
 
             $stmtItem = $this->db->prepare(
-                "INSERT INTO pedido_items (pedido_id, producto_id, cantidad, precio_unitario)
-                 VALUES (:pedido_id, :producto_id, :cantidad, :precio_unitario)"
+                "INSERT INTO pedido_items (pedido_id, producto_id, variante_id, variante_nombre, cantidad, precio_unitario)
+                 VALUES (:pedido_id, :producto_id, :variante_id, :variante_nombre, :cantidad, :precio_unitario)"
             );
             foreach ($validatedItems as $item) {
                 $stmtItem->execute([
                     ':pedido_id'       => $pedidoId,
                     ':producto_id'     => $item['producto_id'],
+                    ':variante_id'     => $item['variante_id'],
+                    // Copia del nombre: el pedido se sigue leyendo aunque la
+                    // variante despues se renombre o se borre.
+                    ':variante_nombre' => $item['variante_nombre'],
                     ':cantidad'        => $item['cantidad'],
                     ':precio_unitario' => $item['precio_unitario'],
                 ]);
-                $this->stockService->reservar($item['producto_id'], $item['cantidad']);
+                $this->stockService->reservar($item['producto_id'], $item['cantidad'], $item['variante_id']);
             }
 
             $this->db->commit();
@@ -148,6 +165,33 @@ class PedidoService {
             $this->db->rollBack();
             throw $e;
         }
+    }
+
+    /**
+     * Que opcion se esta comprando de este producto.
+     *
+     * Devuelve null cuando el producto no tiene variantes (y entonces se
+     * vende como siempre). Si las tiene, la eleccion es obligatoria: sin esto
+     * no se sabria de que aroma descontar el stock.
+     */
+    private static function elegirVariante(array $producto, array $item): ?array {
+        $variantes = $producto['variantes'] ?? [];
+        if (empty($variantes)) {
+            return null;
+        }
+
+        $varianteId = (int)($item['variante_id'] ?? 0);
+        if ($varianteId <= 0) {
+            throw new InvalidArgumentException("Elegí una opción para \"{$producto['nombre']}\".");
+        }
+        foreach ($variantes as $v) {
+            if ((int)$v['id'] === $varianteId) {
+                return $v;
+            }
+        }
+        // Existe pero esta dada de baja o es de otro producto: getById(false)
+        // ya filtro las inactivas.
+        throw new RuntimeException("La opción elegida para \"{$producto['nombre']}\" ya no está disponible.");
     }
 
     /**
@@ -185,10 +229,14 @@ class PedidoService {
                     $this->db->commit();
                     continue;
                 }
-                $items = $this->db->prepare("SELECT producto_id, cantidad FROM pedido_items WHERE pedido_id = :id");
+                $items = $this->db->prepare("SELECT producto_id, variante_id, cantidad FROM pedido_items WHERE pedido_id = :id");
                 $items->execute([':id' => $id]);
                 foreach ($items->fetchAll() as $item) {
-                    $this->stockService->liberarReserva((int)$item['producto_id'], (int)$item['cantidad']);
+                    $this->stockService->liberarReserva(
+                        (int)$item['producto_id'],
+                        (int)$item['cantidad'],
+                        self::varianteDe($item)
+                    );
                 }
                 $this->db->prepare("UPDATE pedidos SET estado = 'cancelado' WHERE id = :id")->execute([':id' => $id]);
                 $this->db->commit();
@@ -226,10 +274,14 @@ class PedidoService {
         $pedido = $stmt->fetch();
         if (!$pedido) return null;
 
+        // La foto de la variante manda sobre la del producto; el nombre de la
+        // opcion sale de la copia guardada en el item (pi.variante_nombre).
         $stmtItems = $this->db->prepare(
-            "SELECT pi.*, pr.nombre AS producto_nombre, pr.imagen_url AS producto_imagen
+            "SELECT pi.*, pr.nombre AS producto_nombre,
+                    COALESCE(pv.imagen_url, pr.imagen_url) AS producto_imagen
              FROM pedido_items pi
              INNER JOIN productos pr ON pr.id = pi.producto_id
+             LEFT  JOIN producto_variantes pv ON pv.id = pi.variante_id
              WHERE pi.pedido_id = :pedido_id"
         );
         $stmtItems->execute([':pedido_id' => $id]);
@@ -343,33 +395,44 @@ class PedidoService {
         foreach ($items as $item) {
             $productoId = (int)$item['producto_id'];
             $cantidad   = (int)$item['cantidad'];
+            // Si la linea se vendio como variante, las unidades salen de ella.
+            $varianteId = self::varianteDe($item);
 
             if ($quedaDescontado) {
                 if ($estabaReservado) {
                     // confirmar() descuenta del stock y limpia la reserva.
-                    $this->stockService->confirmar($productoId, $cantidad);
+                    $this->stockService->confirmar($productoId, $cantidad, $varianteId);
                 } else {
                     // Venia de rechazado/cancelado: no tiene reserva propia, y
                     // confirmar() le sacaria la reserva a otro pedido.
-                    $this->stockService->descontar($productoId, $cantidad);
+                    $this->stockService->descontar($productoId, $cantidad, $varianteId);
                 }
 
             } elseif ($nuevo === 'rechazado' || $nuevo === 'cancelado') {
                 if ($estabaReservado) {
-                    $this->stockService->liberarReserva($productoId, $cantidad);
+                    $this->stockService->liberarReserva($productoId, $cantidad, $varianteId);
                 } elseif ($estabaDescontado) {
                     // Ya se habia descontado: devolvemos las unidades al stock.
-                    $this->stockService->incrementar($productoId, $cantidad);
+                    $this->stockService->incrementar($productoId, $cantidad, $varianteId);
                 }
 
             } elseif ($nuevo === 'pendiente') {
                 // Vuelve a quedar reservado.
                 if ($estabaDescontado) {
-                    $this->stockService->incrementar($productoId, $cantidad);
+                    $this->stockService->incrementar($productoId, $cantidad, $varianteId);
                 }
-                $this->stockService->reservar($productoId, $cantidad);
+                $this->stockService->reservar($productoId, $cantidad, $varianteId);
             }
         }
+    }
+
+    /**
+     * Variante de una linea de pedido, o null si se vendio sin opciones.
+     * Los pedidos anteriores a las variantes tienen la columna en NULL.
+     */
+    private static function varianteDe(array $item): ?int {
+        $id = (int)($item['variante_id'] ?? 0);
+        return $id > 0 ? $id : null;
     }
 
     public function cancelar(int $id): ?array {

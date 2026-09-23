@@ -21,11 +21,27 @@ function mapProducto(p) {
     stock:       parseInt(p.stock_disponible ?? p.stock) || 0,
     genero:      p.tipo,
     categoria_slug: p.categoria_slug || '',
+    // Opciones del producto (aromas, tamanos). Vacio = se vende de una sola
+    // forma y todo funciona como siempre.
+    variantes:   (p.variantes || []).map(v => ({
+      id:     parseInt(v.id),
+      nombre: v.nombre,
+      precio: v.precio != null ? parseFloat(v.precio) : null,
+      img:    v.imagen_url || '',
+      stock:  parseInt(v.stock_disponible ?? v.stock) || 0,
+    })),
   };
 }
 
 // ---- Slider de imágenes dentro de cada card (flechas a los costados) ----
 function escAttr(s) { return String(s == null ? '' : s).replace(/"/g, '&quot;'); }
+
+// Texto que se inserta como HTML (nombres cargados desde el panel).
+function escTexto(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
 
 function cardSliderHTML(imgs, alt, fallback) {
   const list  = (imgs && imgs.length) ? imgs : (fallback ? [fallback] : []);
@@ -209,8 +225,12 @@ function abrirModal(id) {
   document.getElementById('modal-nombre').textContent = p.nombre;
   document.getElementById('modal-tipo').textContent   = p.nota || '';
   document.getElementById('modal-desc').textContent   = p.descripcion;
-  document.getElementById('modal-precio').textContent = fmt(p.precio);
-  if (window.Pagos) Pagos.renderCuotas(document.getElementById('modal-cuotas'), p.precio);
+
+  // Las opciones se arman antes del precio: si la elegida tiene precio propio,
+  // es el que se muestra.
+  renderVariantes(p);
+  document.getElementById('modal-precio').textContent = fmt(precioElegido());
+  if (window.Pagos) Pagos.renderCuotas(document.getElementById('modal-cuotas'), precioElegido());
   document.getElementById('modal-qty').textContent    = modalQty;
 
   // Thumbnail strip
@@ -249,33 +269,122 @@ function cerrarModal() {
     document.body.style.overflow = '';
   }, { once: true });
   modalProductoActual = null;
+  modalVariante       = null;
 }
 
 function cambiarQty(delta) {
-  const maxQty = modalProductoActual ? (modalProductoActual.stock || 1) : 999;
+  const maxQty = stockElegido() || 1;
   modalQty = Math.max(1, Math.min(modalQty + delta, maxQty));
   document.getElementById('modal-qty').textContent = modalQty;
 }
 
-function agregarDesdeModal() {
-  if (!modalProductoActual) return;
-  if (modalProductoActual.stock === 0) {
-    window.showToast('Este producto no tiene stock disponible.', 'error');
+// ---- Opciones (aromas, tamanos) ----
+// La opcion elegida manda sobre el producto: define stock, precio y foto.
+let modalVariante = null;
+
+function stockElegido() {
+  if (!modalProductoActual) return 999;
+  if (modalVariante) return modalVariante.stock;
+  return modalProductoActual.stock || 0;
+}
+
+function precioElegido() {
+  if (!modalProductoActual) return 0;
+  if (modalVariante && modalVariante.precio != null) return modalVariante.precio;
+  return modalProductoActual.precio;
+}
+
+function renderVariantes(p) {
+  const cont = document.getElementById('modal-variantes');
+  if (!cont) return;
+
+  const variantes = p.variantes || [];
+  if (!variantes.length) {
+    modalVariante = null;
+    cont.style.display = 'none';
+    cont.innerHTML = '';
     return;
   }
-  if (typeof window.Carrito !== 'undefined') {
-    window.Carrito.agregar({ ...modalProductoActual }, modalQty);
-    window.showToast(`"${modalProductoActual.nombre}" agregado al carrito.`, 'success');
-    cerrarModal();
-  } else {
-    window.showToast('Error: módulo de carrito no disponible.', 'error');
+
+  // Arranca elegida la primera con stock: una opcion menos para el cliente.
+  modalVariante = variantes.find(v => v.stock > 0) || null;
+
+  cont.style.display = 'block';
+  cont.innerHTML = `
+    <p class="prod-modal__variantes-titulo">Elegí una opción</p>
+    <div class="prod-modal__variantes-lista">
+      ${variantes.map((v, i) => `
+        <button
+          type="button"
+          class="prod-modal__variante${v.id === modalVariante?.id ? ' is-activa' : ''}${v.stock === 0 ? ' is-agotada' : ''}"
+          ${v.stock === 0 ? 'disabled' : `onclick="elegirVariante(${i})"`}
+        >${escTexto(v.nombre)}${v.stock === 0 ? ' · sin stock' : ''}</button>
+      `).join('')}
+    </div>`;
+}
+
+function elegirVariante(index) {
+  if (!modalProductoActual) return;
+  const v = (modalProductoActual.variantes || [])[index];
+  if (!v || v.stock === 0) return;
+
+  modalVariante = v;
+  modalQty = 1;
+
+  // La foto de la opcion, si tiene, pasa a ser la principal.
+  if (v.img) {
+    const main = document.getElementById('modal-img');
+    if (main) main.src = v.img;
   }
+
+  document.getElementById('modal-qty').textContent    = modalQty;
+  document.getElementById('modal-precio').textContent = fmt(precioElegido());
+  if (window.Pagos) Pagos.renderCuotas(document.getElementById('modal-cuotas'), precioElegido());
+
+  document.querySelectorAll('#modal-variantes .prod-modal__variante').forEach((b, i) => {
+    b.classList.toggle('is-activa', i === index);
+  });
+}
+
+function agregarDesdeModal() {
+  if (!modalProductoActual) return;
+
+  const variantes = modalProductoActual.variantes || [];
+  if (variantes.length && !modalVariante) {
+    window.showToast('Elegí una opción antes de agregar al carrito.', 'error');
+    return;
+  }
+  if (stockElegido() === 0) {
+    window.showToast('Esta opción no tiene stock disponible.', 'error');
+    return;
+  }
+  if (typeof window.Carrito === 'undefined') {
+    window.showToast('Error: módulo de carrito no disponible.', 'error');
+    return;
+  }
+
+  const nombre = modalVariante
+    ? `${modalProductoActual.nombre} — ${modalVariante.nombre}`
+    : modalProductoActual.nombre;
+
+  window.Carrito.agregar({
+    ...modalProductoActual,
+    precio:          precioElegido(),
+    stock:           stockElegido(),
+    img:             (modalVariante && modalVariante.img) || modalProductoActual.img,
+    variante_id:     modalVariante ? modalVariante.id : null,
+    variante_nombre: modalVariante ? modalVariante.nombre : null,
+  }, modalQty);
+
+  window.showToast(`"${nombre}" agregado al carrito.`, 'success');
+  cerrarModal();
 }
 
 window.abrirModal        = abrirModal;
 window.cerrarModal       = cerrarModal;
 window.cambiarQty        = cambiarQty;
 window.agregarDesdeModal = agregarDesdeModal;
+window.elegirVariante    = elegirVariante;
 
 // ---- Featured (homepage — "Más Vendidos") ----
 window.loadFeaturedProductos = async function () {

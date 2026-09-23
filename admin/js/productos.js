@@ -5,6 +5,7 @@
 let allProductos   = [];
 let editingId      = null;
 let imagenesActuales = [];
+let variantesActuales = [];
 // Each item: { url: string|null, file: File|null, preview: string }
 
 let categorias = [];
@@ -150,6 +151,114 @@ function addImagenesFromFiles(files) {
   });
 }
 
+// ============================================================
+// Variantes (aromas, tamanos, colores)
+// ============================================================
+// Cada item: { id: number|null, nombre, stock, activo, url, file, preview }
+// Los inputs se arman con el DOM y no con innerHTML: escHtml no escapa
+// comillas y un nombre con " romperia el atributo value.
+
+function renderVariantes() {
+  const lista = document.getElementById('f-variantes-lista');
+  if (!lista) return;
+
+  lista.innerHTML = '';
+  variantesActuales.forEach((v, i) => lista.appendChild(filaVariante(v, i)));
+
+  // Con opciones, el stock del producto es la suma y no se edita a mano.
+  const hayVariantes = variantesActuales.length > 0;
+  const stockInput   = document.getElementById('f-stock');
+  const aviso        = document.getElementById('f-stock-aviso');
+  if (stockInput) stockInput.disabled = hayVariantes;
+  if (aviso)      aviso.style.display = hayVariantes ? 'block' : 'none';
+}
+
+function filaVariante(v, i) {
+  const fila = document.createElement('div');
+  fila.style.cssText = 'display:flex;align-items:center;gap:0.6rem;flex-wrap:wrap;' +
+                       'border:1px solid var(--champagne);border-radius:var(--radius);padding:0.55rem;';
+
+  // Foto propia de la opcion (vacia = se usa la del producto)
+  const foto = document.createElement('label');
+  foto.title = 'Foto de esta opción';
+  foto.style.cssText = 'cursor:pointer;flex-shrink:0;';
+  const img = document.createElement('img');
+  img.src = v.preview || v.url ? mediaUrl(v.preview || v.url) : IMG_PLACEHOLDER;
+  img.style.cssText = 'width:44px;height:44px;object-fit:cover;border-radius:4px;border:1px solid var(--champagne);display:block;';
+  img.alt = 'Foto de la opción';
+  const file = document.createElement('input');
+  file.type = 'file';
+  file.accept = 'image/jpeg,image/png,image/webp,image/gif';
+  file.style.display = 'none';
+  file.addEventListener('change', function () {
+    const elegido = this.files[0];
+    if (!elegido) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      variantesActuales[i].file    = elegido;
+      variantesActuales[i].preview = e.target.result;
+      renderVariantes();
+    };
+    reader.readAsDataURL(elegido);
+    this.value = '';
+  });
+  foto.append(img, file);
+
+  const nombre = document.createElement('input');
+  nombre.type        = 'text';
+  nombre.className   = 'form-input';
+  nombre.placeholder = 'Lavanda';
+  nombre.value       = v.nombre || '';
+  nombre.style.flex  = '1 1 150px';
+  nombre.addEventListener('input', () => { variantesActuales[i].nombre = nombre.value; });
+
+  const stockWrap = document.createElement('label');
+  stockWrap.style.cssText = 'display:flex;align-items:center;gap:0.4rem;font-size:0.7rem;color:var(--taupe);';
+  stockWrap.append('Stock');
+  const stock = document.createElement('input');
+  stock.type      = 'number';
+  stock.min       = '0';
+  stock.className = 'form-input';
+  stock.value     = v.stock ?? 0;
+  stock.style.width = '80px';
+  stock.addEventListener('input', () => { variantesActuales[i].stock = stock.value; });
+  stockWrap.append(stock);
+
+  const activoWrap = document.createElement('label');
+  activoWrap.style.cssText = 'display:flex;align-items:center;gap:0.4rem;font-size:0.7rem;color:var(--taupe);';
+  const activo = document.createElement('input');
+  activo.type    = 'checkbox';
+  activo.checked = v.activo !== 0 && v.activo !== '0' && v.activo !== false;
+  activo.style.cssText = 'width:15px;height:15px;accent-color:var(--negro);';
+  activo.addEventListener('change', () => { variantesActuales[i].activo = activo.checked ? 1 : 0; });
+  activoWrap.append(activo, 'A la venta');
+
+  const borrar = document.createElement('button');
+  borrar.type      = 'button';
+  borrar.textContent = '✕';
+  borrar.title     = 'Quitar esta opción';
+  borrar.style.cssText = 'background:none;border:none;color:#c07b7b;cursor:pointer;font-size:0.85rem;padding:0.2rem 0.4rem;';
+  borrar.addEventListener('click', () => removeVariante(i));
+
+  fila.append(foto, nombre, stockWrap, activoWrap, borrar);
+  return fila;
+}
+
+function addVariante() {
+  variantesActuales.push({ id: null, nombre: '', stock: 0, activo: 1, url: null, file: null, preview: null });
+  renderVariantes();
+}
+window.addVariante = addVariante;
+
+function removeVariante(index) {
+  const v = variantesActuales[index];
+  // Las que ya existen pueden estar en pedidos: el backend las da de baja en
+  // vez de borrarlas, pero conviene avisar antes de sacarlas de la lista.
+  if (v && v.id && !confirm(`¿Quitar la opción "${v.nombre || 'sin nombre'}"?`)) return;
+  variantesActuales.splice(index, 1);
+  renderVariantes();
+}
+
 // ---- Open modal ----
 async function openModal(id = null) {
   editingId = id;
@@ -159,8 +268,10 @@ async function openModal(id = null) {
 
   form.reset();
   document.getElementById('f-imagen-file').value = '';
-  imagenesActuales = [];
+  imagenesActuales  = [];
+  variantesActuales = [];
   renderImagenes();
+  renderVariantes();
 
   if (id !== null) {
     title.textContent = 'Editar Producto';
@@ -191,6 +302,17 @@ async function openModal(id = null) {
           imagenesActuales = [{ url: p.imagen_url, file: null, preview: p.imagen_url }];
         }
         renderImagenes();
+
+        variantesActuales = (p.variantes || []).map(v => ({
+          id:      parseInt(v.id),
+          nombre:  v.nombre || '',
+          stock:   v.stock ?? 0,
+          activo:  parseInt(v.activo) === 1 ? 1 : 0,
+          url:     v.imagen_url || null,
+          file:    null,
+          preview: null,
+        }));
+        renderVariantes();
       }
     } catch (e) {
       showToast('Error al cargar producto.', 'error');
@@ -219,6 +341,10 @@ async function saveProducto() {
 
   if (!nombre) { showToast('El nombre es obligatorio.', 'error'); return; }
   if (isNaN(precio) || precio <= 0) { showToast('Ingresá un precio válido.', 'error'); return; }
+  if (variantesActuales.some(v => (v.nombre || '').trim() === '')) {
+    showToast('Cada opción necesita un nombre (o quitá la fila vacía).', 'error');
+    return;
+  }
 
   const saveBtn = document.getElementById('btn-save');
   saveBtn.disabled    = true;
@@ -244,6 +370,25 @@ async function saveProducto() {
     }
   }
 
+  // Fotos de las opciones (las que el usuario acaba de elegir)
+  for (let i = 0; i < variantesActuales.length; i++) {
+    const v = variantesActuales[i];
+    if (!v.file) continue;
+    const formData = new FormData();
+    formData.append('imagen', v.file);
+    try {
+      const res  = await fetch(API_URL + '/upload', { method: 'POST', credentials: 'include', body: formData });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.message || 'Error al subir la foto de una opción.');
+      variantesActuales[i] = { ...v, url: json.url, file: null, preview: null };
+    } catch (err) {
+      showToast(err.message, 'error');
+      saveBtn.disabled    = false;
+      saveBtn.textContent = 'Guardar';
+      return;
+    }
+  }
+
   saveBtn.textContent = 'Guardando...';
 
   const payload = {
@@ -263,7 +408,20 @@ async function saveProducto() {
     activo:        document.getElementById('f-activo').checked    ? 1 : 0,
     destacado:     document.getElementById('f-destacado').checked ? 1 : 0,
     imagenes:      imagenesActuales.map(img => img.url).filter(Boolean),
+    // Siempre se manda la lista completa: si queda vacia, el producto vuelve
+    // a venderse sin opciones.
+    variantes:     variantesActuales.map((v, i) => ({
+      id:         v.id || null,
+      nombre:     (v.nombre || '').trim(),
+      stock:      parseInt(v.stock) || 0,
+      activo:     v.activo ? 1 : 0,
+      imagen_url: v.url || null,
+      orden:      i,
+    })),
   };
+
+  // Con opciones el stock sale de ellas: no se pisa el del producto.
+  if (variantesActuales.length) delete payload.stock;
 
   try {
     const url    = editingId !== null ? API_URL + '/productos/' + editingId : API_URL + '/productos';

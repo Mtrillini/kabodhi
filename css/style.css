@@ -4306,3 +4306,63 @@ select.form-input {
   font-size: 0.75rem;
   color: var(--taupe);
 }
+
+/* ============================================================
+   OPCIONES DEL PRODUCTO (aromas, tamaños)
+   ============================================================ */
+.prod-modal__variantes {
+  margin: 0.2rem 0 0.9rem;
+}
+
+.prod-modal__variantes-titulo {
+  font-family: var(--font-secondary);
+  font-size: 0.66rem;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--taupe);
+  margin: 0 0 0.5rem;
+}
+
+.prod-modal__variantes-lista {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.prod-modal__variante {
+  font-family: var(--font-secondary);
+  font-size: 0.72rem;
+  letter-spacing: 0.4px;
+  padding: 0.42rem 0.85rem;
+  border: 1px solid var(--gris-suave);
+  border-radius: 999px;
+  background: none;
+  color: var(--negro);
+  cursor: pointer;
+  transition: border-color var(--transition), background var(--transition), color var(--transition);
+}
+
+.prod-modal__variante:hover:not(:disabled) {
+  border-color: var(--negro);
+}
+
+.prod-modal__variante.is-activa {
+  background: var(--negro);
+  border-color: var(--negro);
+  color: var(--blanco);
+}
+
+.prod-modal__variante.is-agotada,
+.prod-modal__variante:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  text-decoration: line-through;
+}
+
+/* La opción elegida, en la línea del carrito */
+.cart-item__variante {
+  font-family: var(--font-secondary);
+  font-size: 0.72rem;
+  color: var(--champagne);
+  margin-top: 2px;
+}

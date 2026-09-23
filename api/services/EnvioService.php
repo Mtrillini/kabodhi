@@ -367,43 +367,88 @@ class EnvioService {
      * mando el cliente.
      */
     public function validarItems(array $items): array {
-        $ids = [];
-        $cantidades = [];
+        // Una linea por producto+variante: dos aromas del mismo producto pesan
+        // distinto y no se pueden sumar como si fueran lo mismo.
+        $lineas = [];
         foreach ($items as $it) {
-            $id = (int)($it['id'] ?? $it['producto_id'] ?? 0);
-            $q  = (int)($it['cantidad'] ?? 1);
+            $id  = (int)($it['id'] ?? $it['producto_id'] ?? 0);
+            $vid = (int)($it['variante_id'] ?? 0);
+            $q   = (int)($it['cantidad'] ?? 1);
             if ($id <= 0 || $q <= 0) continue;
-            $ids[] = $id;
-            $cantidades[$id] = ($cantidades[$id] ?? 0) + $q;
+
+            $clave = $id . ':' . $vid;
+            if (!isset($lineas[$clave])) {
+                $lineas[$clave] = ['producto_id' => $id, 'variante_id' => $vid, 'cantidad' => 0];
+            }
+            $lineas[$clave]['cantidad'] += $q;
         }
-        if (empty($ids)) {
+        if (empty($lineas)) {
             throw new InvalidArgumentException('El carrito está vacío.');
         }
 
-        $marcas = implode(',', array_fill(0, count($cantidades), '?'));
+        $productoIds = array_values(array_unique(array_column($lineas, 'producto_id')));
+        $marcas = implode(',', array_fill(0, count($productoIds), '?'));
         $stmt   = $this->db->prepare(
             "SELECT id, nombre, precio, peso_gramos, alto_cm, ancho_cm, largo_cm
              FROM productos WHERE activo = 1 AND id IN ({$marcas})"
         );
-        $stmt->execute(array_keys($cantidades));
+        $stmt->execute($productoIds);
+        $productos = [];
+        foreach ($stmt->fetchAll() as $p) {
+            $productos[(int)$p['id']] = $p;
+        }
+
+        $varianteIds = array_values(array_filter(array_unique(array_column($lineas, 'variante_id'))));
+        $variantes   = [];
+        if (!empty($varianteIds)) {
+            $marcas = implode(',', array_fill(0, count($varianteIds), '?'));
+            $stmt   = $this->db->prepare(
+                "SELECT id, producto_id, nombre, precio, peso_gramos, alto_cm, ancho_cm, largo_cm
+                 FROM producto_variantes WHERE activo = 1 AND id IN ({$marcas})"
+            );
+            $stmt->execute($varianteIds);
+            foreach ($stmt->fetchAll() as $v) {
+                $variantes[(int)$v['id']] = $v;
+            }
+        }
 
         $out = [];
-        foreach ($stmt->fetchAll() as $p) {
+        foreach ($lineas as $linea) {
+            $p = $productos[$linea['producto_id']] ?? null;
+            if ($p === null) continue;
+
+            $v = null;
+            if ($linea['variante_id'] > 0) {
+                $v = $variantes[$linea['variante_id']] ?? null;
+                // Variante inexistente, de baja o de otro producto: se ignora
+                // la linea en vez de cotizar un bulto que no se va a vender.
+                if ($v === null || (int)$v['producto_id'] !== (int)$p['id']) continue;
+            }
+
             $out[] = [
                 'id'          => (int)$p['id'],
-                'nombre'      => $p['nombre'],
-                'cantidad'    => $cantidades[(int)$p['id']],
-                'precio'      => (float)$p['precio'],
-                'peso_gramos' => $p['peso_gramos'] !== null ? (int)$p['peso_gramos'] : null,
-                'alto_cm'     => $p['alto_cm']     !== null ? (int)$p['alto_cm']     : null,
-                'ancho_cm'    => $p['ancho_cm']    !== null ? (int)$p['ancho_cm']    : null,
-                'largo_cm'    => $p['largo_cm']    !== null ? (int)$p['largo_cm']    : null,
+                'variante_id' => $v !== null ? (int)$v['id'] : null,
+                'nombre'      => $v !== null ? $p['nombre'] . ' — ' . $v['nombre'] : $p['nombre'],
+                'cantidad'    => $linea['cantidad'],
+                'precio'      => $v !== null && $v['precio'] !== null ? (float)$v['precio'] : (float)$p['precio'],
+                // Medidas propias de la variante; si no tiene, las del producto.
+                'peso_gramos' => self::medidaHeredada($v, $p, 'peso_gramos'),
+                'alto_cm'     => self::medidaHeredada($v, $p, 'alto_cm'),
+                'ancho_cm'    => self::medidaHeredada($v, $p, 'ancho_cm'),
+                'largo_cm'    => self::medidaHeredada($v, $p, 'largo_cm'),
             ];
         }
         if (empty($out)) {
             throw new InvalidArgumentException('Ninguno de los productos del carrito está disponible.');
         }
         return $out;
+    }
+
+    /** Medida de la variante; si no la tiene cargada, la del producto. */
+    private static function medidaHeredada(?array $variante, array $producto, string $campo): ?int {
+        $valor = $variante[$campo] ?? null;
+        if ($valor === null) $valor = $producto[$campo] ?? null;
+        return $valor !== null ? (int)$valor : null;
     }
 
     /**

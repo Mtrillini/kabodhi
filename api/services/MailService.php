@@ -265,7 +265,13 @@ class MailService {
             $linea    = $precio * $cantidad;
             $subtotal += $linea;
 
-            $nombre = self::esc($item['producto_nombre'] ?? ('Producto #' . ($item['producto_id'] ?? '')));
+            $nombre = $item['producto_nombre'] ?? ('Producto #' . ($item['producto_id'] ?? ''));
+            // La opcion elegida (aroma, tamano) va pegada al nombre; los
+            // pedidos anteriores a las variantes no la tienen.
+            if (!empty($item['variante_nombre'])) {
+                $nombre .= ' — ' . $item['variante_nombre'];
+            }
+            $nombre = self::esc($nombre);
             $filas .= "
               <tr>
                 <td style=\"padding:10px 0;border-bottom:1px solid #eee;font-size:14px;\">

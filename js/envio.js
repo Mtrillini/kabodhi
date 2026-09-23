@@ -36,7 +36,10 @@ const Envio = {
    */
   async cotizar(cp) {
     const carrito = window.Carrito ? window.Carrito.get() : { items: [] };
-    const items   = (carrito.items || []).map(i => ({ id: i.id, cantidad: i.cantidad }));
+    // La variante va en la cotizacion: cada opcion puede pesar distinto.
+    const items   = (carrito.items || []).map(i => ({
+      id: i.id, variante_id: i.variante_id || null, cantidad: i.cantidad,
+    }));
 
     const res  = await fetch(API_URL + '/envios/cotizar', {
       method:  'POST',

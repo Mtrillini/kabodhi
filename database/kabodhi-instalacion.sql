@@ -32,6 +32,7 @@ SET SQL_MODE = 'NO_AUTO_VALUE_ON_ZERO';
 
 DROP TABLE IF EXISTS `pedido_items`;
 DROP TABLE IF EXISTS `pedidos`;
+DROP TABLE IF EXISTS `producto_variantes`;
 DROP TABLE IF EXISTS `producto_imagenes`;
 DROP TABLE IF EXISTS `productos`;
 DROP TABLE IF EXISTS `categorias`;
@@ -94,6 +95,32 @@ CREATE TABLE `producto_imagenes` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 
+-- Opciones de un producto (aromas, tamanos, colores). Si un producto tiene
+-- variantes, el stock vive SOLO aca y `productos`.stock queda sin uso: la API
+-- devuelve la suma. `precio` vacio = usa el del producto.
+CREATE TABLE `producto_variantes` (
+    `id`              INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    `producto_id`     INT UNSIGNED NOT NULL,
+    `nombre`          VARCHAR(120) NOT NULL,
+    `sku`             VARCHAR(60)  NULL,
+    `precio`          DECIMAL(10,2) NULL,
+    `stock`           INT UNSIGNED NOT NULL DEFAULT 0,
+    `stock_reservado` INT UNSIGNED NOT NULL DEFAULT 0,
+    `imagen_url`      VARCHAR(500) NULL,
+    `peso_gramos`     INT UNSIGNED      NULL,
+    `alto_cm`         SMALLINT UNSIGNED NULL,
+    `ancho_cm`        SMALLINT UNSIGNED NULL,
+    `largo_cm`        SMALLINT UNSIGNED NULL,
+    `activo`          TINYINT(1)   NOT NULL DEFAULT 1,
+    `orden`           INT UNSIGNED NOT NULL DEFAULT 0,
+    `created_at`      TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    KEY `idx_producto` (`producto_id`, `orden`),
+    KEY `idx_activo` (`activo`),
+    CONSTRAINT `fk_variante_producto` FOREIGN KEY (`producto_id`)
+        REFERENCES `productos` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
 -- Seccion destacada del home.
 CREATE TABLE `hongos_principales` (
     `id`          INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
@@ -142,14 +169,22 @@ CREATE TABLE `pedido_items` (
     `id`              INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
     `pedido_id`       INT UNSIGNED NOT NULL,
     `producto_id`     INT UNSIGNED NOT NULL,
+    -- Que opcion se vendio. `variante_nombre` es una copia del nombre al
+    -- momento de la venta: el pedido se sigue leyendo aunque despues se
+    -- renombre o se borre la variante.
+    `variante_id`     INT UNSIGNED NULL,
+    `variante_nombre` VARCHAR(120) NULL,
     `cantidad`        INT UNSIGNED NOT NULL,
     `precio_unitario` DECIMAL(10,2) NOT NULL,
     KEY `idx_pedido` (`pedido_id`),
     KEY `idx_producto` (`producto_id`),
+    KEY `idx_variante` (`variante_id`),
     CONSTRAINT `fk_item_pedido` FOREIGN KEY (`pedido_id`)
         REFERENCES `pedidos` (`id`) ON DELETE CASCADE,
     CONSTRAINT `fk_item_producto` FOREIGN KEY (`producto_id`)
-        REFERENCES `productos` (`id`) ON DELETE RESTRICT
+        REFERENCES `productos` (`id`) ON DELETE RESTRICT,
+    CONSTRAINT `fk_item_variante` FOREIGN KEY (`variante_id`)
+        REFERENCES `producto_variantes` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 
