@@ -3438,22 +3438,24 @@ body { padding-top: calc(var(--nav-h) + var(--nav-arch)); }
    Va por encima del degradado inferior y de los puntos del slider. */
 .hero__btn {
   position: absolute;
-  left: 50%;
-  bottom: 18%;
-  transform: translateX(-50%);
+  left: 6%;
+  /* Abajo a la izquierda, justo donde arranca el degradado inferior (que
+     ocupa el 38% de abajo): el boton queda entre la imagen y la franja que
+     se funde con la seccion azul. */
+  bottom: 33%;
   z-index: 4;
   display: inline-flex;
   align-items: center;
-  gap: 0.9rem;
-  padding: 0.85rem 2.1rem;
+  gap: 1.1rem;
+  padding: 0.95rem 2.2rem;
   background: var(--champagne);
   color: var(--blanco);
   font-family: var(--font-secondary);
-  font-size: 0.82rem;
+  font-size: 0.9rem;
   font-weight: 400;
-  letter-spacing: 1px;
+  letter-spacing: 0.4px;
   text-decoration: none;
-  border-radius: 3px;
+  border-radius: 6px;
   box-shadow: 0 4px 16px rgba(28, 58, 79, 0.18);
   transition: background var(--transition), transform var(--transition);
   white-space: nowrap;
@@ -3461,21 +3463,22 @@ body { padding-top: calc(var(--nav-h) + var(--nav-arch)); }
 
 .hero__btn:hover {
   background: #8d5732;          /* el acento, un tono mas profundo */
-  transform: translateX(-50%) translateY(-2px);
+  transform: translateY(-2px);
 }
 
 .hero__btn-flecha {
-  font-size: 1rem;
+  font-size: 1.05rem;
   line-height: 1;
 }
 
 @media (max-width: 768px) {
   .hero__btn {
-    bottom: 14%;
-    padding: 0.6rem 1.3rem;
-    font-size: 0.7rem;
-    gap: 0.6rem;
-    letter-spacing: 0.6px;
+    left: 5%;
+    bottom: 36%;
+    padding: 0.62rem 1.35rem;
+    font-size: 0.74rem;
+    gap: 0.7rem;
+    border-radius: 5px;
   }
 }
 .hero__img {
