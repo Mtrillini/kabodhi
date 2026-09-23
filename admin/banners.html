@@ -102,7 +102,18 @@
             <label class="form-label" for="f-link">Link (opcional)</label>
             <input type="text" id="f-link" class="form-input" placeholder="/productos">
             <p style="font-size:0.7rem;color:var(--taupe);margin-top:0.35rem;">
-              A dónde lleva al hacer clic. Dejalo vacío si no querés que sea clickeable.
+              A dónde lleva al hacer clic. Dejalo vacío si no querés que sea clickeable.<br>
+              Todos los productos: <code>/productos</code> ·
+              Una categoría: <code>/productos?categoria=velas</code>
+            </p>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="f-boton-texto">Texto del botón (opcional)</label>
+            <input type="text" id="f-boton-texto" class="form-input" maxlength="60" placeholder="Descubrir colección">
+            <p style="font-size:0.7rem;color:var(--taupe);margin-top:0.35rem;">
+              Si lo completás, se dibuja un botón sobre el banner que lleva al link de arriba.
+              Vacío = la imagen entera es el link, como hasta ahora.
             </p>
           </div>
 
@@ -124,6 +135,6 @@
   <script src="js/layout.js?v=8"></script>
   <script src="js/demo.js?v=9"></script>
   <script src="js/auth.js?v=7"></script>
-  <script src="js/banners.js?v=7"></script>
+  <script src="js/banners.js?v=8"></script>
 </body>
 </html>

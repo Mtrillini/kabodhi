@@ -18,7 +18,7 @@ class BannerController {
     public function index(): void {
         $todos = Auth::isAdmin() && !empty($_GET['all']);
 
-        $sql = "SELECT id, titulo, imagen_desktop, imagen_mobile, link, orden, activo
+        $sql = "SELECT id, titulo, imagen_desktop, imagen_mobile, link, boton_texto, orden, activo
                 FROM banners"
              . ($todos ? '' : ' WHERE activo = 1')
              . ' ORDER BY orden ASC, id ASC';
@@ -58,14 +58,16 @@ class BannerController {
             : (int)$this->db->query("SELECT COALESCE(MAX(orden), 0) + 1 FROM banners")->fetchColumn();
 
         $stmt = $this->db->prepare(
-            "INSERT INTO banners (titulo, imagen_desktop, imagen_mobile, link, orden, activo)
-             VALUES (:titulo, :desktop, :mobile, :link, :orden, :activo)"
+            "INSERT INTO banners (titulo, imagen_desktop, imagen_mobile, link, boton_texto, orden, activo)
+             VALUES (:titulo, :desktop, :mobile, :link, :boton_texto, :orden, :activo)"
         );
         $stmt->execute([
             ':titulo'  => trim($body['titulo']),
             ':desktop' => trim($body['imagen_desktop']),
             ':mobile'  => self::nullSiVacio($body['imagen_mobile'] ?? ''),
             ':link'    => self::nullSiVacio($body['link'] ?? ''),
+            // Vacio = sin boton: el banner entero sigue siendo el link.
+            ':boton_texto' => self::nullSiVacio($body['boton_texto'] ?? ''),
             ':orden'   => $orden,
             ':activo'  => isset($body['activo']) ? (int)$body['activo'] : 1,
         ]);
@@ -106,6 +108,7 @@ class BannerController {
             'imagen_desktop' => 'imagen_desktop',
             'imagen_mobile'  => 'imagen_mobile',
             'link'           => 'link',
+            'boton_texto'    => 'boton_texto',
             'orden'          => 'orden',
             'activo'         => 'activo',
         ];
@@ -115,7 +118,7 @@ class BannerController {
             $campos[] = "`{$columna}` = :{$columna}";
             $params[":{$columna}"] = in_array($clave, ['orden', 'activo'], true)
                 ? (int)$body[$clave]
-                : (in_array($clave, ['imagen_mobile', 'link'], true)
+                : (in_array($clave, ['imagen_mobile', 'link', 'boton_texto'], true)
                     ? self::nullSiVacio($body[$clave])
                     : trim((string)$body[$clave]));
         }

@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=71">
+  <link rel="stylesheet" href="css/style.css?v=72">
 </head>
 <body>
 
@@ -309,6 +309,17 @@
                 <source media="(max-width: 768px)" srcset="${escAtributo(mobile)}">
                 <img class="hero__img" src="${escAtributo(desktop)}" alt="${escAtributo(b.titulo || '')}">
               </picture>`;
+
+          // Con texto de boton se dibuja el boton y la imagen deja de ser un
+          // link (un <a> dentro de otro <a> no es HTML valido).
+          const conBoton = b.boton_texto && b.link;
+          if (conBoton) {
+            return `<div class="hero__slide">${img}
+              <a class="hero__btn" href="${escAtributo(b.link)}">
+                ${escAtributo(b.boton_texto)}<span class="hero__btn-flecha" aria-hidden="true">&#10230;</span>
+              </a>
+            </div>`;
+          }
           return `<div class="hero__slide">${
             b.link ? `<a href="${escAtributo(b.link)}">${img}</a>` : img
           }</div>`;

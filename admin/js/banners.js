@@ -52,6 +52,7 @@ function renderTabla() {
       <td>
         <div style="font-size:0.8rem;">${escHtml(b.titulo)}</div>
         ${b.link ? `<div style="font-size:0.7rem;color:var(--taupe);margin-top:2px;">→ ${escHtml(b.link)}</div>` : ''}
+        ${b.boton_texto ? `<div style="font-size:0.7rem;color:var(--champagne);margin-top:2px;">botón: ${escHtml(b.boton_texto)}</div>` : ''}
       </td>
       <td>
         ${b.imagen_mobile
@@ -159,6 +160,7 @@ async function openModal(id = null) {
     if (b) {
       document.getElementById('f-titulo').value = b.titulo || '';
       document.getElementById('f-link').value   = b.link   || '';
+      document.getElementById('f-boton-texto').value = b.boton_texto || '';
       document.getElementById('f-activo').checked = parseInt(b.activo) === 1;
       if (b.imagen_desktop) imagenes.desktop = { url: b.imagen_desktop };
       if (b.imagen_mobile)  imagenes.mobile  = { url: b.imagen_mobile };
@@ -209,6 +211,7 @@ async function saveBanner() {
       imagen_desktop: await subirSiHaceFalta('desktop'),
       imagen_mobile:  await subirSiHaceFalta('mobile'),
       link:           document.getElementById('f-link').value.trim(),
+      boton_texto:    document.getElementById('f-boton-texto').value.trim(),
       activo:         document.getElementById('f-activo').checked ? 1 : 0,
     };
 
