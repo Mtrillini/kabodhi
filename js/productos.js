@@ -20,7 +20,8 @@ function mapProducto(p) {
     nota:        p.nota_olfativa || '',
     stock:       parseInt(p.stock_disponible ?? p.stock) || 0,
     genero:      p.tipo,
-    categoria_slug: p.categoria_slug || '',
+    categoria_slug:   p.categoria_slug   || '',
+    categoria_nombre: p.categoria_nombre || '',
     // Opciones del producto (aromas, tamanos). Vacio = se vende de una sola
     // forma y todo funciona como siempre.
     variantes:   (p.variantes || []).map(v => ({
@@ -143,6 +144,54 @@ function renderProductos(lista) {
 // ---- Filtro + sort ----
 let generoActivo = '';
 let categoriaActiva = document.body.dataset.categoria || '';
+
+// ---- Filtros por categoria ----
+// Se arman con las categorias que realmente tienen productos publicados: si
+// se agrega o se saca una desde el panel, la barra se acomoda sola.
+function renderFiltrosCategoria() {
+  const cont = document.getElementById('filtro-categorias');
+  if (!cont) return;
+
+  const categorias = new Map();
+  PRODUCTOS.forEach(p => {
+    if (p.categoria_slug) categorias.set(p.categoria_slug, p.categoria_nombre || p.categoria_slug);
+  });
+
+  // Con una sola categoria el filtro no filtra nada: no se muestra.
+  if (categorias.size < 2) {
+    cont.innerHTML = '';
+    cont.style.display = 'none';
+    return;
+  }
+
+  const ordenadas = [...categorias.entries()].sort((a, b) => a[1].localeCompare(b[1], 'es'));
+  const opciones  = [['', 'Todos'], ...ordenadas];
+
+  cont.style.display = '';
+  cont.innerHTML = opciones.map(([slug, nombre]) => `
+    <button type="button"
+            class="cat-filtro${slug === categoriaActiva ? ' is-activo' : ''}"
+            data-slug="${escAttr(slug)}">${escTexto(nombre)}</button>
+  `).join('');
+
+  cont.querySelectorAll('.cat-filtro').forEach(btn => {
+    btn.addEventListener('click', () => seleccionarCategoria(btn.dataset.slug));
+  });
+}
+
+function seleccionarCategoria(slug) {
+  categoriaActiva = slug || '';
+
+  // La URL acompaña al filtro: asi el link se puede compartir y es el mismo
+  // formato que usan los botones de los banners (?categoria=velas).
+  const url = new URL(window.location.href);
+  if (categoriaActiva) url.searchParams.set('categoria', categoriaActiva);
+  else                 url.searchParams.delete('categoria');
+  history.replaceState(null, '', url);
+
+  renderFiltrosCategoria();
+  aplicarFiltros();
+}
 
 function aplicarFiltros() {
   const search = (document.getElementById('search-input')?.value || '').toLowerCase();
@@ -483,6 +532,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Only fetch + render grid on productos.html
   if (document.getElementById('productos-grid')) {
     await fetchAllProductos();
+    renderFiltrosCategoria();
     aplicarFiltros();
 
     document.getElementById('search-input')?.addEventListener('input', aplicarFiltros);

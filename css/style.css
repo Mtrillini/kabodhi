@@ -3439,10 +3439,9 @@ body { padding-top: calc(var(--nav-h) + var(--nav-arch)); }
 .hero__btn {
   position: absolute;
   left: 6%;
-  /* Abajo a la izquierda, justo donde arranca el degradado inferior (que
-     ocupa el 38% de abajo): el boton queda entre la imagen y la franja que
-     se funde con la seccion azul. */
-  bottom: 33%;
+  /* Abajo a la izquierda, en el limite entre la parte clara del banner y la
+     franja azul de abajo: debajo del texto del banner, sin taparlo. */
+  bottom: 22%;
   z-index: 4;
   display: inline-flex;
   align-items: center;
@@ -3474,7 +3473,7 @@ body { padding-top: calc(var(--nav-h) + var(--nav-arch)); }
 @media (max-width: 768px) {
   .hero__btn {
     left: 5%;
-    bottom: 36%;
+    bottom: 24%;
     padding: 0.62rem 1.35rem;
     font-size: 0.74rem;
     gap: 0.7rem;
@@ -4414,4 +4413,55 @@ select.form-input {
   font-size: 0.72rem;
   color: var(--champagne);
   margin-top: 2px;
+}
+
+/* ============================================================
+   FILTROS POR CATEGORIA (productos.html)
+   ============================================================ */
+.cat-filtros {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+  max-width: 1200px;
+  margin: 0 auto 1.8rem;
+  padding: 0 2rem;
+}
+
+.cat-filtro {
+  font-family: var(--font-secondary);
+  font-size: 0.72rem;
+  font-weight: 400;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;   /* uniforme, se carguen como se carguen */
+  padding: 0.55rem 1.3rem;
+  border: 1px solid var(--gris-suave);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--negro);
+  cursor: pointer;
+  transition: border-color var(--transition), background var(--transition), color var(--transition);
+}
+
+.cat-filtro:hover {
+  border-color: var(--negro);
+}
+
+.cat-filtro.is-activo {
+  background: var(--negro);
+  border-color: var(--negro);
+  color: var(--blanco);
+}
+
+@media (max-width: 768px) {
+  .cat-filtros {
+    padding: 0 1.2rem;
+    gap: 0.4rem;
+    margin-bottom: 1.4rem;
+  }
+  .cat-filtro {
+    font-size: 0.66rem;
+    padding: 0.45rem 1rem;
+    letter-spacing: 1.2px;
+  }
 }
