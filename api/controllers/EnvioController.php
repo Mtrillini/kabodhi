@@ -129,6 +129,11 @@ class EnvioController {
             echo json_encode(['success' => false, 'message' => 'El CP desde no puede ser mayor al CP hasta.']);
             return;
         }
+        if ($error = self::validarPeso($body)) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => $error]);
+            return;
+        }
 
         $tarifa = $this->service->create($body);
         http_response_code(201);
@@ -143,9 +148,24 @@ class EnvioController {
             echo json_encode(['success' => false, 'message' => "Tarifa #{$id} no encontrada."]);
             return;
         }
-        $body    = json_decode(file_get_contents('php://input'), true) ?? [];
+        $body = json_decode(file_get_contents('php://input'), true) ?? [];
+        if ($error = self::validarPeso($body)) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => $error]);
+            return;
+        }
         $updated = $this->service->update($id, $body);
         echo json_encode(['success' => true, 'data' => $updated, 'message' => 'Tarifa actualizada.']);
+    }
+
+    /** "Peso hasta" tiene que ser mayor al "Peso desde" cuando se cargan los dos. */
+    private static function validarPeso(array $body): ?string {
+        $desde = $body['peso_desde_gramos'] ?? null;
+        $hasta = $body['peso_hasta_gramos'] ?? null;
+        if ($desde !== null && $desde !== '' && $hasta !== null && $hasta !== '' && (int)$desde > (int)$hasta) {
+            return 'El peso desde no puede ser mayor al peso hasta.';
+        }
+        return null;
     }
 
     public function destroy(int $id): void {

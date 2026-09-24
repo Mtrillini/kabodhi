@@ -190,12 +190,16 @@ CREATE TABLE `pedido_items` (
 
 -- El cliente ingresa su CP y se le cobra el rango que corresponda.
 CREATE TABLE `tarifas_envio` (
-    `id`          INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    `descripcion` VARCHAR(300) NOT NULL,
-    `cp_desde`    INT UNSIGNED NOT NULL,
-    `cp_hasta`    INT UNSIGNED NOT NULL,
-    `precio`      DECIMAL(10,2) NOT NULL,
-    `activo`      TINYINT(1) NOT NULL DEFAULT 1,
+    `id`                INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    `descripcion`       VARCHAR(300) NOT NULL,
+    `cp_desde`          INT UNSIGNED NOT NULL,
+    `cp_hasta`          INT UNSIGNED NOT NULL,
+    -- Rango de peso del carrito completo al que aplica. NULL = sin limite de
+    -- ese lado: una tarifa sin peso cargado sirve para cualquier peso.
+    `peso_desde_gramos` INT UNSIGNED NULL,
+    `peso_hasta_gramos` INT UNSIGNED NULL,
+    `precio`            DECIMAL(10,2) NOT NULL,
+    `activo`            TINYINT(1) NOT NULL DEFAULT 1,
     KEY `idx_rango` (`cp_desde`, `cp_hasta`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 

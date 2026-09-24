@@ -8,7 +8,7 @@ let editingId  = null;
 async function fetchTarifas() {
   try {
     document.getElementById('envios-tbody').innerHTML =
-      `<tr><td colspan="6" class="loading">Cargando...</td></tr>`;
+      `<tr><td colspan="7" class="loading">Cargando...</td></tr>`;
     const res  = await fetch(API_URL + '/envios', { credentials: 'include' });
     const json = await res.json();
     if (!json.success) throw new Error(json.message);
@@ -24,17 +24,28 @@ function renderTabla(tarifas) {
   if (!tbody) return;
 
   if (!tarifas.length) {
-    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--taupe);padding:2rem;">Sin tarifas cargadas.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--taupe);padding:2rem;">Sin tarifas cargadas.</td></tr>`;
     return;
   }
 
   const fmt = window.formatMoney || (v => '$ ' + parseFloat(v).toLocaleString('es-AR'));
+
+  // "Sin límite" cuando no hay tope de ese lado: una tarifa sin peso cargado
+  // sigue aplicando a cualquier peso del carrito.
+  const rangoPeso = t => {
+    if (t.peso_desde_gramos == null && t.peso_hasta_gramos == null) return 'Cualquiera';
+    const kg = g => (parseInt(g) / 1000).toLocaleString('es-AR', { maximumFractionDigits: 2 });
+    const desde = t.peso_desde_gramos != null ? kg(t.peso_desde_gramos) + 'kg' : '0kg';
+    const hasta = t.peso_hasta_gramos != null ? kg(t.peso_hasta_gramos) + 'kg' : 'sin límite';
+    return `${desde} – ${hasta}`;
+  };
 
   tbody.innerHTML = tarifas.map(t => `
     <tr>
       <td><strong style="font-weight:500;">${escHtml(t.descripcion)}</strong></td>
       <td>${t.cp_desde}</td>
       <td>${t.cp_hasta}</td>
+      <td style="font-size:0.78rem;color:var(--taupe);">${rangoPeso(t)}</td>
       <td>${fmt(t.precio)}</td>
       <td>
         <button
@@ -66,6 +77,8 @@ function openModal(id = null) {
       document.getElementById('f-descripcion').value = t.descripcion || '';
       document.getElementById('f-cp-desde').value    = t.cp_desde   || '';
       document.getElementById('f-cp-hasta').value    = t.cp_hasta   || '';
+      document.getElementById('f-peso-desde').value  = t.peso_desde_gramos ?? '';
+      document.getElementById('f-peso-hasta').value  = t.peso_hasta_gramos ?? '';
       document.getElementById('f-precio').value      = t.precio     || '';
       document.getElementById('f-activo').checked    = parseInt(t.activo) === 1;
     }
@@ -88,9 +101,18 @@ async function saveTarifa() {
   const cp_hasta    = parseInt(document.getElementById('f-cp-hasta').value);
   const precio      = parseFloat(document.getElementById('f-precio').value);
 
+  // Vacio = sin tope de ese lado (aplica a cualquier peso).
+  const pesoDesdeRaw = document.getElementById('f-peso-desde').value.trim();
+  const pesoHastaRaw = document.getElementById('f-peso-hasta').value.trim();
+  const peso_desde_gramos = pesoDesdeRaw === '' ? null : parseInt(pesoDesdeRaw);
+  const peso_hasta_gramos = pesoHastaRaw === '' ? null : parseInt(pesoHastaRaw);
+
   if (!descripcion)               { showToast('La descripción es obligatoria.', 'error'); return; }
   if (isNaN(cp_desde) || cp_desde < 1000) { showToast('CP Desde inválido.', 'error'); return; }
   if (isNaN(cp_hasta) || cp_hasta < cp_desde) { showToast('CP Hasta debe ser mayor o igual al CP Desde.', 'error'); return; }
+  if (peso_desde_gramos !== null && peso_hasta_gramos !== null && peso_desde_gramos > peso_hasta_gramos) {
+    showToast('El peso desde no puede ser mayor al peso hasta.', 'error'); return;
+  }
   if (isNaN(precio) || precio < 0) { showToast('Ingresá un precio válido.', 'error'); return; }
 
   const saveBtn = document.getElementById('btn-save');
@@ -101,6 +123,8 @@ async function saveTarifa() {
     descripcion,
     cp_desde,
     cp_hasta,
+    peso_desde_gramos,
+    peso_hasta_gramos,
     precio,
     activo: document.getElementById('f-activo').checked ? 1 : 0,
   };

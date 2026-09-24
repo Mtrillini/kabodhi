@@ -397,9 +397,11 @@ function updateCounterBadge() {
 }
 
 // ---- Init on carrito.html ----
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   if (document.getElementById('cart-items-container')) {
-    renderCarrito();
+    renderCarrito();               // primero lo que hay, para no ver una pantalla vacia
+    await corregirCarrito();
+    renderCarrito();               // de nuevo, ya con lo invalido afuera
 
     // El costo depende del peso del bulto: si cambia el carrito con un envio
     // ya elegido, se vuelve a cotizar sin que el cliente tenga que pedirlo.
@@ -415,3 +417,62 @@ document.addEventListener('DOMContentLoaded', () => {
   updateCounterBadge();
   window.addEventListener('carrito-updated', updateCounterBadge);
 });
+
+// ============================================================
+// Autocorreccion del carrito
+// ============================================================
+// Un item puede quedar invalido por varias razones (se agrego antes de que
+// el producto tuviera opciones, la opcion se borro, el producto se
+// desactivo...). Antes, eso bloqueaba TODO el pago con un error tecnico.
+// Ahora se valida contra el catalogo real al entrar al carrito o al
+// checkout: lo que esta roto se saca solo, se avisa por que, y el resto de
+// la compra sigue de largo.
+async function corregirCarrito() {
+  const carrito = getCarrito();
+  if (!carrito.items.length) return carrito;
+
+  let productos;
+  try {
+    const json = await loadProductosData();
+    productos = json.data || json;
+  } catch {
+    return carrito;   // sin catalogo no se puede validar; se deja como esta
+  }
+  if (!Array.isArray(productos)) return carrito;
+
+  const porId = new Map(productos.map(p => [parseInt(p.id), p]));
+  const invalidos = [];
+
+  const validos = carrito.items.filter(item => {
+    const p = porId.get(parseInt(item.id));
+    if (!p || (p.activo !== undefined && parseInt(p.activo) !== 1)) {
+      invalidos.push(item.nombre);
+      return false;
+    }
+    const variantes = p.variantes || [];
+    if (!variantes.length) return true;   // producto sin opciones: nada que validar
+
+    const activa = variantes.find(v =>
+      parseInt(v.id) === parseInt(item.variante_id) && parseInt(v.activo ?? 1) === 1
+    );
+    if (!activa) {
+      invalidos.push(item.variante_nombre ? `${item.nombre} (${item.variante_nombre})` : item.nombre);
+      return false;
+    }
+    return true;
+  });
+
+  if (invalidos.length) {
+    guardarCarrito({ ...carrito, items: validos });
+    if (window.showToast) {
+      const lista = invalidos.join(', ');
+      window.showToast(
+        `Sacamos del carrito ${invalidos.length > 1 ? 'estos productos' : 'este producto'} porque ya no está disponible así: ${lista}. Volvé a agregarlo si querés.`,
+        'error'
+      );
+    }
+  }
+
+  return getCarrito();
+}
+window.corregirCarrito = corregirCarrito;

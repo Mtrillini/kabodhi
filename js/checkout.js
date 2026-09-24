@@ -410,6 +410,7 @@ async function submitCheckout(e) {
     btn.textContent = 'Procesando...';
   }
 
+  try {
   const provinciaCod = document.getElementById('provincia')?.value || '';
   const payload = {
     nombre:    document.getElementById('nombre')?.value.trim()    || '',
@@ -445,7 +446,6 @@ async function submitCheckout(e) {
   // Combine nombre + apellido for the API
   payload.nombre = payload.nombre + ' ' + payload.apellido;
 
-  try {
     const res = await fetch(API_URL + '/pedidos', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -522,6 +522,14 @@ function buildDireccion(envio) {
 // ---- Init ----
 document.addEventListener('DOMContentLoaded', async () => {
   renderCheckoutSummary();
+
+  // Un item que quedo invalido (opcion borrada, producto de baja) ya no
+  // bloquea el pago con un error tecnico: se saca solo, se avisa, y el
+  // resto del pedido sigue de largo.
+  if (typeof corregirCarrito === 'function') {
+    await corregirCarrito();
+    renderCheckoutSummary();
+  }
 
   const form = document.getElementById('checkout-form');
   if (form) {

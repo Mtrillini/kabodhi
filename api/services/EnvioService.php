@@ -64,14 +64,17 @@ class EnvioService {
      * Tarifa de la tabla que corresponde a un CP. Si se pasa el subtotal del
      * carrito y supera el umbral de envio gratis configurado, el precio queda en 0.
      */
-    public function calcular(int $cp, ?float $subtotal = null): ?array {
+    public function calcular(int $cp, ?float $subtotal = null, ?int $pesoGramos = null): ?array {
+        $peso = $pesoGramos ?? (int)(new ConfigService())->getEnvioConfig()['bulto_default']['peso_gramos'];
         $stmt = $this->db->prepare(
             "SELECT * FROM tarifas_envio
              WHERE activo = 1 AND cp_desde <= :cp1 AND cp_hasta >= :cp2
-             ORDER BY cp_desde ASC
+               AND (peso_desde_gramos IS NULL OR peso_desde_gramos <= :peso1)
+               AND (peso_hasta_gramos IS NULL OR peso_hasta_gramos >= :peso2)
+             ORDER BY (peso_desde_gramos IS NULL AND peso_hasta_gramos IS NULL) ASC, cp_desde ASC
              LIMIT 1"
         );
-        $stmt->execute([':cp1' => $cp, ':cp2' => $cp]);
+        $stmt->execute([':cp1' => $cp, ':cp2' => $cp, ':peso1' => $peso, ':peso2' => $peso]);
         $row = $stmt->fetch();
         if ($row === false) return null;
 
@@ -94,28 +97,42 @@ class EnvioService {
 
     public function create(array $data): array {
         $stmt = $this->db->prepare(
-            "INSERT INTO tarifas_envio (descripcion, cp_desde, cp_hasta, precio, activo)
-             VALUES (:descripcion, :cp_desde, :cp_hasta, :precio, :activo)"
+            "INSERT INTO tarifas_envio
+                (descripcion, cp_desde, cp_hasta, peso_desde_gramos, peso_hasta_gramos, precio, activo)
+             VALUES (:descripcion, :cp_desde, :cp_hasta, :peso_desde, :peso_hasta, :precio, :activo)"
         );
         $stmt->execute([
             ':descripcion' => $data['descripcion'],
             ':cp_desde'    => (int)$data['cp_desde'],
             ':cp_hasta'    => (int)$data['cp_hasta'],
+            // Vacio = sin tope de ese lado (aplica a cualquier peso).
+            ':peso_desde'  => self::pesoONull($data['peso_desde_gramos'] ?? null),
+            ':peso_hasta'  => self::pesoONull($data['peso_hasta_gramos'] ?? null),
             ':precio'      => (float)$data['precio'],
             ':activo'      => isset($data['activo']) ? (int)$data['activo'] : 1,
         ]);
         return $this->getById((int)$this->db->lastInsertId());
     }
 
+    /** Entero positivo o null (sin tope). */
+    private static function pesoONull($valor): ?int {
+        if ($valor === null || $valor === '') return null;
+        $n = (int)$valor;
+        return $n > 0 ? $n : null;
+    }
+
     public function update(int $id, array $data): ?array {
-        $allowed = ['descripcion', 'cp_desde', 'cp_hasta', 'precio', 'activo'];
+        $allowed = ['descripcion', 'cp_desde', 'cp_hasta', 'peso_desde_gramos', 'peso_hasta_gramos', 'precio', 'activo'];
         $fields  = [];
         $params  = [':id' => $id];
 
+        $medidas = ['peso_desde_gramos', 'peso_hasta_gramos'];
         foreach ($allowed as $field) {
             if (array_key_exists($field, $data)) {
                 $fields[]         = "`{$field}` = :{$field}";
-                $params[":{$field}"] = $data[$field];
+                $params[":{$field}"] = in_array($field, $medidas, true)
+                    ? self::pesoONull($data[$field])
+                    : $data[$field];
             }
         }
 
@@ -193,7 +210,7 @@ class EnvioService {
         }
 
         if ($this->hayTarifasActivas()) {
-            $tabla = $this->cotizarTabla((int)$cpLimpio, $subtotal, $config);
+            $tabla = $this->cotizarTabla((int)$cpLimpio, $bulto['peso_gramos'], $subtotal, $config);
             $resultado['proveedor'] = 'tabla';
             $resultado['opciones']  = $tabla;
             return $resultado;
@@ -300,14 +317,27 @@ class EnvioService {
         ];
     }
 
-    private function cotizarTabla(int $cp, float $subtotal, array $config): array {
+    /**
+     * Tarifa por CP y por peso del bulto completo (los pesos de cada
+     * producto/variante ya vienen sumados en $pesoGramos, ver armarBulto()).
+     * Una tarifa con peso_desde/hasta en NULL de ese lado no tiene tope por
+     * ahi, asi que las tarifas cargadas antes de esto (sin peso) siguen
+     * aplicando a cualquier peso sin tocarlas.
+     *
+     * Entre varias que matchean se prefiere la mas especifica: la que tiene
+     * rango de peso cargado gana sobre la que no, asi un admin puede sumar
+     * un escalon por peso sin que la tarifa vieja (sin peso) se lo pise.
+     */
+    private function cotizarTabla(int $cp, int $pesoGramos, float $subtotal, array $config): array {
         $stmt = $this->db->prepare(
             "SELECT * FROM tarifas_envio
              WHERE activo = 1 AND cp_desde <= :cp1 AND cp_hasta >= :cp2
-             ORDER BY cp_desde ASC
+               AND (peso_desde_gramos IS NULL OR peso_desde_gramos <= :peso1)
+               AND (peso_hasta_gramos IS NULL OR peso_hasta_gramos >= :peso2)
+             ORDER BY (peso_desde_gramos IS NULL AND peso_hasta_gramos IS NULL) ASC, cp_desde ASC
              LIMIT 1"
         );
-        $stmt->execute([':cp1' => $cp, ':cp2' => $cp]);
+        $stmt->execute([':cp1' => $cp, ':cp2' => $cp, ':peso1' => $pesoGramos, ':peso2' => $pesoGramos]);
         $row = $stmt->fetch();
         if ($row === false) return [];
 
