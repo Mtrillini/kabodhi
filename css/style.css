@@ -3416,30 +3416,35 @@ body { padding-top: calc(var(--nav-h) + var(--nav-arch)); }
      franja azul de abajo: debajo del texto del banner, sin taparlo. */
   bottom: 15%;
   z-index: 4;
+  /* Mismo estilo que el resto de los botones del sitio (VER PRODUCTOS):
+     pastilla clara, texto en el azul de la marca y versalita espaciada. */
   display: inline-flex;
   align-items: center;
-  gap: 1.1rem;
-  padding: 0.95rem 2.2rem;
-  background: var(--champagne);
-  color: var(--blanco);
+  gap: 0.7rem;
+  padding: 0.95rem 2.6rem;
+  background: var(--blanco);
+  color: var(--bosque);
   font-family: var(--font-secondary);
-  font-size: 0.9rem;
-  font-weight: 400;
-  letter-spacing: 0.4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
   text-decoration: none;
-  border-radius: 6px;
-  box-shadow: 0 4px 16px rgba(28, 58, 79, 0.18);
-  transition: background var(--transition), transform var(--transition);
+  border: 1px solid rgba(28, 58, 79, 0.12);
+  border-radius: 999px;
+  box-shadow: 0 6px 18px rgba(28, 58, 79, 0.12);
+  transition: background var(--transition), color var(--transition), transform var(--transition);
   white-space: nowrap;
 }
 
 .hero__btn:hover {
-  background: #8d5732;          /* el acento, un tono mas profundo */
+  background: var(--bosque);
+  color: var(--crema);
   transform: translateY(-2px);
 }
 
 .hero__btn-flecha {
-  font-size: 1.05rem;
+  font-size: 0.95rem;
   line-height: 1;
 }
 
@@ -3449,10 +3454,10 @@ body { padding-top: calc(var(--nav-h) + var(--nav-arch)); }
   .hero__btn {
     left: 5%;
     bottom: 17%;
-    padding: 0.62rem 1.35rem;
-    font-size: 0.74rem;
-    gap: 0.7rem;
-    border-radius: 5px;
+    padding: 0.7rem 1.6rem;
+    font-size: 0.64rem;
+    letter-spacing: 0.16em;
+    gap: 0.5rem;
   }
 }
 /* El encuadre lo define cada banner desde el panel (foco y acercamiento);
