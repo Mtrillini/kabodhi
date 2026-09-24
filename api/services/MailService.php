@@ -33,34 +33,42 @@ class MailService {
     // Ciclo del pedido
     // ---------------------------------------------------------------
 
-    /** Al crear el pedido: comprobante con el detalle completo. */
+    /**
+     * Al crear el pedido. Por transferencia el cliente todavia tiene que
+     * hacer algo (mandar el comprobante), asi que el mail sale enseguida
+     * con los datos bancarios. Por Mercado Pago no: si todavia no pago,
+     * mandarle un mail de "pedido recibido" es confuso (y si abandona el
+     * pago, le queda un mail de un pedido que nunca se concreto). Ahi el
+     * primer mail al cliente es enviarPedidoAprobado, cuando el webhook
+     * confirma el pago. El aviso interno al equipo sale siempre.
+     */
     public static function enviarPedidoCreado(array $pedido): void {
-        $email = $pedido['cliente_email'] ?? '';
-        if (!$email) return;
-
-        $nombre   = self::esc(self::primerNombre($pedido['cliente_nombre'] ?? ''));
         $pedidoId = (int)($pedido['id'] ?? 0);
-
         $porTransferencia = ($pedido['metodo_pago'] ?? '') === 'transferencia';
-        $intro = $porTransferencia
-            ? 'Recibimos tu pedido. Para confirmarlo, transferí el total a la cuenta de abajo y mandanos el comprobante.'
-            : 'Recibimos tu pedido. Te escribimos de nuevo apenas se confirme el pago.';
 
-        $contenido = "
-            <p>Hola <strong>{$nombre}</strong>,</p>
-            <p>{$intro}</p>
-            " . ($porTransferencia ? self::bloqueTransferencia($pedido) : '') . "
-            " . self::bloqueResumen($pedido) . "
-            " . self::bloqueEntrega($pedido) . "
-            <p style=\"margin-top:28px;color:#8B7966;font-size:13px;\">
-              Guardá este mail: el número de pedido te sirve para cualquier consulta.
-            </p>
-        ";
+        if ($porTransferencia) {
+            $email = $pedido['cliente_email'] ?? '';
+            if ($email) {
+                $nombre = self::esc(self::primerNombre($pedido['cliente_nombre'] ?? ''));
 
-        $body = self::layout("Pedido #{$pedidoId} recibido", $contenido, "Pedido #{$pedidoId}");
-        Mailer::enviar($email, "Recibimos tu pedido #{$pedidoId} — KABODHI", $body, null, $pedidoId, 'pedido_creado');
+                $contenido = "
+                    <p>Hola <strong>{$nombre}</strong>,</p>
+                    <p>Recibimos tu pedido. Para confirmarlo, transferí el total a la cuenta de abajo y mandanos el comprobante.</p>
+                    " . self::bloqueTransferencia($pedido) . "
+                    " . self::bloqueResumen($pedido) . "
+                    " . self::bloqueEntrega($pedido) . "
+                    <p style=\"margin-top:28px;color:#8B7966;font-size:13px;\">
+                      Guardá este mail: el número de pedido te sirve para cualquier consulta.
+                    </p>
+                ";
 
-        // Aviso interno para no depender de mirar el panel.
+                $body = self::layout("Pedido #{$pedidoId} recibido", $contenido, "Pedido #{$pedidoId}");
+                Mailer::enviar($email, "Recibimos tu pedido #{$pedidoId} — KABODHI", $body, null, $pedidoId, 'pedido_creado');
+            }
+        }
+
+        // Aviso interno para no depender de mirar el panel: sale siempre,
+        // este pago o no, para que el equipo tenga visibilidad del pedido.
         self::avisarAdmin($pedido);
     }
 
