@@ -3384,23 +3384,8 @@ body { padding-top: calc(var(--nav-h) + var(--nav-arch)); }
   background: var(--crema);
   overflow: hidden;
 }
-/* Difuminado: el banner se disuelve hacia el azul de la seccion de abajo.
-   Es una franja corta y suave: cubria el 38% del banner y apagaba el texto
-   del diseño, que cae justo ahi. Los banners ya traen su propio azul, asi
-   que esto solo disimula la diferencia de tono con la seccion siguiente. */
-.hero::after {
-  content: "";
-  position: absolute;
-  bottom: 0; left: 0; right: 0;
-  height: 15%;
-  background: linear-gradient(to top,
-    rgba(35, 81, 99, 0.85) 0%,
-    rgba(35, 81, 99, 0.45) 35%,
-    rgba(35, 81, 99, 0.15) 65%,
-    rgba(35, 81, 99, 0) 100%);
-  z-index: 2;
-  pointer-events: none;
-}
+/* El banner ya no lleva velo: existia para fundirlo con la seccion azul que
+   habia debajo, y ahora abajo van los productos sobre fondo blanco. */
 .hero__track {
   display: flex;
   height: 100%;
