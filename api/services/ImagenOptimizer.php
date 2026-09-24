@@ -13,8 +13,12 @@
  */
 class ImagenOptimizer {
 
-    /** Lado mas largo, en pixeles. Alcanza para pantallas grandes. */
-    public const ANCHO_MAX = 1920;
+    /**
+     * Lado mas largo, en pixeles. 1600 alcanza para cualquier pantalla de
+     * notebook y para un banner a todo el ancho: a 1920 los banners pesaban
+     * unos 180 KB cada uno y son lo primero que baja el visitante.
+     */
+    public const ANCHO_MAX = 1600;
 
     /** 82 es el punto donde WebP deja de verse distinto del original. */
     public const CALIDAD = 82;
