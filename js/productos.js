@@ -118,21 +118,23 @@ function renderProductos(lista) {
 
   container.innerHTML = lista.map(p => {
     const imgs = (p.imagenes && p.imagenes.length) ? p.imagenes : (p.img ? [p.img] : []);
+    // La tarjeta lleva a la ficha: ahi se ven la descripcion completa y las
+    // opciones (aromas) con su foto, que en una tarjeta no entran.
+    const ficha = `${PAGES_BASE}/producto?id=${p.id}`;
+    const conOpciones = (p.variantes || []).length > 0;
     return `
-    <div class="nuve-card reveal reveal--up" onclick="${p.stock > 0 ? `abrirModal(${p.id})` : ''}">
+    <div class="nuve-card reveal reveal--up" onclick="${p.stock > 0 ? `irAFicha(${p.id})` : ''}">
       <div class="nuve-card__img-wrap">
         ${cardSliderHTML(imgs, p.nombre, p.img)}
       </div>
       <div class="nuve-card__body">
         <div class="nuve-card__nombre">${p.nombre}</div>
         <div class="nuve-card__marca">${p.marca}</div>
-        <div class="nuve-card__tipo">${p.nota ? p.nota.slice(0, 60) : ''}</div>
+        <div class="nuve-card__tipo">${conOpciones ? `${p.variantes.length} fragancias` : (p.nota ? p.nota.slice(0, 60) : '')}</div>
         <div class="nuve-card__precio">${fmt(p.precio)}</div>
-        <button
-          class="nuve-card__btn${p.stock === 0 ? ' nuve-card__btn--agotado' : ''}"
-          ${p.stock === 0 ? 'disabled style="opacity:0.5;cursor:not-allowed;"' : `onclick="event.stopPropagation(); abrirModal(${p.id})"`}>
-          ${p.stock === 0 ? 'SIN STOCK' : 'AGREGAR AL CARRITO'}
-        </button>
+        ${p.stock === 0
+          ? `<button class="nuve-card__btn nuve-card__btn--agotado" disabled style="opacity:0.5;cursor:not-allowed;">SIN STOCK</button>`
+          : `<a class="nuve-card__btn" href="${ficha}" onclick="event.stopPropagation();">${conOpciones ? 'ELEGIR FRAGANCIA' : 'VER PRODUCTO'}</a>`}
       </div>
     </div>
   `;
@@ -211,6 +213,12 @@ function aplicarFiltros() {
 
   renderProductos(lista);
 }
+
+// ---- Ficha del producto ----
+function irAFicha(id) {
+  window.location.href = `${PAGES_BASE}/producto?id=${id}`;
+}
+window.irAFicha = irAFicha;
 
 // ---- Modal ----
 let modalProductoActual = null;

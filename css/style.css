@@ -2350,7 +2350,6 @@ body.page-productos .section {
   .navbar__link          { font-size: 12px; letter-spacing: 2px; }
   .mas-vendidos__grid    { grid-template-columns: repeat(2, 1fr); }
   .productos-grid-nuve   { grid-template-columns: repeat(3, 1fr); gap: 1rem; }
-  .nuve-card__img-wrap   { height: 195px; }
   .cart-layout,
   .checkout-layout       { grid-template-columns: 1fr 320px; }
   .colecciones-panel     { padding: 2rem 2.5rem; }
@@ -2393,7 +2392,6 @@ body.page-productos .section {
   .filter-bar                   { flex-direction: column; align-items: stretch; padding: 0; gap: 0.6rem; }
   .filter-bar__search           { min-width: unset; width: 100%; padding: 0.75rem 0.75rem; font-size: 0.8rem; }
   .filter-bar__select           { min-width: unset; width: 100%; padding: 0.75rem 0.75rem; font-size: 0.8rem; }
-  .nuve-card__img-wrap          { height: 185px; }
   .nuve-card__body              { padding: 0.8rem 0.85rem 0.9rem; gap: 3px; }
   .nuve-card__nombre            { font-size: 0.85rem; }
   .nuve-card__marca             { font-size: 0.58rem; }
@@ -2640,6 +2638,9 @@ body.page-productos .section {
   gap: 1rem;
   max-width: 1200px;
   margin: 0 auto;
+  /* Cada tarjeta mide lo que mide su foto: sin esto, las de una misma fila
+     se estiran a la mas alta y vuelve a aparecer el blanco de relleno. */
+  align-items: start;
 }
 
 .nuve-card {
@@ -2675,17 +2676,16 @@ body.page-productos .section {
 
 .nuve-card__img-wrap {
   background: var(--blanco);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 210px;
+  display: block;
   overflow: hidden;
 }
 
+/* Sin alto fijo: la caja toma la forma de la foto y la foto entra entera.
+   Con alto fijo, una foto vertical dejaba dos franjas blancas al costado. */
 .nuve-card__img-wrap img {
   width: 100%;
-  height: 100%;
-  object-fit: contain;
+  height: auto;
+  display: block;
   transition: transform 0.4s ease;
 }
 
@@ -2699,14 +2699,13 @@ body.page-productos .section {
 .card-slider {
   position: relative;
   width: 100%;
-  height: 100%;
   overflow: hidden;
 }
 
 .card-slider__track {
   display: flex;
   width: 100%;
-  height: 100%;
+  align-items: flex-start;
   transition: transform 0.9s ease-in-out;
 }
 
@@ -2714,8 +2713,8 @@ body.page-productos .section {
   flex: 0 0 100%;
   min-width: 100%;
   width: 100%;
-  height: 100%;
-  object-fit: contain;
+  height: auto;
+  display: block;
 }
 
 .card-slider__arrow {
@@ -2872,13 +2871,11 @@ body.page-productos .section {
 /* Tablet landscape → 3 columnas */
 @media (max-width: 1024px) {
   .productos-grid-nuve { grid-template-columns: repeat(3, 1fr); gap: 1rem; }
-  .nuve-card__img-wrap { height: 200px; }
 }
 
 /* Tablet portrait → 2 columnas */
 @media (max-width: 768px) {
   .productos-grid-nuve { grid-template-columns: repeat(2, 1fr); gap: 0.875rem; }
-  .nuve-card__img-wrap { height: 220px; }
   .nuve-card__nombre   { font-size: 0.85rem; }
   .nuve-card__marca    { font-size: 0.58rem; }
   .nuve-card__precio   { font-size: 0.88rem; }
@@ -2954,17 +2951,15 @@ body.page-productos .section {
     min-width: 0;
     max-width: none;
     height: auto;
-    aspect-ratio: 5 / 4;
     min-height: 0;
     border-right: none;
   }
-  /* la imagen llena todo el recuadro, sin margen blanco */
+  /* La foto entra entera y con su forma: ni recortada ni con bandas. */
   .productos-grid-nuve .nuve-card__img-wrap img,
-  .productos-grid-nuve .card-slider,
   .productos-grid-nuve .card-slider__img {
     width: 100%;
-    height: 100%;
-    object-fit: cover;
+    height: auto;
+    display: block;
   }
   /* datos debajo de la imagen, alineados a la izquierda */
   .productos-grid-nuve .nuve-card__body {
@@ -3384,8 +3379,20 @@ body { padding-top: calc(var(--nav-h) + var(--nav-arch)); }
   background: var(--crema);
   overflow: hidden;
 }
-/* El banner ya no lleva velo: existia para fundirlo con la seccion azul que
-   habia debajo, y ahora abajo van los productos sobre fondo blanco. */
+/* Un velo blanco muy suave en el borde de abajo: disimula el corte entre el
+   banner y la seccion blanca que sigue, sin llegar a tocar el texto. */
+.hero::after {
+  content: "";
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 9%;
+  background: linear-gradient(to top,
+    rgba(255, 255, 255, 0.8) 0%,
+    rgba(255, 255, 255, 0.3) 45%,
+    rgba(255, 255, 255, 0) 100%);
+  z-index: 2;
+  pointer-events: none;
+}
 .hero__track {
   display: flex;
   height: 100%;
@@ -4428,4 +4435,253 @@ select.form-input {
     padding: 0.45rem 1rem;
     letter-spacing: 1.2px;
   }
+}
+
+/* ============================================================
+   FICHA DE PRODUCTO (producto.html)
+   ============================================================ */
+.pdp {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 2.5rem 2rem 4.5rem;
+}
+
+.pdp__cargando,
+.pdp__vacio-texto {
+  font-family: var(--font-secondary);
+  font-size: 0.9rem;
+  color: var(--taupe);
+  text-align: center;
+  padding: 4rem 0 1.5rem;
+}
+
+.pdp__vacio { text-align: center; padding-bottom: 4rem; }
+
+.pdp__volver {
+  margin-bottom: 1.6rem;
+}
+.pdp__volver a {
+  font-family: var(--font-secondary);
+  font-size: 0.75rem;
+  letter-spacing: 1px;
+  color: var(--taupe);
+  text-decoration: none;
+  transition: color var(--transition);
+}
+.pdp__volver a:hover { color: var(--negro); }
+
+.pdp__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3.5rem;
+  align-items: start;
+}
+
+/* ---- Galería ---- */
+/* Sin alto fijo: la foto entra entera y con su forma, sea vertical u
+   horizontal. Con un recuadro fijo quedaban bandas blancas o recorte. */
+.pdp__foto-wrap {
+  background: var(--crema);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.pdp__foto {
+  width: 100%;
+  height: auto;
+  display: block;
+  transition: opacity var(--transition);
+}
+
+.pdp__miniaturas {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.7rem;
+  flex-wrap: wrap;
+}
+.pdp__miniatura {
+  width: 64px;
+  height: 64px;
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: 5px;
+  overflow: hidden;
+  background: var(--crema);
+  cursor: pointer;
+  transition: border-color var(--transition);
+}
+.pdp__miniatura img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.pdp__miniatura.is-activa { border-color: var(--negro); }
+
+/* ---- Info ---- */
+.pdp__categoria {
+  font-family: var(--font-secondary);
+  font-size: 0.68rem;
+  letter-spacing: 2.4px;
+  text-transform: uppercase;
+  color: var(--champagne);
+  margin: 0 0 0.6rem;
+}
+.pdp__nombre {
+  font-family: var(--font-primary);
+  font-weight: 400;
+  font-size: clamp(1.6rem, 3vw, 2.3rem);
+  color: var(--negro);
+  margin: 0 0 0.5rem;
+}
+.pdp__nota {
+  font-family: var(--font-secondary);
+  font-size: 0.82rem;
+  color: var(--taupe);
+  margin: 0 0 1.3rem;
+}
+.pdp__precio-wrap {
+  display: flex;
+  align-items: baseline;
+  gap: 0.9rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.3rem;
+}
+.pdp__precio {
+  font-family: var(--font-primary);
+  font-size: 1.7rem;
+  color: var(--negro);
+}
+.pdp__cuotas {
+  font-family: var(--font-secondary);
+  font-size: 0.76rem;
+  color: var(--taupe);
+}
+.pdp__desc {
+  font-family: var(--font-secondary);
+  font-size: 0.86rem;
+  font-weight: 300;
+  line-height: 1.75;
+  color: var(--carbon);
+  margin: 0 0 1.8rem;
+}
+
+/* ---- Opciones (fragancias, tamaños) ---- */
+.pdp__opciones { margin-bottom: 1.8rem; }
+.pdp__opciones-titulo {
+  font-family: var(--font-secondary);
+  font-size: 0.7rem;
+  letter-spacing: 1.8px;
+  text-transform: uppercase;
+  color: var(--taupe);
+  margin: 0 0 0.8rem;
+}
+.pdp__opciones-lista {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
+  gap: 0.6rem;
+}
+.pdp__opcion {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.7rem 0.5rem;
+  border: 1px solid var(--gris-suave);
+  border-radius: 6px;
+  background: var(--blanco);
+  cursor: pointer;
+  text-align: center;
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+.pdp__opcion:hover:not(:disabled) {
+  border-color: var(--negro);
+}
+.pdp__opcion.is-activa {
+  border-color: var(--negro);
+  box-shadow: inset 0 0 0 1px var(--negro);
+}
+.pdp__opcion.is-agotada,
+.pdp__opcion:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.pdp__opcion-foto {
+  width: 62px;
+  height: 62px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--crema);
+  display: block;
+}
+.pdp__opcion-foto img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.pdp__opcion-nombre {
+  font-family: var(--font-secondary);
+  font-size: 0.75rem;
+  color: var(--negro);
+  line-height: 1.3;
+}
+.pdp__opcion-stock {
+  font-family: var(--font-secondary);
+  font-size: 0.63rem;
+  color: var(--taupe);
+}
+
+/* ---- Comprar ---- */
+.pdp__compra {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.8rem;
+}
+.pdp__qty {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  border: 1px solid var(--gris-suave);
+  border-radius: 999px;
+  padding: 0.35rem 0.9rem;
+}
+.pdp__qty button {
+  border: none;
+  background: none;
+  font-size: 1.1rem;
+  line-height: 1;
+  color: var(--negro);
+  cursor: pointer;
+  padding: 0.2rem 0.3rem;
+}
+.pdp__qty span {
+  font-family: var(--font-secondary);
+  font-size: 0.9rem;
+  min-width: 18px;
+  text-align: center;
+}
+.pdp__btn {
+  flex: 1;
+  min-width: 220px;
+  padding: 0.95rem 2rem;
+  border: none;
+  border-radius: 4px;
+  background: var(--negro);
+  color: var(--blanco);
+  font-family: var(--font-secondary);
+  font-size: 0.78rem;
+  letter-spacing: 2px;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+  text-align: center;
+  transition: background var(--transition);
+}
+.pdp__btn:hover:not(:disabled) { background: var(--bosque-oscuro); }
+.pdp__btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.pdp__stock {
+  font-family: var(--font-secondary);
+  font-size: 0.73rem;
+  color: var(--taupe);
+  margin: 0;
+}
+
+@media (max-width: 860px) {
+  .pdp { padding: 1.5rem 1.2rem 3rem; }
+  .pdp__grid { grid-template-columns: 1fr; gap: 1.8rem; }
+  .pdp__opciones-lista { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); }
+  .pdp__btn { min-width: 0; }
 }
