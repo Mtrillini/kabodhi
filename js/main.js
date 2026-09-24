@@ -169,7 +169,7 @@ function updateCartBadge() {
   if (!badge) return;
 
   try {
-    const raw = localStorage.getItem('nuve_cart');
+    const raw = localStorage.getItem('kabodhi_cart_v2');
     if (!raw) { badge.style.display = 'none'; return; }
     const carrito = JSON.parse(raw);
     const total = (carrito.items || []).reduce((sum, item) => sum + (item.cantidad || 0), 0);

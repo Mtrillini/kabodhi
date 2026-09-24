@@ -182,7 +182,11 @@ class PedidoService {
 
         $varianteId = (int)($item['variante_id'] ?? 0);
         if ($varianteId <= 0) {
-            throw new InvalidArgumentException("Elegí una opción para \"{$producto['nombre']}\".");
+            // Pasa con un carrito viejo, de cuando el producto todavia no
+            // tenia opciones: el mensaje tiene que decir como salir.
+            throw new InvalidArgumentException(
+                "Sacá \"{$producto['nombre']}\" del carrito y volvé a agregarlo eligiendo una opción."
+            );
         }
         foreach ($variantes as $v) {
             if ((int)$v['id'] === $varianteId) {

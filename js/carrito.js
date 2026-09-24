@@ -8,9 +8,14 @@
 // distintas, asi que no alcanza con el id del producto.
 // ============================================================
 
-const CART_KEY = 'nuve_cart';
+// La version va en el nombre: un carrito guardado antes de las fragancias
+// tiene lineas sin opcion elegida, y al pagar el servidor las rechaza con
+// "Elegí una opción para...". Cambiar la clave los deja atras de una.
+const CART_KEY = 'kabodhi_cart_v2';
 
 // ---- Helpers ----
+try { localStorage.removeItem('nuve_cart'); } catch { /* sin localStorage, nada que limpiar */ }
+
 function claveItem(productoId, varianteId) {
   return `${parseInt(productoId)}:${parseInt(varianteId) || 0}`;
 }
