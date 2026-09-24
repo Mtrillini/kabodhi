@@ -3438,7 +3438,7 @@ body { padding-top: calc(var(--nav-h) + var(--nav-arch)); }
    Va por encima del degradado inferior y de los puntos del slider. */
 .hero__btn {
   position: absolute;
-  left: 6%;
+  left: 12%;
   /* Abajo a la izquierda, en el limite entre la parte clara del banner y la
      franja azul de abajo: debajo del texto del banner, sin taparlo. */
   bottom: 15%;
