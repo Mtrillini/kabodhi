@@ -3346,30 +3346,6 @@ body.page-productos .section {
   border-color: var(--crema);
 }
 
-/* ---- Buscador desplegable ---- */
-.navbar__search {
-  position: absolute;
-  top: 100%;
-  right: clamp(1.25rem, 4vw, 3.5rem);
-  margin-top: calc(var(--nav-arch) - 8px);
-  background: var(--crema);
-  border: 1px solid rgba(28, 58, 79, 0.16);
-  padding: 0.55rem 0.85rem;
-  display: none;
-  z-index: 1001;
-  box-shadow: var(--shadow-md);
-}
-.navbar__search.open { display: flex; }
-.navbar__search input {
-  border: none;
-  background: transparent;
-  outline: none;
-  font-family: var(--font-secondary);
-  font-size: 0.85rem;
-  color: var(--bosque);
-  width: 230px;
-}
-.navbar__search input::placeholder { color: var(--tierra); }
 
 /* ---- Dropdown ---- */
 .navbar__dropdown-menu {
@@ -3408,17 +3384,19 @@ body { padding-top: calc(var(--nav-h) + var(--nav-arch)); }
   background: var(--crema);
   overflow: hidden;
 }
-/* Difuminado: el banner se disuelve hacia el azul de la seccion de abajo */
+/* Difuminado: el banner se disuelve hacia el azul de la seccion de abajo.
+   Es una franja corta y suave: cubria el 38% del banner y apagaba el texto
+   del diseño, que cae justo ahi. Los banners ya traen su propio azul, asi
+   que esto solo disimula la diferencia de tono con la seccion siguiente. */
 .hero::after {
   content: "";
   position: absolute;
   bottom: 0; left: 0; right: 0;
-  height: 38%;
+  height: 15%;
   background: linear-gradient(to top,
-    rgb(35, 81, 99) 0%,
-    rgba(35, 81, 99, 0.78) 20%,
-    rgba(35, 81, 99, 0.4) 44%,
-    rgba(35, 81, 99, 0.12) 70%,
+    rgba(35, 81, 99, 0.85) 0%,
+    rgba(35, 81, 99, 0.45) 35%,
+    rgba(35, 81, 99, 0.15) 65%,
     rgba(35, 81, 99, 0) 100%);
   z-index: 2;
   pointer-events: none;
@@ -3554,7 +3532,6 @@ body { padding-top: calc(var(--nav-h) + var(--nav-arch)); }
   .navbar__logo-name { height: 22px; }
   .navbar__logo-link { gap: 8px; }
   .navbar__icons { gap: 1rem; }
-  .navbar__icon-btn.navbar__search-toggle { display: none; }
   .hero { height: 68vh; min-height: 440px; }
   .hero__img { object-position: center; }
   .hero__cta { padding: 0.85rem 2.6rem; font-size: 0.72rem; bottom: 8%; }

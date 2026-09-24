@@ -31,9 +31,6 @@ function getNavbarHTML() {
       </nav>
 
       <div class="navbar__icons">
-        <button class="navbar__icon-btn navbar__search-toggle" id="search-toggle" aria-label="Buscar">
-          <i class="fa-solid fa-magnifying-glass"></i>
-        </button>
         <a href="${PAGES_BASE}/admin/login.html" class="navbar__icon-btn" aria-label="Ingresar">
           <i class="fa-regular fa-user"></i>
         </a>
@@ -47,10 +44,6 @@ function getNavbarHTML() {
       </div>
 
     </header>
-
-    <form class="navbar__search" id="navbar-search" role="search" action="${PAGES_BASE}/productos" method="get">
-      <input type="search" name="search" placeholder="Buscar hongo o beneficio..." aria-label="Buscar productos">
-    </form>
 
     <div class="mobile-menu" id="mobile-menu">
       <a href="${PAGES_BASE}/">Inicio</a>
@@ -103,7 +96,7 @@ function getFooterHTML() {
       <div class="footer__top-wrap">
       <div class="footer__top">
         <div>
-          <img src="images/logo-footer-kabodhi.webp" alt="KABODHI — Adaptógenos naturales para tu bienestar diario" class="footer__logo-img">
+          <img src="images/logo-footer-kabodhi.webp?v=2" alt="KABODHI — Adaptógenos naturales para tu bienestar diario" class="footer__logo-img">
         </div>
 
         <div>
@@ -259,30 +252,6 @@ function setupReveal() {
   setTimeout(revealInView, 300);
 }
 
-// ---- Search toggle ----
-function setupSearch() {
-  const toggle = document.getElementById('search-toggle');
-  const box    = document.getElementById('navbar-search');
-  if (!toggle || !box) return;
-
-  const input = box.querySelector('input');
-
-  toggle.addEventListener('click', (e) => {
-    e.stopPropagation();
-    box.classList.toggle('open');
-    if (box.classList.contains('open') && input) input.focus();
-  });
-
-  document.addEventListener('click', (e) => {
-    if (!box.contains(e.target) && e.target !== toggle && !toggle.contains(e.target)) {
-      box.classList.remove('open');
-    }
-  });
-
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') box.classList.remove('open');
-  });
-}
 
 // ---- Navbar scroll behaviour ----
 function setupNavbarScroll() {
@@ -363,7 +332,6 @@ document.addEventListener('DOMContentLoaded', () => {
   updateCartBadge();
   setActiveNavLink();
   setupHamburger();
-  setupSearch();
   setupNavbarScroll();
   setupSmoothScroll();
   setupDropdowns();
