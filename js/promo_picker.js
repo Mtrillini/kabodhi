@@ -32,17 +32,8 @@ async function cargarPromo() {
       return;
     }
 
-    PROMO = {
-      id: parseInt(promo.id),
-      nombre: promo.nombre || '',
-      descripcion: promo.descripcion || '',
-      precio: parseFloat(promo.precio) || 0,
-      producto_ids: (promo.producto_ids || []).map(x => parseInt(x)),
-    };
-    document.title = `${PROMO.nombre} — KABODHI`;
-
     const todos = Array.isArray(productos) ? productos : [];
-    PRODUCTOS = PROMO.producto_ids
+    PRODUCTOS = (promo.producto_ids || []).map(x => parseInt(x))
       .map(id => todos.find(p => parseInt(p.id) === id))
       .filter(Boolean)
       .map(p => ({
@@ -56,6 +47,20 @@ async function cargarPromo() {
           img: v.imagen_url || '', stock: parseInt(v.stock_disponible ?? v.stock) || 0,
         })),
       }));
+
+    // Imagen principal: la que cargo el admin para el combo o, si no cargo
+    // ninguna, la del primer producto (para no dejar el header sin imagen).
+    const imagenPrincipal = promo.imagen_url || (PRODUCTOS[0] && PRODUCTOS[0].img) || '';
+
+    PROMO = {
+      id: parseInt(promo.id),
+      nombre: promo.nombre || '',
+      descripcion: promo.descripcion || '',
+      precio: parseFloat(promo.precio) || 0,
+      imagen: imagenPrincipal,
+      producto_ids: (promo.producto_ids || []).map(x => parseInt(x)),
+    };
+    document.title = `${PROMO.nombre} — KABODHI`;
 
     if (PRODUCTOS.length !== PROMO.producto_ids.length) {
       mostrarErrorPromo('Este combo ya no está disponible.');
@@ -97,6 +102,7 @@ function render() {
     </nav>
 
     <header class="promo-armador__header">
+      ${PROMO.imagen ? `<div class="promo-armador__img-wrap"><img src="${escP(PROMO.imagen)}" alt="${escP(PROMO.nombre)}"></div>` : ''}
       <h1 class="promo-armador__nombre">${escP(PROMO.nombre)}</h1>
       ${PROMO.descripcion ? `<p class="promo-armador__desc">${escP(PROMO.descripcion)}</p>` : ''}
       <div class="promo-armador__precio">${fmtP(PROMO.precio)}</div>
