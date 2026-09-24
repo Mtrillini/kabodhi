@@ -1,11 +1,14 @@
 <?php
 
 /**
- * "Arma tu combo": el cliente elige N productos (de una lista que arma el
- * admin) y paga un precio fijo. Esta clase resuelve dos cosas separadas:
+ * Combos: el admin arma un combo con una lista fija de productos y le pone
+ * un precio unico, mas barato que comprarlos sueltos. El cliente no elige
+ * que productos entran en el combo (eso ya lo decidio el admin) — solo
+ * elige la fragancia/opcion de cada producto, si ese producto tiene
+ * variantes. Esta clase resuelve dos cosas separadas:
  *
  *   1. El ABM del panel (getAll/getById/create/update/delete).
- *   2. Convertir un combo elegido en el carrito en items normales de pedido
+ *   2. Convertir un combo agregado al carrito en items normales de pedido
  *      (validarYExpandir), que es lo que usa PedidoService al crear el
  *      pedido. De ahi en mas el combo no existe: son productos sueltos con
  *      su producto_id y variante_id de siempre.
@@ -55,7 +58,8 @@ class PromoService {
             "SELECT pp.promo_id, pp.producto_id
              FROM promo_productos pp
              INNER JOIN productos pr ON pr.id = pp.producto_id AND pr.activo = 1
-             WHERE pp.promo_id IN ({$marcas})"
+             WHERE pp.promo_id IN ({$marcas})
+             ORDER BY pp.id ASC"
         );
         $stmt->execute($promoIds);
 
@@ -82,7 +86,7 @@ class PromoService {
         $stmt->execute([
             ':nombre'         => trim($data['nombre']),
             ':descripcion'    => self::nullSiVacio($data['descripcion'] ?? ''),
-            ':cantidad_items' => (int)$data['cantidad_items'],
+            ':cantidad_items' => self::contarProductos($data['producto_ids'] ?? []),
             ':precio'         => (float)$data['precio'],
             ':imagen_url'     => self::nullSiVacio($data['imagen_url'] ?? ''),
             ':activo'         => isset($data['activo']) ? (int)$data['activo'] : 1,
@@ -95,12 +99,14 @@ class PromoService {
     }
 
     public function update(int $id, array $data): ?array {
-        $completo = array_key_exists('nombre', $data) || array_key_exists('cantidad_items', $data);
+        // Un PUT parcial (por ej. solo "activo", desde el toggle de la
+        // tabla) no manda producto_ids ni pasa por la validacion completa.
+        $completo = array_key_exists('nombre', $data) || array_key_exists('producto_ids', $data);
         if ($completo && ($error = $this->validar($data))) {
             throw new InvalidArgumentException($error);
         }
 
-        $allowed = ['nombre', 'descripcion', 'cantidad_items', 'precio', 'imagen_url', 'activo', 'orden'];
+        $allowed = ['nombre', 'descripcion', 'precio', 'imagen_url', 'activo', 'orden'];
         $campos  = [];
         $params  = [':id' => $id];
 
@@ -109,23 +115,32 @@ class PromoService {
             $campos[] = "`{$field}` = :{$field}";
             $params[":{$field}"] = match ($field) {
                 'descripcion', 'imagen_url' => self::nullSiVacio($data[$field]),
-                'cantidad_items', 'activo', 'orden' => (int)$data[$field],
+                'activo', 'orden' => (int)$data[$field],
                 'precio' => (float)$data[$field],
                 default  => trim((string)$data[$field]),
             };
+        }
+        // cantidad_items es siempre la cuenta real de producto_ids: nunca se
+        // confia en un numero mandado aparte, asi no se puede desincronizar.
+        if (array_key_exists('producto_ids', $data)) {
+            $campos[] = "`cantidad_items` = :cantidad_items";
+            $params[':cantidad_items'] = self::contarProductos($data['producto_ids']);
         }
         if ($campos) {
             $this->db->prepare("UPDATE promos SET " . implode(', ', $campos) . " WHERE id = :id")
                      ->execute($params);
         }
 
-        // Solo si el panel mando la lista: un PUT parcial (por ej. solo
-        // "activo") no tiene que vaciar los productos elegibles.
         if (array_key_exists('producto_ids', $data)) {
             $this->syncProductos($id, (array)$data['producto_ids']);
         }
 
         return $this->getById($id);
+    }
+
+    private static function contarProductos($productoIds): int {
+        $ids = array_values(array_unique(array_filter(array_map('intval', (array)$productoIds), fn($v) => $v > 0)));
+        return count($ids);
     }
 
     public function delete(int $id): bool {
@@ -152,16 +167,15 @@ class PromoService {
         if (trim($data['nombre'] ?? '') === '') {
             return 'Poné un nombre para el combo.';
         }
-        $cantidad = (int)($data['cantidad_items'] ?? 0);
-        if ($cantidad < 2 || $cantidad > 20) {
-            return 'La cantidad de productos a elegir tiene que ser entre 2 y 20.';
-        }
         if (!isset($data['precio']) || (float)$data['precio'] <= 0) {
             return 'Ingresá un precio válido para el combo.';
         }
         $productoIds = array_filter((array)($data['producto_ids'] ?? []));
-        if (count($productoIds) < $cantidad) {
-            return "Elegí al menos {$cantidad} productos para que el combo se pueda completar.";
+        if (count($productoIds) < 2) {
+            return 'Elegí al menos 2 productos para armar el combo.';
+        }
+        if (count($productoIds) > 20) {
+            return 'Un combo no puede tener más de 20 productos.';
         }
         return null;
     }
@@ -172,23 +186,22 @@ class PromoService {
     }
 
     // =================================================================
-    // Uso en el checkout: abrir un combo elegido en items normales
+    // Uso en el checkout: abrir un combo en items normales del pedido
     // =================================================================
 
     /**
-     * Convierte un item de carrito de tipo "promo" (el combo + que producto
-     * y opcion eligio el cliente en cada uno de los N lugares) en items
-     * normales de pedido, listos para el resto de PedidoService::crear().
+     * Convierte un item de carrito de tipo "promo" (solo identifica el combo
+     * + las opciones/fragancias elegidas para cada producto) en items
+     * normales de pedido, listos para PedidoService::crear().
      *
-     * El precio del combo se reparte entre los N productos elegidos (el
-     * ultimo se lleva el redondeo, para que la suma de cierre exacto con el
-     * precio del combo). Si el cliente eligio el mismo producto+opcion mas
-     * de una vez, se junta en una sola linea con cantidad>1: asi el stock se
-     * reserva una sola vez por esa linea y no se puede pisar a si mismo.
+     * El cliente NO eligio que productos entran en el combo (el admin ya lo
+     * decidio). Solo eligio la fragancia/opcion de cada producto, si eso
+     * corresponde. El precio del combo se reparte en partes iguales entre
+     * todos los productos (el ultimo se lleva el redondeo si queda fraccion).
      *
-     * @throws InvalidArgumentException datos del cliente invalidos (elegir
-     *         mal, sin opcion, etc. — mensaje pensado para mostrarselo)
-     * @throws RuntimeException el combo o algo elegido ya no esta disponible
+     * @throws InvalidArgumentException datos invalidos (fragancia mal elegida,
+     *         etc. — mensaje pensado para el cliente)
+     * @throws RuntimeException combo o algo elegido ya no disponible
      */
     public function validarYExpandir(array $item): array {
         $promoId = (int)($item['promo_id'] ?? 0);
@@ -204,43 +217,56 @@ class PromoService {
 
         $n = (int)$promo['cantidad_items'];
         if (!is_array($picks) || count($picks) !== $n) {
-            throw new InvalidArgumentException("El combo \"{$promo['nombre']}\" necesita que elijas {$n} productos.");
+            throw new InvalidArgumentException("Hay un problema con este combo: esperábamos {$n} productos pero llegó diferente. Recargá la página.");
         }
 
-        $elegibles = array_fill_keys($promo['producto_ids'], true);
+        // Los productos del combo son fijos (los eligio el admin, no el
+        // cliente): el conjunto de producto_id que llega tiene que ser
+        // exactamente el mismo que el del combo, ni mas ni menos, para que
+        // nadie pueda colar un producto mas caro al precio del combo.
+        $picksPorProducto = [];
+        foreach ($picks as $pick) {
+            $pid = (int)($pick['producto_id'] ?? 0);
+            if ($pid > 0) $picksPorProducto[$pid] = $pick;
+        }
+        $enviados = $picksPorProducto ? array_keys($picksPorProducto) : [];
+        sort($enviados);
+        $fijos = $promo['producto_ids'];
+        sort($fijos);
+        if ($enviados !== $fijos) {
+            throw new InvalidArgumentException("Este combo cambió. Recargá la página y volvé a agregarlo al carrito.");
+        }
+
         $productoService = new ProductoService();
 
-        // Reparto del precio: floor a centavos, el ultimo pick se lleva lo
-        // que falta para llegar exacto al precio del combo.
-        $precioPorPick = floor(((float)$promo['precio'] / $n) * 100) / 100;
-        $resto         = round((float)$promo['precio'] - $precioPorPick * $n, 2);
+        // Reparto del precio: cada producto paga precio_total / N,
+        // el ultimo se lleva el redondeo si hay fraccion (para que cierre exacto).
+        $precioPorProducto = floor(((float)$promo['precio'] / $n) * 100) / 100;
+        $resto             = round((float)$promo['precio'] - $precioPorProducto * $n, 2);
 
         $expandidos = [];
-        foreach (array_values($picks) as $i => $pick) {
-            $productoId = (int)($pick['producto_id'] ?? 0);
-            if ($productoId <= 0 || !isset($elegibles[$productoId])) {
-                throw new InvalidArgumentException("Ese producto no forma parte del combo \"{$promo['nombre']}\".");
-            }
+        foreach (array_values($promo['producto_ids']) as $i => $productoId) {
+            $pick = $picksPorProducto[$productoId];
             $producto = $productoService->getById($productoId, false);
             if (!$producto) {
-                throw new RuntimeException('Uno de los productos del combo ya no está disponible.');
+                throw new RuntimeException("Uno de los productos del combo ya no está disponible.");
             }
 
             $variante = null;
             if (!empty($producto['variantes'])) {
                 $varianteId = (int)($pick['variante_id'] ?? 0);
                 if ($varianteId <= 0) {
-                    throw new InvalidArgumentException("Elegí una opción para \"{$producto['nombre']}\" dentro del combo \"{$promo['nombre']}\".");
+                    throw new InvalidArgumentException("Elegí una fragancia/opción para \"{$producto['nombre']}\".");
                 }
                 foreach ($producto['variantes'] as $v) {
                     if ((int)$v['id'] === $varianteId) { $variante = $v; break; }
                 }
                 if ($variante === null) {
-                    throw new RuntimeException("La opción elegida para \"{$producto['nombre']}\" dentro del combo ya no está disponible.");
+                    throw new RuntimeException("La fragancia/opción elegida para \"{$producto['nombre']}\" ya no existe.");
                 }
             }
 
-            $precioPick = $precioPorPick + ($i === $n - 1 ? $resto : 0);
+            $precioPick = $precioPorProducto + ($i === $n - 1 ? $resto : 0);
 
             $expandidos[] = [
                 'id'          => $productoId,
@@ -249,31 +275,15 @@ class PromoService {
             ];
         }
 
-        // Agrupa picks repetidos (mismo producto + misma opcion): sin esto,
-        // dos lineas de cantidad 1 sobre el mismo producto verificarian
-        // stock por separado contra el mismo numero disponible, y la
-        // segunda reserva fallaria recien al confirmar el pedido en vez de
-        // avisar antes.
-        $agrupados = [];
-        foreach ($expandidos as $e) {
-            $clave = $e['id'] . ':' . ($e['variante_id'] ?? 0);
-            if (!isset($agrupados[$clave])) {
-                $agrupados[$clave] = [
-                    'id' => $e['id'], 'variante_id' => $e['variante_id'],
-                    'cantidad' => 0, 'suma_precio' => 0.0,
-                ];
-            }
-            $agrupados[$clave]['cantidad']++;
-            $agrupados[$clave]['suma_precio'] += $e['precio_pick'];
-        }
-
+        // Cada producto del combo es unico (asi lo garantiza syncProductos),
+        // asi que no hace falta agrupar duplicados: una linea por producto.
         $resultado = [];
-        foreach (array_values($agrupados) as $a) {
+        foreach ($expandidos as $e) {
             $resultado[] = [
-                'id'              => $a['id'],
-                'variante_id'     => $a['variante_id'],
-                'cantidad'        => $a['cantidad'],
-                'precio_unitario' => round($a['suma_precio'] / $a['cantidad'], 2),
+                'id'              => $e['id'],
+                'variante_id'     => $e['variante_id'],
+                'cantidad'        => 1,
+                'precio_unitario' => round($e['precio_pick'], 2),
                 'promo_id'        => $promoId,
                 'promo_nombre'    => $promo['nombre'],
             ];

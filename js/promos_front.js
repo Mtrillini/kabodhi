@@ -45,7 +45,7 @@ async function cargarPromos() {
         </div>
         <div class="promo-card__body">
           <div class="promo-card__nombre">${escTextoPromo(p.nombre)}</div>
-          <div class="promo-card__elegir">Elegí ${p.cantidad_items} productos</div>
+          <div class="promo-card__elegir">Incluye ${p.cantidad_items} productos</div>
           ${p.descripcion ? `<div class="promo-card__desc">${escTextoPromo(p.descripcion).slice(0, 90)}</div>` : ''}
           <div class="promo-card__precio">${fmtPromo(p.precio)}</div>
           <span class="promo-card__btn">ARMAR COMBO →</span>

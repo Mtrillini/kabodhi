@@ -1,6 +1,6 @@
 // ============================================================
 // KABODHI Admin — promos.js
-// "Arma tu combo": el cliente elige N productos y paga un precio fijo.
+// Combos: el admin arma una lista fija de productos con un precio unico.
 // ============================================================
 
 // ---- Helpers (no compartidos entre paginas del panel) ----
@@ -21,7 +21,7 @@ let imagenPromo  = null; // { file, preview } o { url }
 // ---- Carga ----
 async function fetchPromos() {
   const tbody = document.getElementById('promos-tbody');
-  tbody.innerHTML = `<tr><td colspan="7" class="loading">Cargando...</td></tr>`;
+  tbody.innerHTML = `<tr><td colspan="6" class="loading">Cargando...</td></tr>`;
   try {
     const [resPromos, resProductos] = await Promise.all([
       fetch(API_URL + '/promos?all=1', { credentials: 'include' }),
@@ -37,7 +37,7 @@ async function fetchPromos() {
     renderTabla();
   } catch (err) {
     showToast(err.message, 'error');
-    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--taupe);padding:2rem;">${err.message}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--taupe);padding:2rem;">${err.message}</td></tr>`;
   }
 }
 
@@ -49,7 +49,7 @@ function nombreProducto(id) {
 function renderTabla() {
   const tbody = document.getElementById('promos-tbody');
   if (!allPromos.length) {
-    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--taupe);padding:2rem;">
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--taupe);padding:2rem;">
       Todavía no hay combos cargados.</td></tr>`;
     return;
   }
@@ -67,11 +67,9 @@ function renderTabla() {
              style="width:56px;height:56px;object-fit:cover;border-radius:4px;border:1px solid var(--champagne);">
       </td>
       <td><strong style="font-weight:500;">${escHtml(p.nombre)}</strong></td>
-      <td>${p.cantidad_items}</td>
       <td>${fmt(p.precio)}</td>
-      <td style="font-size:0.75rem;color:var(--taupe);max-width:220px;" title="${escAttr(productos.join(', '))}">
-        ${productos.length} producto${productos.length === 1 ? '' : 's'}
-        ${productos.length < p.cantidad_items ? ' <span style="color:#c07b7b;">(insuficientes)</span>' : ''}
+      <td style="font-size:0.75rem;color:var(--taupe);max-width:240px;" title="${escAttr(productos.join(', '))}">
+        ${escHtml(productos.join(', ')) || '<span style="color:#c07b7b;">Sin productos</span>'}
       </td>
       <td>
         <button
@@ -136,7 +134,7 @@ async function subirImagenSiHaceFalta() {
   return json.url;
 }
 
-// ---- Checklist de productos elegibles ----
+// ---- Checklist de productos del combo ----
 function renderChecklistProductos(seleccionados) {
   const cont = document.getElementById('f-productos-lista');
   const set  = new Set((seleccionados || []).map(id => parseInt(id)));
@@ -176,7 +174,6 @@ function openModal(id = null) {
     if (p) {
       document.getElementById('f-nombre').value      = p.nombre || '';
       document.getElementById('f-descripcion').value = p.descripcion || '';
-      document.getElementById('f-cantidad').value     = p.cantidad_items || '';
       document.getElementById('f-precio').value       = p.precio || '';
       document.getElementById('f-activo').checked     = parseInt(p.activo) === 1;
       if (p.imagen_url) imagenPromo = { url: p.imagen_url };
@@ -200,15 +197,13 @@ function closeModal() {
 
 async function savePromo() {
   const nombre    = document.getElementById('f-nombre').value.trim();
-  const cantidad  = parseInt(document.getElementById('f-cantidad').value);
   const precio    = parseFloat(document.getElementById('f-precio').value);
   const productoIds = productosSeleccionados();
 
   if (!nombre) { showToast('Ponele un nombre al combo.', 'error'); return; }
-  if (isNaN(cantidad) || cantidad < 2) { showToast('La cantidad a elegir tiene que ser al menos 2.', 'error'); return; }
   if (isNaN(precio) || precio <= 0) { showToast('Ingresá un precio válido.', 'error'); return; }
-  if (productoIds.length < cantidad) {
-    showToast(`Tildá al menos ${cantidad} productos elegibles (hay ${productoIds.length}).`, 'error');
+  if (productoIds.length < 2) {
+    showToast('Tildá al menos 2 productos para armar el combo.', 'error');
     return;
   }
 
@@ -222,7 +217,6 @@ async function savePromo() {
     const payload = {
       nombre,
       descripcion:    document.getElementById('f-descripcion').value.trim(),
-      cantidad_items: cantidad,
       precio,
       imagen_url,
       producto_ids:   productoIds,

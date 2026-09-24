@@ -1,13 +1,13 @@
--- "Arma tu combo": el cliente elige N productos (con su fragancia si
--- corresponde) de una lista y paga un precio fijo, mas barato que comprarlos
--- sueltos. Ej: "Elegi 3 velas por $30.000" y "Elegi 4 por $38.000" son dos
--- promos distintas, cada una con su propia lista de productos elegibles.
+-- Combos: el admin arma una lista fija de productos y le pone un precio
+-- unico, mas barato que comprarlos sueltos. El cliente no elige que
+-- productos entran en el combo (eso ya lo decidio el admin) — solo elige la
+-- fragancia/opcion de cada producto, si ese producto tiene variantes.
 --
--- Al pagar, el combo se "abre" en N pedido_items normales (uno por producto
--- + opcion elegida), con el precio del combo repartido entre ellos. Asi el
--- stock, el peso para el envio y los mails funcionan exactamente igual que
--- con productos sueltos, sin que el resto del sistema tenga que saber que
--- existen los combos.
+-- Al pagar, el combo se "abre" en N pedido_items normales (uno por
+-- producto + opcion elegida), con el precio del combo repartido entre
+-- ellos. Asi el stock, el peso para el envio y los mails funcionan
+-- exactamente igual que con productos sueltos, sin que el resto del
+-- sistema tenga que saber que existen los combos.
 --
 -- Esta migracion no borra nada: solo crea tablas y agrega una columna.
 
@@ -15,7 +15,8 @@ CREATE TABLE IF NOT EXISTS `promos` (
     `id`              INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
     `nombre`          VARCHAR(150) NOT NULL,
     `descripcion`     TEXT NULL,
-    -- Cuantos productos hay que elegir para completar el combo.
+    -- Cuantos productos tiene el combo (se calcula solo, es un espejo de
+    -- promo_productos para no tener que hacer un COUNT en cada consulta).
     `cantidad_items`  TINYINT UNSIGNED NOT NULL,
     -- Precio fijo del combo completo (no por producto).
     `precio`          DECIMAL(10,2) NOT NULL,
@@ -27,7 +28,7 @@ CREATE TABLE IF NOT EXISTS `promos` (
     KEY `idx_activo` (`activo`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Que productos puede elegir el cliente para armar este combo. Si un
+-- Que productos forman este combo (lista fija, la define el admin). Si un
 -- producto se borra, sale solo de la lista (el combo sigue existiendo con
 -- los que le queden).
 CREATE TABLE IF NOT EXISTS `promo_productos` (

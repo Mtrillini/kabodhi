@@ -1,7 +1,8 @@
 // ============================================================
 // KABODHI — promo_picker.js
-// "Armá tu combo": /promo?id=X — el cliente elige N productos (con su
-// fragancia si corresponde) hasta completar el combo.
+// /promo?id=X — el combo trae una lista fija de productos (la armó el
+// admin). El cliente solo elige la fragancia/opción de cada producto,
+// si ese producto tiene variantes.
 // ============================================================
 
 const fmtP = n => '$ ' + Number(n).toLocaleString('es-AR');
@@ -13,12 +14,11 @@ function escP(s) {
 }
 
 let PROMO      = null;
-let ELEGIBLES  = [];      // productos que se pueden elegir (mapeados, con variantes)
-let PICKS      = [];      // uno por lugar del combo; null = todavia vacio
+let PRODUCTOS  = [];      // productos fijos del combo (mapeados, con variantes)
+let SELECCIONES = {};     // producto_id -> variante_id elegida (o null si no tiene variantes)
 
 async function cargarPromo() {
-  const cont = document.getElementById('promo-armador');
-  const id   = parseInt(new URLSearchParams(location.search).get('id'));
+  const id = parseInt(new URLSearchParams(location.search).get('id'));
   if (!id) { mostrarErrorPromo('No encontramos el combo que buscabas.'); return; }
 
   try {
@@ -36,15 +36,15 @@ async function cargarPromo() {
       id: parseInt(promo.id),
       nombre: promo.nombre || '',
       descripcion: promo.descripcion || '',
-      cantidad: parseInt(promo.cantidad_items) || 0,
       precio: parseFloat(promo.precio) || 0,
       producto_ids: (promo.producto_ids || []).map(x => parseInt(x)),
     };
     document.title = `${PROMO.nombre} — KABODHI`;
 
-    const elegiblesSet = new Set(PROMO.producto_ids);
-    ELEGIBLES = (Array.isArray(productos) ? productos : [])
-      .filter(p => elegiblesSet.has(parseInt(p.id)))
+    const todos = Array.isArray(productos) ? productos : [];
+    PRODUCTOS = PROMO.producto_ids
+      .map(id => todos.find(p => parseInt(p.id) === id))
+      .filter(Boolean)
       .map(p => ({
         id: parseInt(p.id),
         nombre: p.nombre,
@@ -57,7 +57,13 @@ async function cargarPromo() {
         })),
       }));
 
-    PICKS = new Array(PROMO.cantidad).fill(null);
+    if (PRODUCTOS.length !== PROMO.producto_ids.length) {
+      mostrarErrorPromo('Este combo ya no está disponible.');
+      return;
+    }
+
+    SELECCIONES = {};
+    PRODUCTOS.forEach(p => { SELECCIONES[p.id] = null; });
     render();
   } catch (e) {
     console.error(e);
@@ -73,13 +79,17 @@ function mostrarErrorPromo(mensaje) {
     </div>`;
 }
 
-function completo() {
-  return PICKS.every(p => p !== null);
+function productoAgotado(p) {
+  return p.variantes.length ? p.variantes.every(v => v.stock === 0) : p.stock === 0;
+}
+
+function listo() {
+  return PRODUCTOS.every(p => productoAgotado(p) || !p.variantes.length || SELECCIONES[p.id] !== null);
 }
 
 function render() {
   const cont = document.getElementById('promo-armador');
-  const llenos = PICKS.filter(Boolean).length;
+  const hayAgotado = PRODUCTOS.some(productoAgotado);
 
   cont.innerHTML = `
     <nav class="pdp__volver">
@@ -90,38 +100,19 @@ function render() {
       <h1 class="promo-armador__nombre">${escP(PROMO.nombre)}</h1>
       ${PROMO.descripcion ? `<p class="promo-armador__desc">${escP(PROMO.descripcion)}</p>` : ''}
       <div class="promo-armador__precio">${fmtP(PROMO.precio)}</div>
-      <p class="promo-armador__progreso">Elegiste ${llenos} de ${PROMO.cantidad} productos</p>
+      <p class="promo-armador__progreso">Este combo incluye ${PRODUCTOS.length} productos</p>
     </header>
 
-    <div class="promo-armador__slots" id="promo-slots">
-      ${PICKS.map((pick, i) => `
-        <div class="promo-slot${pick ? ' is-lleno' : ''}" data-i="${i}">
-          ${pick ? `
-            <img class="promo-slot__img" src="${escP(pick.img)}" alt="">
-            <div class="promo-slot__info">
-              <span class="promo-slot__nombre">${escP(pick.nombre)}</span>
-              ${pick.variante_nombre ? `<span class="promo-slot__variante">${escP(pick.variante_nombre)}</span>` : ''}
-            </div>
-            <button type="button" class="promo-slot__quitar" data-i="${i}" aria-label="Quitar">✕</button>
-          ` : `
-            <span class="promo-slot__num">${i + 1}</span>
-            <span class="promo-slot__vacio">Elegí un producto</span>
-          `}
-        </div>
-      `).join('')}
+    <div class="promo-armador__items" id="promo-items">
+      ${PRODUCTOS.map((p, i) => itemCombo(p, i)).join('')}
     </div>
 
-    <section class="promo-armador__catalogo">
-      <p class="promo-armador__catalogo-titulo">Elegí entre estos productos</p>
-      <div class="promo-armador__grid" id="promo-grid">
-        ${ELEGIBLES.map((p, i) => cardElegible(p, i)).join('')}
-      </div>
-    </section>
-
     <div class="promo-armador__footer">
-      <button type="button" class="pdp__btn" id="promo-agregar" ${completo() ? '' : 'disabled'}>
-        ${completo() ? `AGREGAR COMBO AL CARRITO — ${fmtP(PROMO.precio)}` : 'ELEGÍ TODOS LOS PRODUCTOS'}
-      </button>
+      ${hayAgotado
+        ? `<p class="promo-armador__sinstock">Este combo no está disponible por el momento: hay productos sin stock.</p>`
+        : `<button type="button" class="pdp__btn" id="promo-agregar" ${listo() ? '' : 'disabled'}>
+            ${listo() ? `AGREGAR COMBO AL CARRITO — ${fmtP(PROMO.precio)}` : 'ELEGÍ LAS FRAGANCIAS FALTANTES'}
+          </button>`}
     </div>
   `;
 
@@ -129,97 +120,78 @@ function render() {
   if (window.observeReveals) window.observeReveals(cont);
 }
 
-function cardElegible(p, i) {
-  const agotado = p.variantes.length ? p.variantes.every(v => v.stock === 0) : p.stock === 0;
+function itemCombo(p, i) {
+  const agotado = productoAgotado(p);
+  const varianteId = SELECCIONES[p.id];
+  const imgMostrada = (varianteId && p.variantes.find(v => v.id === varianteId)?.img) || p.img;
   return `
-    <div class="promo-prod${agotado ? ' is-agotado' : ''}" data-prod="${i}">
-      <div class="promo-prod__img-wrap">
-        ${p.img ? `<img src="${escP(p.img)}" alt="${escP(p.nombre)}" loading="lazy">` : ''}
+    <div class="promo-item${agotado ? ' is-agotado' : ''}" data-prod="${i}">
+      <div class="promo-item__img-wrap">
+        ${imgMostrada ? `<img src="${escP(imgMostrada)}" alt="${escP(p.nombre)}" loading="lazy">` : ''}
       </div>
-      <div class="promo-prod__nombre">${escP(p.nombre)}</div>
-      <div class="promo-prod__precio-lista">${fmtP(p.precio)} por separado</div>
-      ${agotado ? `<div class="promo-prod__sinstock">Sin stock</div>` : (
-        p.variantes.length
-          ? `<div class="promo-prod__variantes">
-              ${p.variantes.map((v, vi) => `
-                <button type="button" class="promo-prod__variante${v.stock === 0 ? ' is-agotada' : ''}"
-                        data-prod="${i}" data-var="${vi}" ${v.stock === 0 ? 'disabled' : ''}>
-                  ${escP(v.nombre)}
-                </button>`).join('')}
-            </div>`
-          : `<button type="button" class="promo-prod__elegir" data-prod="${i}">+ Elegir</button>`
-      )}
+      <div class="promo-item__info">
+        <div class="promo-item__nombre">${escP(p.nombre)}</div>
+        <div class="promo-item__precio-lista">${fmtP(p.precio)} por separado</div>
+        ${agotado ? `<div class="promo-item__sinstock">Sin stock</div>` : (
+          p.variantes.length
+            ? `<div class="promo-item__variantes">
+                ${p.variantes.map(v => `
+                  <button type="button" class="promo-item__variante${v.id === varianteId ? ' is-selected' : ''}${v.stock === 0 ? ' is-agotada' : ''}"
+                          data-prod="${i}" data-var="${v.id}" ${v.stock === 0 ? 'disabled' : ''}>
+                    ${escP(v.nombre)}
+                  </button>`).join('')}
+              </div>`
+            : `<div class="promo-item__incluido">Incluido</div>`
+        )}
+      </div>
     </div>`;
 }
 
-function primerLugarVacio() {
-  return PICKS.findIndex(p => p === null);
-}
-
-function agregarPick(prodIndex, varIndex) {
-  const lugar = primerLugarVacio();
-  if (lugar === -1) {
-    window.showToast(`Ya elegiste los ${PROMO.cantidad} productos del combo. Sacá uno si querés cambiarlo.`, 'error');
-    return;
-  }
-  const p = ELEGIBLES[prodIndex];
+function elegirVariante(prodIndex, varianteId) {
+  const p = PRODUCTOS[prodIndex];
   if (!p) return;
-
-  let variante = null;
-  if (p.variantes.length) {
-    variante = p.variantes[varIndex];
-    if (!variante || variante.stock === 0) return;
-  } else if (p.stock === 0) {
-    return;
-  }
-
-  PICKS[lugar] = {
-    producto_id: p.id,
-    variante_id: variante ? variante.id : null,
-    nombre: p.nombre,
-    variante_nombre: variante ? variante.nombre : null,
-    img: (variante && variante.img) || p.img,
-  };
-  render();
-}
-
-function quitarPick(i) {
-  PICKS[i] = null;
+  const variante = p.variantes.find(v => v.id === varianteId);
+  if (!variante || variante.stock === 0) return;
+  SELECCIONES[p.id] = varianteId;
   render();
 }
 
 function agregarComboAlCarrito() {
-  if (!completo()) return;
+  if (!listo()) return;
   if (typeof window.Carrito === 'undefined' || typeof window.Carrito.agregarPromo !== 'function') {
     window.showToast('Error: módulo de carrito no disponible.', 'error');
     return;
   }
 
+  const picks = PRODUCTOS.map(p => {
+    const varianteId = SELECCIONES[p.id];
+    const variante = varianteId ? p.variantes.find(v => v.id === varianteId) : null;
+    return {
+      producto_id: p.id,
+      variante_id: variante ? variante.id : null,
+      nombre: p.nombre,
+      variante_nombre: variante ? variante.nombre : null,
+      img: (variante && variante.img) || p.img,
+    };
+  });
+
   window.Carrito.agregarPromo({
     promoId:     PROMO.id,
     promoNombre: PROMO.nombre,
     precio:      PROMO.precio,
-    imagen_url:  PICKS[0]?.img || '',
-    picks:       PICKS.map(p => ({
+    imagen_url:  picks[0]?.img || '',
+    picks:       picks.map(p => ({
       producto_id: p.producto_id, variante_id: p.variante_id,
       nombre: p.nombre, variante_nombre: p.variante_nombre,
     })),
   });
 
   window.showToast(`"${PROMO.nombre}" agregado al carrito.`, 'success');
-  PICKS = new Array(PROMO.cantidad).fill(null);
-  render();
 }
 
 function enlazarEventosPromo() {
-  document.querySelectorAll('.promo-slot__quitar').forEach(btn => {
-    btn.addEventListener('click', () => quitarPick(parseInt(btn.dataset.i)));
-  });
-  document.querySelectorAll('.promo-prod__elegir').forEach(btn => {
-    btn.addEventListener('click', () => agregarPick(parseInt(btn.dataset.prod), null));
-  });
-  document.querySelectorAll('.promo-prod__variante').forEach(btn => {
-    btn.addEventListener('click', () => agregarPick(parseInt(btn.dataset.prod), parseInt(btn.dataset.var)));
+  document.querySelectorAll('.promo-item__variante').forEach(btn => {
+    btn.addEventListener('click', () => elegirVariante(parseInt(btn.dataset.prod), parseInt(btn.dataset.var)));
   });
   document.getElementById('promo-agregar')?.addEventListener('click', agregarComboAlCarrito);
 }
