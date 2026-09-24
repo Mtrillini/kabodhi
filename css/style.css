@@ -2364,8 +2364,11 @@ body.page-productos .section {
   .navbar__link          { font-size: 12px; letter-spacing: 2px; }
   .mas-vendidos__grid    { grid-template-columns: repeat(2, 1fr); }
   .productos-grid-nuve   { grid-template-columns: repeat(3, 1fr); gap: 1rem; }
-  .cart-layout,
-  .checkout-layout       { grid-template-columns: 1fr 320px; }
+  /* NO tocar .cart-layout/.checkout-layout aca: la regla de 1024px ya los
+     puso en una columna. Esta pisaba eso y los volvia a poner en dos (con un
+     resumen de 320px), asi que entre 769px y 992px la columna de productos
+     quedaba angosta y el renglon de cantidad/precio/eliminar se veia
+     descolgado. */
   .colecciones-panel     { padding: 2rem 2.5rem; }
 }
 
