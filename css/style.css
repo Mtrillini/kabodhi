@@ -3441,7 +3441,7 @@ body { padding-top: calc(var(--nav-h) + var(--nav-arch)); }
   left: 6%;
   /* Abajo a la izquierda, en el limite entre la parte clara del banner y la
      franja azul de abajo: debajo del texto del banner, sin taparlo. */
-  bottom: 22%;
+  bottom: 15%;
   z-index: 4;
   display: inline-flex;
   align-items: center;
@@ -3470,10 +3470,12 @@ body { padding-top: calc(var(--nav-h) + var(--nav-arch)); }
   line-height: 1;
 }
 
-@media (max-width: 768px) {
+/* El banner se achica con la pantalla pero el boton no: en pantallas medianas
+   quedaba tan alto como un tercio del banner y se montaba sobre el texto. */
+@media (max-width: 1024px) {
   .hero__btn {
     left: 5%;
-    bottom: 24%;
+    bottom: 17%;
     padding: 0.62rem 1.35rem;
     font-size: 0.74rem;
     gap: 0.7rem;
