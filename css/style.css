@@ -4734,3 +4734,356 @@ body.page-producto { background: var(--blanco); }
   .pdp__opciones-lista { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); }
   .pdp__btn { min-width: 0; }
 }
+
+/* ============================================================
+   COMBOS ("Armá tu combo")
+   ============================================================ */
+
+/* ---- Listado /promos ---- */
+.promos-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem 2rem 4.5rem;
+}
+
+.promos-page__cargando {
+  text-align: center;
+  font-family: var(--font-secondary);
+  font-size: 0.85rem;
+  color: var(--taupe);
+  padding: 3rem 0;
+}
+
+.promos-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+}
+
+.promo-card {
+  display: flex;
+  flex-direction: column;
+  background: var(--blanco);
+  border: 1px solid var(--arena);
+  border-radius: 8px;
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+  transition: box-shadow var(--transition), transform var(--transition);
+}
+.promo-card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.promo-card__img-wrap {
+  background: var(--crema);
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+}
+.promo-card__img-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.promo-card__body { padding: 1.2rem 1.3rem 1.4rem; display: flex; flex-direction: column; gap: 0.35rem; }
+.promo-card__nombre {
+  font-family: var(--font-primary);
+  font-size: 1.15rem;
+  color: var(--negro);
+}
+.promo-card__elegir {
+  font-family: var(--font-secondary);
+  font-size: 0.7rem;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+  color: var(--champagne);
+}
+.promo-card__desc {
+  font-family: var(--font-secondary);
+  font-size: 0.78rem;
+  color: var(--taupe);
+  line-height: 1.5;
+  margin: 0.2rem 0;
+}
+.promo-card__precio {
+  font-family: var(--font-primary);
+  font-size: 1.3rem;
+  color: var(--negro);
+  margin-top: 0.3rem;
+}
+.promo-card__btn {
+  margin-top: 0.6rem;
+  align-self: flex-start;
+  font-family: var(--font-secondary);
+  font-size: 0.72rem;
+  letter-spacing: 1.5px;
+  color: var(--negro);
+  border-bottom: 1px solid var(--negro);
+  padding-bottom: 2px;
+}
+
+/* ---- Armador /promo?id=N ---- */
+.promo-armador {
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 2rem 2rem 6rem;
+}
+
+.promo-armador__header { text-align: center; margin-bottom: 2rem; }
+.promo-armador__nombre {
+  font-family: var(--font-primary);
+  font-size: clamp(1.5rem, 3vw, 2.1rem);
+  color: var(--negro);
+  margin: 0 0 0.5rem;
+}
+.promo-armador__desc {
+  font-family: var(--font-secondary);
+  font-size: 0.86rem;
+  color: var(--taupe);
+  max-width: 520px;
+  margin: 0 auto 0.8rem;
+  line-height: 1.6;
+}
+.promo-armador__precio {
+  font-family: var(--font-primary);
+  font-size: 1.6rem;
+  color: var(--negro);
+}
+.promo-armador__progreso {
+  font-family: var(--font-secondary);
+  font-size: 0.75rem;
+  letter-spacing: 0.5px;
+  color: var(--champagne);
+  margin-top: 0.4rem;
+}
+
+.promo-armador__slots {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.7rem;
+  margin-bottom: 2.2rem;
+}
+.promo-slot {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  border: 1px dashed var(--gris-suave);
+  border-radius: 6px;
+  padding: 0.6rem;
+  min-height: 60px;
+}
+.promo-slot.is-lleno { border-style: solid; border-color: var(--negro); }
+.promo-slot__num {
+  width: 26px; height: 26px; flex-shrink: 0;
+  border-radius: 50%;
+  border: 1px solid var(--gris-suave);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-secondary); font-size: 0.75rem; color: var(--taupe);
+}
+.promo-slot__vacio { font-family: var(--font-secondary); font-size: 0.75rem; color: var(--taupe); }
+.promo-slot__img { width: 44px; height: 44px; object-fit: cover; border-radius: 4px; flex-shrink: 0; }
+.promo-slot__info { display: flex; flex-direction: column; gap: 1px; flex: 1; min-width: 0; }
+.promo-slot__nombre { font-family: var(--font-secondary); font-size: 0.76rem; color: var(--negro); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.promo-slot__variante { font-family: var(--font-secondary); font-size: 0.68rem; color: var(--champagne); }
+.promo-slot__quitar {
+  background: none; border: none; cursor: pointer;
+  color: var(--taupe); font-size: 0.8rem; padding: 0.2rem;
+  flex-shrink: 0;
+}
+.promo-slot__quitar:hover { color: #c07b7b; }
+
+.promo-armador__catalogo-titulo {
+  font-family: var(--font-secondary);
+  font-size: 0.7rem;
+  letter-spacing: 1.8px;
+  text-transform: uppercase;
+  color: var(--taupe);
+  margin: 0 0 1rem;
+}
+
+.promo-armador__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2.5rem;
+}
+
+.promo-prod {
+  border: 1px solid var(--arena);
+  border-radius: 6px;
+  padding: 0.8rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.promo-prod.is-agotado { opacity: 0.5; }
+.promo-prod__img-wrap {
+  background: var(--crema);
+  aspect-ratio: 1 / 1;
+  border-radius: 4px;
+  overflow: hidden;
+}
+.promo-prod__img-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.promo-prod__nombre { font-family: var(--font-secondary); font-size: 0.8rem; color: var(--negro); }
+.promo-prod__precio-lista { font-family: var(--font-secondary); font-size: 0.66rem; color: var(--taupe); }
+.promo-prod__sinstock { font-family: var(--font-secondary); font-size: 0.7rem; color: #c07b7b; }
+
+.promo-prod__elegir {
+  margin-top: 0.2rem;
+  padding: 0.5rem 0.7rem;
+  border: 1px solid var(--negro);
+  border-radius: 999px;
+  background: none;
+  color: var(--negro);
+  font-family: var(--font-secondary);
+  font-size: 0.7rem;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: background var(--transition), color var(--transition);
+}
+.promo-prod__elegir:hover { background: var(--negro); color: var(--blanco); }
+
+.promo-prod__variantes { display: flex; flex-wrap: wrap; gap: 0.3rem; margin-top: 0.2rem; }
+.promo-prod__variante {
+  padding: 0.32rem 0.6rem;
+  border: 1px solid var(--gris-suave);
+  border-radius: 999px;
+  background: none;
+  color: var(--negro);
+  font-family: var(--font-secondary);
+  font-size: 0.66rem;
+  cursor: pointer;
+  transition: border-color var(--transition), background var(--transition);
+}
+.promo-prod__variante:hover:not(:disabled) { border-color: var(--negro); }
+.promo-prod__variante.is-agotada, .promo-prod__variante:disabled {
+  opacity: 0.4; cursor: not-allowed; text-decoration: line-through;
+}
+
+.promo-armador__footer {
+  position: sticky;
+  bottom: 0;
+  background: var(--crema);
+  padding: 1rem 0 0.4rem;
+  border-top: 1px solid var(--arena);
+}
+.promo-armador__footer .pdp__btn { width: 100%; }
+
+/* ---- Combo dentro del carrito/checkout ---- */
+.cart-item--combo .cart-item__combo-lista {
+  list-style: none;
+  padding: 0;
+  margin: 0.3rem 0 0;
+  font-family: var(--font-secondary);
+  font-size: 0.7rem;
+  color: var(--taupe);
+  line-height: 1.6;
+}
+.cart-item--combo .cart-item__combo-lista li::before { content: "· "; }
+
+@media (max-width: 860px) {
+  .promos-grid { grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+  .promo-armador { padding: 1.2rem 1.2rem 5rem; }
+  .promo-armador__grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 520px) {
+  .promos-grid { grid-template-columns: 1fr; }
+}
+
+/* ---- Combos y ofertas (seccion del home) ---- */
+.home-promos {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 3rem 2rem 4.5rem;
+  text-align: center;
+}
+.home-promos__eyebrow {
+  font-family: var(--font-secondary);
+  font-size: 0.7rem;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--champagne);
+  margin: 0 0 0.5rem;
+}
+.home-promos__titulo {
+  font-family: var(--font-primary);
+  font-weight: 400;
+  font-size: clamp(1.5rem, 3vw, 2.2rem);
+  color: var(--negro);
+  margin: 0 0 2.2rem;
+}
+.home-promos__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  text-align: left;
+}
+.home-promo-card {
+  display: flex;
+  flex-direction: column;
+  background: var(--blanco);
+  border: 1px solid var(--arena);
+  border-radius: 8px;
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+  transition: box-shadow var(--transition), transform var(--transition);
+}
+.home-promo-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+.home-promo-card__img-wrap { background: var(--crema); aspect-ratio: 4/3; }
+.home-promo-card__img-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.home-promo-card__body { padding: 1rem 1.1rem 1.2rem; }
+.home-promo-card__nombre { font-family: var(--font-primary); font-size: 1.05rem; color: var(--negro); }
+.home-promo-card__elegir {
+  font-family: var(--font-secondary); font-size: 0.66rem; letter-spacing: 1.4px;
+  text-transform: uppercase; color: var(--champagne); margin: 0.2rem 0 0.5rem;
+}
+.home-promo-card__precio { font-family: var(--font-primary); font-size: 1.15rem; color: var(--negro); }
+
+@media (max-width: 860px) {
+  .home-promos__grid { grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+}
+@media (max-width: 520px) {
+  .home-promos__grid { grid-template-columns: 1fr; }
+}
+
+/* ---- "Otros productos" al pie de la ficha (producto.html) ---- */
+.otros-productos {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 1rem 2rem 4rem;
+  border-top: 1px solid var(--arena);
+}
+.otros-productos__titulo {
+  font-family: var(--font-secondary);
+  font-size: 0.7rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--taupe);
+  margin: 1.6rem 0 1.2rem;
+}
+.otros-productos__grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+}
+.otro-producto {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  text-decoration: none;
+  color: inherit;
+}
+.otro-producto__img-wrap {
+  background: var(--crema);
+  aspect-ratio: 1 / 1;
+  border-radius: 6px;
+  overflow: hidden;
+}
+.otro-producto__img-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform var(--transition); }
+.otro-producto:hover .otro-producto__img-wrap img { transform: scale(1.04); }
+.otro-producto__nombre { font-family: var(--font-secondary); font-size: 0.78rem; color: var(--negro); }
+.otro-producto__precio { font-family: var(--font-secondary); font-size: 0.76rem; color: var(--taupe); }
+
+@media (max-width: 860px) {
+  .otros-productos__grid { grid-template-columns: repeat(2, 1fr); gap: 0.8rem; }
+}

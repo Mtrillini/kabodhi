@@ -26,6 +26,13 @@ class PedidoService {
      */
     public function crear(array $clienteData, array $items, array $envioData = [], string $metodoPago = 'mercadopago'): array {
         $this->vencerPendientes();
+
+        // Los combos ("Arma tu combo") llegan como un item especial con la
+        // lista de productos elegidos; se abren aca en items normales (uno
+        // por producto+opcion) para que el resto del flujo — stock, peso
+        // para el envio, precio — no tenga que saber que existen los combos.
+        $items = $this->expandirCombos($items);
+
         $total          = 0.0;
         $validatedItems = [];
         $productoService = new ProductoService();
@@ -71,10 +78,12 @@ class PedidoService {
                 throw new RuntimeException("Stock insuficiente para \"{$etiqueta}\". Disponible: {$disponible}.");
             }
 
-            // La variante solo pisa el precio si tiene uno propio.
-            $precio = $variante !== null && $variante['precio'] !== null
-                ? (float)$variante['precio']
-                : (float)$producto['precio'];
+            // Si el item vino de un combo, el precio ya esta repartido (ver
+            // expandirCombos): no se vuelve a mirar el precio de lista.
+            $promoId = isset($item['promo_id']) ? (int)$item['promo_id'] : null;
+            $precio  = $promoId !== null
+                ? (float)$item['precio_unitario']
+                : ($variante !== null && $variante['precio'] !== null ? (float)$variante['precio'] : (float)$producto['precio']);
             $total += $precio * $cantidad;
 
             $validatedItems[] = [
@@ -84,6 +93,8 @@ class PedidoService {
                 'cantidad'        => $cantidad,
                 'precio_unitario' => $precio,
                 'nombre'          => $etiqueta,
+                'promo_id'        => $promoId,
+                'promo_nombre'    => $item['promo_nombre'] ?? null,
             ];
         }
 
@@ -138,8 +149,8 @@ class PedidoService {
             }
 
             $stmtItem = $this->db->prepare(
-                "INSERT INTO pedido_items (pedido_id, producto_id, variante_id, variante_nombre, cantidad, precio_unitario)
-                 VALUES (:pedido_id, :producto_id, :variante_id, :variante_nombre, :cantidad, :precio_unitario)"
+                "INSERT INTO pedido_items (pedido_id, producto_id, variante_id, variante_nombre, promo_id, promo_nombre, cantidad, precio_unitario)
+                 VALUES (:pedido_id, :producto_id, :variante_id, :variante_nombre, :promo_id, :promo_nombre, :cantidad, :precio_unitario)"
             );
             foreach ($validatedItems as $item) {
                 $stmtItem->execute([
@@ -147,8 +158,10 @@ class PedidoService {
                     ':producto_id'     => $item['producto_id'],
                     ':variante_id'     => $item['variante_id'],
                     // Copia del nombre: el pedido se sigue leyendo aunque la
-                    // variante despues se renombre o se borre.
+                    // variante o el combo despues se renombren o se borren.
                     ':variante_nombre' => $item['variante_nombre'],
+                    ':promo_id'        => $item['promo_id']     ?? null,
+                    ':promo_nombre'    => $item['promo_nombre'] ?? null,
                     ':cantidad'        => $item['cantidad'],
                     ':precio_unitario' => $item['precio_unitario'],
                 ]);
@@ -165,6 +178,31 @@ class PedidoService {
             $this->db->rollBack();
             throw $e;
         }
+    }
+
+    /**
+     * Reemplaza cada item de tipo "promo" (un combo con la lista de que
+     * eligio el cliente) por los items normales que representa. Un item
+     * normal pasa sin tocar.
+     *
+     * Ver PromoService::validarYExpandir() para como se reparte el precio y
+     * se agrupan los picks repetidos.
+     */
+    private function expandirCombos(array $items): array {
+        $promoService = null;
+        $resultado = [];
+
+        foreach ($items as $item) {
+            if (($item['tipo'] ?? '') !== 'promo') {
+                $resultado[] = $item;
+                continue;
+            }
+            $promoService ??= new PromoService();
+            foreach ($promoService->validarYExpandir($item) as $expandido) {
+                $resultado[] = $expandido;
+            }
+        }
+        return $resultado;
     }
 
     /**

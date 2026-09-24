@@ -271,6 +271,9 @@ class MailService {
             if (!empty($item['variante_nombre'])) {
                 $nombre .= ' — ' . $item['variante_nombre'];
             }
+            if (!empty($item['promo_nombre'])) {
+                $nombre .= ' (combo: ' . $item['promo_nombre'] . ')';
+            }
             $nombre = self::esc($nombre);
             $filas .= "
               <tr>

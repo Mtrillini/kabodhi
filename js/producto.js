@@ -57,8 +57,9 @@ async function cargarProducto() {
   if (!id) { mostrarError('No encontramos el producto que buscabas.'); return; }
 
   try {
-    const json = await loadProductosData();
-    const fila = (json.data || []).find(p => parseInt(p.id) === id);
+    const json  = await loadProductosData();
+    const todos = json.data || [];
+    const fila  = todos.find(p => parseInt(p.id) === id);
     if (!fila || (fila.activo !== undefined && parseInt(fila.activo) !== 1)) {
       mostrarError('Este producto ya no está disponible.');
       return;
@@ -66,6 +67,7 @@ async function cargarProducto() {
 
     PRODUCTO = mapear(fila);
     document.title = `${PRODUCTO.nombre} — KABODHI`;
+    renderOtrosProductos(todos, id);
 
     // Arranca elegida la primera opcion con stock.
     VARIANTE = PRODUCTO.variantes.find(v => v.stock > 0) || null;
@@ -250,6 +252,43 @@ function agregarAlCarrito() {
   }, CANTIDAD);
 
   window.showToast(`"${nombreActual()}" agregado al carrito.`, 'success');
+}
+
+/** Otros productos activos, al azar, para seguir mirando desde esta ficha. */
+function renderOtrosProductos(todos, idActual) {
+  const seccion = document.getElementById('otros-productos');
+  const grid    = document.getElementById('otros-productos-grid');
+  if (!seccion || !grid) return;
+
+  const candidatos = todos.filter(p =>
+    parseInt(p.id) !== idActual && (p.activo === undefined || parseInt(p.activo) === 1)
+  );
+  if (!candidatos.length) return;   // seccion queda oculta
+
+  // Mezcla simple: distintas visitas a la misma ficha muestran productos
+  // distintos, en vez de repetir siempre los mismos 4 primeros del catalogo.
+  const elegidos = candidatos
+    .map(p => ({ p, orden: Math.random() }))
+    .sort((a, b) => a.orden - b.orden)
+    .slice(0, 4)
+    .map(x => x.p);
+
+  const fmt = window.formatMoney || (v => '$ ' + v.toLocaleString('es-AR'));
+  grid.innerHTML = elegidos.map(p => {
+    const img = p.imagen_url || (p.imagenes && p.imagenes[0] && p.imagenes[0].url) || '';
+    const conOpciones = (p.variantes || []).length > 0;
+    return `
+      <a class="otro-producto" href="${PAGES_BASE}/producto?id=${p.id}">
+        <div class="otro-producto__img-wrap">
+          ${img ? `<img src="${escTxt(img)}" alt="${escTxt(p.nombre)}" loading="lazy">` : ''}
+        </div>
+        <div class="otro-producto__nombre">${escTxt(p.nombre)}</div>
+        <div class="otro-producto__precio">${fmt(p.precio)}${conOpciones ? ' desde' : ''}</div>
+      </a>`;
+  }).join('');
+
+  seccion.hidden = false;
+  if (window.observeReveals) window.observeReveals(seccion);
 }
 
 document.addEventListener('DOMContentLoaded', cargarProducto);

@@ -87,6 +87,7 @@ require_once __DIR__ . '/services/RateLimiter.php';
 require_once __DIR__ . '/services/Mailer.php';
 require_once __DIR__ . '/services/MailService.php';
 require_once __DIR__ . '/services/ProductoService.php';
+require_once __DIR__ . '/services/PromoService.php';
 require_once __DIR__ . '/services/EnvioService.php';
 require_once __DIR__ . '/services/PedidoService.php';
 require_once __DIR__ . '/services/MercadoPagoService.php';
@@ -237,6 +238,28 @@ if ($seg0 === 'faq') {
 }
 
 // --- CATEGORIAS ---
+// --- COMBOS ("armá tu combo": N productos por un precio fijo) ---
+if ($seg0 === 'promos') {
+    require_once __DIR__ . '/controllers/PromoController.php';
+    $ctrl = new PromoController();
+
+    if ($seg1 === '' || $seg1 === null) {
+        if ($method === 'GET')       $ctrl->index();
+        elseif ($method === 'POST')  $ctrl->store();
+        else { http_response_code(405); echo json_encode(['success' => false, 'message' => 'Método no permitido.']); }
+    } elseif (is_numeric($seg1)) {
+        $id = (int)$seg1;
+        if ($method === 'GET')         $ctrl->show($id);
+        elseif ($method === 'PUT')     $ctrl->update($id);
+        elseif ($method === 'DELETE')  $ctrl->destroy($id);
+        else { http_response_code(405); echo json_encode(['success' => false, 'message' => 'Método no permitido.']); }
+    } else {
+        http_response_code(404);
+        echo json_encode(['success' => false, 'message' => 'Ruta no encontrada.']);
+    }
+    exit;
+}
+
 if ($seg0 === 'categorias') {
     require_once __DIR__ . '/controllers/CategoriaController.php';
     $ctrl = new CategoriaController();

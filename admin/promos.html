@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Combos — KABODHI Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/admin.css?v=8">
+</head>
+<body>
+
+  <aside class="sidebar" id="sidebar" data-page="promos"></aside>
+
+  <div class="main">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:1rem;">
+        <button class="hamburger-admin" id="hamburger-admin" aria-label="Menú">
+          <span></span><span></span><span></span>
+        </button>
+        <span class="topbar__title">Combos</span>
+      </div>
+      <div class="topbar__actions">
+        <button id="btn-nuevo-promo" class="btn btn-primary">+ Nuevo combo</button>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="panel">
+        <div class="panel__header" style="padding:1rem 1.5rem;border-bottom:1px solid var(--champagne);">
+          <p style="font-size:0.78rem;color:var(--taupe);">
+            "Armá tu combo": el cliente elige N productos de una lista (con su fragancia si
+            corresponde) y paga un precio fijo, más barato que comprarlos sueltos. Se ve en
+            <a href="../promos" target="_blank" style="color:var(--negro);">kabodhi.online/promos</a>.
+          </p>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Imagen</th>
+                <th>Nombre</th>
+                <th>Elegir</th>
+                <th>Precio</th>
+                <th>Productos elegibles</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="promos-tbody">
+              <tr><td colspan="7" class="loading">Cargando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal-overlay" id="modal-overlay">
+    <div class="modal">
+      <div class="modal__header">
+        <span class="modal__title" id="modal-title">Nuevo combo</span>
+        <button class="modal__close" id="btn-close-modal">✕</button>
+      </div>
+      <div class="modal__body">
+        <form id="promo-form" onsubmit="event.preventDefault();">
+
+          <div class="form-group">
+            <label class="form-label" for="f-nombre">Nombre *</label>
+            <input type="text" id="f-nombre" class="form-input" required placeholder="Combo 3 velas">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="f-descripcion">Descripción (opcional)</label>
+            <textarea id="f-descripcion" class="form-textarea" rows="3"
+                      placeholder="Elegí 3 velas de nuestra colección al precio especial de combo."></textarea>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Imagen (opcional)</label>
+            <div id="preview-imagen" style="margin-bottom:0.6rem;"></div>
+            <label class="btn btn-secondary btn-sm" style="cursor:pointer;">
+              Elegir imagen
+              <input type="file" id="f-file-imagen" accept="image/jpeg,image/png,image/webp" style="display:none;">
+            </label>
+            <p style="font-size:0.7rem;color:var(--taupe);margin-top:0.35rem;">
+              Se ve en la tarjeta del combo en /promos. Si no cargás una, se usa la del primer producto elegible.
+            </p>
+          </div>
+
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label class="form-label" for="f-cantidad">Cuántos productos elige *</label>
+              <input type="number" id="f-cantidad" class="form-input" required min="2" max="20" placeholder="3">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="f-precio">Precio del combo (ARS) *</label>
+              <input type="number" id="f-precio" class="form-input" required min="0" step="0.01" placeholder="30000">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Productos elegibles *</label>
+            <p style="font-size:0.7rem;color:var(--taupe);margin-bottom:0.6rem;">
+              Tildá los productos entre los que el cliente puede elegir para armar este combo.
+              Tienen que ser al menos tantos como la cantidad de arriba.
+            </p>
+            <div id="f-productos-lista" style="display:flex;flex-direction:column;gap:0.4rem;max-height:280px;overflow-y:auto;border:1px solid var(--champagne);border-radius:var(--radius);padding:0.7rem;"></div>
+          </div>
+
+          <div class="form-group" style="display:flex;flex-direction:row;align-items:center;gap:0.5rem;">
+            <input type="checkbox" id="f-activo" style="width:16px;height:16px;accent-color:var(--negro);" checked>
+            <label class="form-label" for="f-activo" style="margin:0;">Visible en la tienda</label>
+          </div>
+
+        </form>
+      </div>
+      <div class="modal__footer">
+        <button class="btn btn-secondary" id="btn-cancel-modal">Cancelar</button>
+        <button class="btn btn-primary" id="btn-save" onclick="savePromo()">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/config.js?v=7"></script>
+  <script src="js/layout.js?v=11"></script>
+  <script src="js/demo.js?v=9"></script>
+  <script src="js/auth.js?v=7"></script>
+  <script src="js/promos.js?v=1"></script>
+</body>
+</html>

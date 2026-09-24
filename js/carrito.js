@@ -129,12 +129,42 @@ window.Carrito = {
   get:           getCarrito,
   guardar:       guardarCarrito,
   agregar:       agregarItem,
+  agregarPromo:  agregarPromo,
   quitar:        quitarItem,
   cambiarQty:    cambiarCantidad,
   vaciar:        vaciarCarrito,
   getTotal:      getTotal,
   getTotalItems: getTotalItems,
 };
+
+// ============================================================
+// Combos ("Arma tu combo")
+// ============================================================
+// Cada vez que se completa un combo se agrega como una linea NUEVA e
+// independiente (no se "suma" con un combo igual ya agregado): asi se puede
+// sacar o repetir un combo sin afectar a los demas. No tiene stepper de
+// cantidad, solo "Eliminar".
+//
+// { promoId, promoNombre, precio, imagen_url, picks:[{producto_id,
+//   variante_id, nombre, variante_nombre}, ...] }
+function agregarPromo(combo) {
+  const carrito = getCarrito();
+  carrito.items.push({
+    key:             `promo:${combo.promoId}:${Date.now()}`,
+    // OJO: no usar `tipo` aca — los items normales ya usan esa clave para el
+    // objetivo del producto (enfoque/energia/...) y se pisarian.
+    esCombo:         true,
+    id:              null,
+    promo_id:        combo.promoId,
+    promo_nombre:    combo.promoNombre,
+    precio:          parseFloat(combo.precio),
+    imagen_url:      combo.imagen_url || '',
+    cantidad:        1,                       // fijo: sin +/-, se agrega de nuevo si quiere otro
+    picks:           combo.picks || [],
+  });
+  guardarCarrito(carrito);
+  return carrito;
+}
 
 // ============================================================
 // Render cart page (carrito.html)
@@ -160,7 +190,14 @@ function renderCarrito() {
 
   const fmt = window.formatMoney || (v => '$ ' + v.toLocaleString('es-AR'));
 
-  const itemsHTML = carrito.items.map(item => `
+  const itemsHTML = carrito.items.map(item => item.esCombo ? filaCombo(item, fmt) : filaProducto(item, fmt)).join('');
+
+  container.innerHTML = `<div class="cart-items">${itemsHTML}</div>`;
+  if (summaryContainer) renderSummary(carrito);
+}
+
+function filaProducto(item, fmt) {
+  return `
     <div class="cart-item" data-key="${item.key}">
       <div class="cart-item__img-wrap">
         <img
@@ -185,11 +222,31 @@ function renderCarrito() {
         <div class="cart-item__subtotal">${fmt(item.precio * item.cantidad)}</div>
         <button class="cart-item__remove" onclick="handleRemove('${item.key}')">Eliminar</button>
       </div>
-    </div>
-  `).join('');
+    </div>`;
+}
 
-  container.innerHTML = `<div class="cart-items">${itemsHTML}</div>`;
-  if (summaryContainer) renderSummary(carrito);
+/** Un combo no tiene +/- (el precio es fijo para el paquete completo) ni
+ *  precio "c/u": se agrega o se saca entero. */
+function filaCombo(item, fmt) {
+  const picks = (item.picks || []).map(p =>
+    p.nombre + (p.variante_nombre ? ` — ${p.variante_nombre}` : '')
+  );
+  return `
+    <div class="cart-item cart-item--combo" data-key="${item.key}">
+      <div class="cart-item__img-wrap">
+        <img class="cart-item__img" src="${item.imagen_url || ''}" alt="${item.promo_nombre}">
+      </div>
+      <div class="cart-item__info">
+        <div class="cart-item__name">${item.promo_nombre}</div>
+        <ul class="cart-item__combo-lista">
+          ${picks.map(p => `<li>${p}</li>`).join('')}
+        </ul>
+      </div>
+      <div class="cart-item__right">
+        <div class="cart-item__subtotal">${fmt(item.precio)}</div>
+        <button class="cart-item__remove" onclick="handleRemove('${item.key}')">Eliminar</button>
+      </div>
+    </div>`;
 }
 
 // La eleccion de envio la maneja js/envio.js (solo se carga en carrito y checkout).
@@ -431,31 +488,52 @@ async function corregirCarrito() {
   const carrito = getCarrito();
   if (!carrito.items.length) return carrito;
 
-  let productos;
+  let productos, promos;
   try {
-    const json = await loadProductosData();
-    productos = json.data || json;
+    const [jsonProd, jsonPromo] = await Promise.all([
+      loadProductosData(),
+      typeof loadPromosData === 'function' ? loadPromosData() : Promise.resolve({ data: [] }),
+    ]);
+    productos = jsonProd.data || jsonProd;
+    promos    = jsonPromo.data || jsonPromo;
   } catch {
     return carrito;   // sin catalogo no se puede validar; se deja como esta
   }
   if (!Array.isArray(productos)) return carrito;
+  if (!Array.isArray(promos)) promos = [];
 
-  const porId = new Map(productos.map(p => [parseInt(p.id), p]));
-  const invalidos = [];
+  const porId       = new Map(productos.map(p => [parseInt(p.id), p]));
+  const promosPorId = new Map(promos.map(p => [parseInt(p.id), p]));
+  const invalidos    = [];
+
+  // Un producto+opcion sigue vigente (para lineas normales y para cada pick
+  // adentro de un combo).
+  function vigente(productoId, varianteId) {
+    const p = porId.get(parseInt(productoId));
+    if (!p || (p.activo !== undefined && parseInt(p.activo) !== 1)) return false;
+    const variantes = p.variantes || [];
+    if (!variantes.length) return true;
+    return variantes.some(v => parseInt(v.id) === parseInt(varianteId) && parseInt(v.activo ?? 1) === 1);
+  }
 
   const validos = carrito.items.filter(item => {
-    const p = porId.get(parseInt(item.id));
-    if (!p || (p.activo !== undefined && parseInt(p.activo) !== 1)) {
-      invalidos.push(item.nombre);
-      return false;
+    if (item.esCombo) {
+      const promo = promosPorId.get(parseInt(item.promo_id));
+      const rota  = !promo
+        || (promo.activo !== undefined && parseInt(promo.activo) !== 1)
+        || (item.picks || []).length !== parseInt(promo.cantidad_items)
+        || !(item.picks || []).every(pick =>
+             (promo.producto_ids || []).map(Number).includes(parseInt(pick.producto_id))
+             && vigente(pick.producto_id, pick.variante_id)
+           );
+      if (rota) {
+        invalidos.push(item.promo_nombre || 'un combo');
+        return false;
+      }
+      return true;
     }
-    const variantes = p.variantes || [];
-    if (!variantes.length) return true;   // producto sin opciones: nada que validar
 
-    const activa = variantes.find(v =>
-      parseInt(v.id) === parseInt(item.variante_id) && parseInt(v.activo ?? 1) === 1
-    );
-    if (!activa) {
+    if (!vigente(item.id, item.variante_id)) {
       invalidos.push(item.variante_nombre ? `${item.nombre} (${item.variante_nombre})` : item.nombre);
       return false;
     }

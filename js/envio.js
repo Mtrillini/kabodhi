@@ -36,10 +36,16 @@ const Envio = {
    */
   async cotizar(cp) {
     const carrito = window.Carrito ? window.Carrito.get() : { items: [] };
-    // La variante va en la cotizacion: cada opcion puede pesar distinto.
-    const items   = (carrito.items || []).map(i => ({
+    // La variante va en la cotizacion: cada opcion puede pesar distinto. Un
+    // combo no tiene id propio: el servidor lo abre en los productos que
+    // eligio el cliente (ver PromoService), asi el peso de la cotizacion
+    // coincide con lo que despues se cobra de verdad.
+    const items = (carrito.items || []).map(i => i.esCombo ? {
+      tipo: 'promo', promo_id: i.promo_id,
+      picks: (i.picks || []).map(p => ({ producto_id: p.producto_id, variante_id: p.variante_id || null })),
+    } : {
       id: i.id, variante_id: i.variante_id || null, cantidad: i.cantidad,
-    }));
+    });
 
     const res  = await fetch(API_URL + '/envios/cotizar', {
       method:  'POST',

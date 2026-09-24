@@ -13,7 +13,9 @@ let openDetailId    = null;
 // (los pedidos anteriores a las variantes no la tienen).
 function nombreItem(item) {
   const base = item.producto_nombre || 'Producto #' + item.producto_id;
-  return item.variante_nombre ? `${base} — ${item.variante_nombre}` : base;
+  const nombre = item.variante_nombre ? `${base} — ${item.variante_nombre}` : base;
+  // Viene de un combo: se marca aparte, para distinguirlo de una compra suelta.
+  return item.promo_nombre ? `${nombre} (combo: ${item.promo_nombre})` : nombre;
 }
 
 // ---- Fetch ----

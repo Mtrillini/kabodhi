@@ -23,6 +23,11 @@ class EnvioController {
         $items = is_array($body['items'] ?? null) ? $body['items'] : [];
 
         try {
+            // Un combo no tiene id/peso propio: se abre en los productos que
+            // eligio el cliente, igual que al confirmar el pedido, para que
+            // el peso (y por lo tanto el costo) de la cotizacion coincida
+            // con lo que se va a cobrar de verdad.
+            $items = self::expandirCombos($items);
             $cotizacion = $this->service->cotizar($cp, $items);
         } catch (InvalidArgumentException $e) {
             http_response_code(400);
@@ -177,5 +182,27 @@ class EnvioController {
         }
         $this->service->delete($id);
         echo json_encode(['success' => true, 'message' => 'Tarifa eliminada.']);
+    }
+
+    /**
+     * Un item de tipo "promo" (combo) no tiene id/peso propio: se reemplaza
+     * por los productos+opciones que eligio el cliente. Misma logica que usa
+     * PedidoService al crear el pedido, asi la cotizacion previa coincide
+     * con lo que se termina cobrando.
+     */
+    private static function expandirCombos(array $items): array {
+        $promoService = null;
+        $resultado = [];
+        foreach ($items as $item) {
+            if (($item['tipo'] ?? '') !== 'promo') {
+                $resultado[] = $item;
+                continue;
+            }
+            $promoService ??= new PromoService();
+            foreach ($promoService->validarYExpandir($item) as $expandido) {
+                $resultado[] = $expandido;
+            }
+        }
+        return $resultado;
     }
 }

@@ -58,12 +58,25 @@ function renderCheckoutSummary() {
   const descuento  = descuentoActual(subtotal);
   const total      = subtotal - descuento + envioTotal;
 
-  const itemsHTML = carrito.items.map(item => `
+  const itemsHTML = carrito.items.map(item => {
+    if (item.esCombo) {
+      const lista = (item.picks || [])
+        .map(p => p.nombre + (p.variante_nombre ? ' — ' + p.variante_nombre : ''))
+        .join(', ');
+      return `
+        <div class="order-summary__row">
+          <span class="order-summary__item-name">${item.promo_nombre} <span class="order-summary__item-qty">(combo)</span></span>
+          <span>${fmt(item.precio)}</span>
+        </div>
+        <div style="font-size:0.68rem;color:#888;margin:-0.3rem 0 0.5rem;">${lista}</div>`;
+    }
+    return `
     <div class="order-summary__row">
       <span class="order-summary__item-name">${item.nombre}${item.variante_nombre ? ' — ' + item.variante_nombre : ''} <span class="order-summary__item-qty">x${item.cantidad}</span></span>
       <span>${fmt(item.precio * item.cantidad)}</span>
     </div>
-  `).join('');
+  `;
+  }).join('');
 
   let envioDetalle = '';
   if (envio) {
@@ -426,12 +439,19 @@ async function submitCheckout(e) {
     ciudad:     envio.requiere_sucursal ? '' : (document.getElementById('ciudad')?.value.trim()     || ''),
     provincia:  PROVINCIAS[provinciaCod] || provinciaCod,
     direccion:  buildDireccion(envio),
-    items:     carrito.items.map(item => ({
+    // Un combo manda el id del combo + que eligio en cada lugar; el servidor
+    // lo abre en items normales y recalcula el precio (nunca confia en el
+    // precio que vino del navegador). Ver PromoService::validarYExpandir.
+    items:     carrito.items.map(item => item.esCombo ? {
+      tipo:     'promo',
+      promo_id: item.promo_id,
+      picks:    (item.picks || []).map(p => ({ producto_id: p.producto_id, variante_id: p.variante_id || null })),
+    } : {
       id:          item.id,
       // Opcion elegida: el servidor descuenta el stock de esta variante.
       variante_id: item.variante_id || null,
       cantidad:    item.cantidad,
-    })),
+    }),
     // Del envio solo va lo que eligio el cliente: el costo lo recalcula el servidor.
     envio: {
       cp,

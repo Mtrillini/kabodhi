@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=86">
+  <link rel="stylesheet" href="css/style.css?v=87">
 </head>
 <body class="page-producto">
 
@@ -19,6 +19,13 @@
     <p class="pdp__cargando">Cargando producto...</p>
   </main>
 
+  <!-- Otros productos para seguir mirando. Aparte de #pdp: no se pisa cada
+       vez que el usuario cambia de fragancia y la ficha se vuelve a pintar. -->
+  <section class="otros-productos" id="otros-productos" hidden>
+    <p class="otros-productos__titulo">Otros productos</p>
+    <div class="otros-productos__grid" id="otros-productos-grid"></div>
+  </section>
+
   <div id="footer"></div>
 
   <!-- WhatsApp flotante -->
@@ -26,10 +33,10 @@
     <svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor" aria-hidden="true"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38a9.87 9.87 0 0 0 4.79 1.22h.01c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2m0 1.67c2.2 0 4.27.86 5.83 2.42a8.2 8.2 0 0 1 2.41 5.82c0 4.54-3.7 8.24-8.25 8.24a8.23 8.23 0 0 1-4.19-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.19 8.19 0 0 1-1.26-4.38c0-4.54 3.7-8.24 8.25-8.24m-3.6 4.3c-.17 0-.44.06-.67.31-.23.25-.88.86-.88 2.1s.9 2.43 1.03 2.6c.13.17 1.76 2.82 4.32 3.84 2.13.84 2.56.67 3.03.63.46-.04 1.5-.61 1.71-1.2.21-.6.21-1.1.15-1.21-.06-.1-.23-.17-.48-.29-.25-.13-1.5-.74-1.73-.82-.23-.09-.4-.13-.57.12-.17.25-.65.82-.8.99-.14.17-.29.19-.54.06-.25-.12-1.07-.39-2.03-1.25-.75-.67-1.26-1.5-1.4-1.75-.15-.25-.02-.38.11-.5.11-.11.25-.29.38-.44.12-.15.16-.25.25-.42.08-.17.04-.31-.02-.44-.06-.12-.56-1.37-.77-1.87-.2-.49-.4-.42-.55-.43h-.47z"/></svg>
   </a>
 
-  <script src="js/config.js?v=37"></script>
+  <script src="js/config.js?v=38"></script>
   <script src="js/main.js?v=47"></script>
-  <script src="js/carrito.js?v=64"></script>
+  <script src="js/carrito.js?v=65"></script>
   <script src="js/pagos.js?v=2"></script>
-  <script src="js/producto.js?v=1"></script>
+  <script src="js/producto.js?v=2"></script>
 </body>
 </html>

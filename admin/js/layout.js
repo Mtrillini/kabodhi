@@ -10,6 +10,7 @@ const SIDEBAR_SECCIONES = [
     links: [
       { page: 'dashboard',  href: 'dashboard.html',  icon: '◈', text: 'Dashboard' },
       { page: 'productos',  href: 'productos.html',  icon: '◆', text: 'Productos' },
+      { page: 'promos',     href: 'promos.html',     icon: '❉', text: 'Combos' },
       { page: 'categorias', href: 'categorias.html', icon: '❖', text: 'Categorías' },
       { page: 'hongos',     href: 'hongos.html',     icon: '✦', text: 'Hongos principales' },
       { page: 'banners',    href: 'banners.html',    icon: '▤', text: 'Banners' },

@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=86">
+  <link rel="stylesheet" href="css/style.css?v=87">
 </head>
 <body>
 
@@ -61,6 +61,15 @@
       <p class="hongos__footer-text">Descubrí todos nuestros productos</p>
       <a href="productos" class="hongos__footer-btn">VER PRODUCTOS →</a>
     </div>
+  </section>
+
+  <!-- ============================================================
+       COMBOS Y OFERTAS (se oculta sola si no hay ninguno activo)
+       ============================================================ -->
+  <section class="home-promos" id="home-promos" hidden>
+    <p class="home-promos__eyebrow">Combos y ofertas</p>
+    <h2 class="home-promos__titulo">Armá tu combo</h2>
+    <div class="home-promos__grid" id="home-promos-grid"></div>
   </section>
 
   <!-- ============================================================
@@ -120,9 +129,9 @@
   </a>
 
   <!-- Scripts -->
-  <script src="js/config.js?v=37"></script>
+  <script src="js/config.js?v=38"></script>
   <script src="js/main.js?v=47"></script>
-  <script src="js/carrito.js?v=64"></script>
+  <script src="js/carrito.js?v=65"></script>
   <script src="js/pagos.js?v=2"></script>
   <script src="js/productos.js?v=60"></script>
   <script>
@@ -137,7 +146,40 @@
 
     document.addEventListener('DOMContentLoaded', () => {
       loadHongosPrincipales();
+      cargarCombosHome();
     });
+
+    // ---- Combos y ofertas (seccion opcional del home) ----
+    async function cargarCombosHome() {
+      const seccion = document.getElementById('home-promos');
+      const grid    = document.getElementById('home-promos-grid');
+      if (!seccion || !grid || typeof loadPromosData !== 'function') return;
+
+      try {
+        const json   = await loadPromosData();
+        const promos = (json.data || []).filter(p => p.activo === undefined || parseInt(p.activo) === 1);
+        if (!promos.length) return;   // seccion queda oculta
+
+        const fmt = window.formatMoney || (v => '$ ' + v.toLocaleString('es-AR'));
+        grid.innerHTML = promos.slice(0, 3).map(p => `
+          <a class="home-promo-card reveal reveal--up" href="${PAGES_BASE}/promo?id=${p.id}">
+            <div class="home-promo-card__img-wrap">
+              ${p.imagen_url ? `<img src="${escAtributo(p.imagen_url)}" alt="${escAtributo(p.nombre)}" loading="lazy">` : ''}
+            </div>
+            <div class="home-promo-card__body">
+              <div class="home-promo-card__nombre">${escAtributo(p.nombre)}</div>
+              <div class="home-promo-card__elegir">Elegí ${p.cantidad_items} productos</div>
+              <div class="home-promo-card__precio">${fmt(p.precio)}</div>
+            </div>
+          </a>
+        `).join('');
+
+        seccion.hidden = false;
+        if (window.observeReveals) window.observeReveals(seccion);
+      } catch (e) {
+        console.error('Error cargando combos del inicio:', e);
+      }
+    }
 
     // ---- Hongos principales (seccion alternada) ----
     async function loadHongosPrincipales() {
