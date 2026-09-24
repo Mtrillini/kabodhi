@@ -31,9 +31,8 @@ function getNavbarHTML() {
       </nav>
 
       <div class="navbar__icons">
-        <a href="${PAGES_BASE}/admin/login.html" class="navbar__icon-btn" aria-label="Ingresar">
-          <i class="fa-regular fa-user"></i>
-        </a>
+        <!-- Sin icono de perfil: la tienda no tiene cuentas de cliente y solo
+             llevaba al login del panel, que usa la administradora. -->
         <a href="${PAGES_BASE}/carrito" class="navbar__cart" aria-label="Carrito">
           <i class="fa-solid fa-bag-shopping"></i>
           <span class="cart-badge" id="cart-badge" style="display:none;">0</span>

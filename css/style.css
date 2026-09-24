@@ -3455,11 +3455,15 @@ body { padding-top: calc(var(--nav-h) + var(--nav-arch)); }
     border-radius: 5px;
   }
 }
+/* El encuadre lo define cada banner desde el panel (foco y acercamiento);
+   sin valores se comporta como siempre: centrado y sin acercar. */
 .hero__img {
   width: 100%;
   height: 100%;
-  object-fit: cover;            /* la franja calza con la imagen: sin recorte */
-  object-position: center;
+  object-fit: cover;
+  object-position: var(--foco-x, 50%) var(--foco-y, 50%);
+  transform: scale(var(--zoom, 1));
+  transform-origin: var(--foco-x, 50%) var(--foco-y, 50%);
   display: block;
   opacity: 1;                   /* 100% nitido */
 }

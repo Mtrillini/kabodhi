@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=80">
+  <link rel="stylesheet" href="css/style.css?v=81">
 </head>
 <body>
 
@@ -116,7 +116,7 @@
 
   <!-- Scripts -->
   <script src="js/config.js?v=37"></script>
-  <script src="js/main.js?v=43"></script>
+  <script src="js/main.js?v=44"></script>
   <script src="js/carrito.js?v=62"></script>
   <script src="js/pagos.js?v=2"></script>
   <script src="js/productos.js?v=60"></script>
@@ -269,9 +269,16 @@
           const carga = i === 0
             ? 'fetchpriority="high" decoding="async"'
             : 'loading="lazy" decoding="async"';
+          // Encuadre elegido en el panel: que parte de la imagen queda a la
+          // vista y cuanto se acerca.
+          const fx = Number.isFinite(+b.foco_x) ? +b.foco_x : 50;
+          const fy = Number.isFinite(+b.foco_y) ? +b.foco_y : 50;
+          const zm = (Number.isFinite(+b.zoom) ? +b.zoom : 100) / 100;
+          const encuadre = `--foco-x:${fx}%;--foco-y:${fy}%;--zoom:${zm};`;
+
           const img = `<picture>
                 <source media="(max-width: 768px)" srcset="${escAtributo(mobile)}">
-                <img class="hero__img" src="${escAtributo(desktop)}" alt="${escAtributo(b.titulo || '')}" ${carga}>
+                <img class="hero__img" src="${escAtributo(desktop)}" alt="${escAtributo(b.titulo || '')}" style="${encuadre}" ${carga}>
               </picture>`;
 
           // Con texto de boton se dibuja el boton y la imagen deja de ser un

@@ -18,7 +18,7 @@ class BannerController {
     public function index(): void {
         $todos = Auth::isAdmin() && !empty($_GET['all']);
 
-        $sql = "SELECT id, titulo, imagen_desktop, imagen_mobile, link, boton_texto, orden, activo
+        $sql = "SELECT id, titulo, imagen_desktop, imagen_mobile, link, boton_texto, foco_x, foco_y, zoom, orden, activo
                 FROM banners"
              . ($todos ? '' : ' WHERE activo = 1')
              . ' ORDER BY orden ASC, id ASC';
@@ -58,8 +58,8 @@ class BannerController {
             : (int)$this->db->query("SELECT COALESCE(MAX(orden), 0) + 1 FROM banners")->fetchColumn();
 
         $stmt = $this->db->prepare(
-            "INSERT INTO banners (titulo, imagen_desktop, imagen_mobile, link, boton_texto, orden, activo)
-             VALUES (:titulo, :desktop, :mobile, :link, :boton_texto, :orden, :activo)"
+            "INSERT INTO banners (titulo, imagen_desktop, imagen_mobile, link, boton_texto, foco_x, foco_y, zoom, orden, activo)
+             VALUES (:titulo, :desktop, :mobile, :link, :boton_texto, :foco_x, :foco_y, :zoom, :orden, :activo)"
         );
         $stmt->execute([
             ':titulo'  => trim($body['titulo']),
@@ -68,6 +68,10 @@ class BannerController {
             ':link'    => self::nullSiVacio($body['link'] ?? ''),
             // Vacio = sin boton: el banner entero sigue siendo el link.
             ':boton_texto' => self::nullSiVacio($body['boton_texto'] ?? ''),
+            // Encuadre: que parte de la imagen queda a la vista.
+            ':foco_x' => self::porcentaje($body['foco_x'] ?? 50, 0, 100),
+            ':foco_y' => self::porcentaje($body['foco_y'] ?? 50, 0, 100),
+            ':zoom'   => self::porcentaje($body['zoom']   ?? 100, 100, 200),
             ':orden'   => $orden,
             ':activo'  => isset($body['activo']) ? (int)$body['activo'] : 1,
         ]);
@@ -109,6 +113,9 @@ class BannerController {
             'imagen_mobile'  => 'imagen_mobile',
             'link'           => 'link',
             'boton_texto'    => 'boton_texto',
+            'foco_x'         => 'foco_x',
+            'foco_y'         => 'foco_y',
+            'zoom'           => 'zoom',
             'orden'          => 'orden',
             'activo'         => 'activo',
         ];
@@ -116,11 +123,17 @@ class BannerController {
         foreach ($mapa as $clave => $columna) {
             if (!array_key_exists($clave, $body)) continue;
             $campos[] = "`{$columna}` = :{$columna}";
-            $params[":{$columna}"] = in_array($clave, ['orden', 'activo'], true)
-                ? (int)$body[$clave]
-                : (in_array($clave, ['imagen_mobile', 'link', 'boton_texto'], true)
-                    ? self::nullSiVacio($body[$clave])
-                    : trim((string)$body[$clave]));
+            if (in_array($clave, ['orden', 'activo'], true)) {
+                $params[":{$columna}"] = (int)$body[$clave];
+            } elseif ($clave === 'zoom') {
+                $params[":{$columna}"] = self::porcentaje($body[$clave], 100, 200);
+            } elseif ($clave === 'foco_x' || $clave === 'foco_y') {
+                $params[":{$columna}"] = self::porcentaje($body[$clave], 0, 100);
+            } elseif (in_array($clave, ['imagen_mobile', 'link', 'boton_texto'], true)) {
+                $params[":{$columna}"] = self::nullSiVacio($body[$clave]);
+            } else {
+                $params[":{$columna}"] = trim((string)$body[$clave]);
+            }
         }
 
         if ($campos) {
@@ -184,5 +197,10 @@ class BannerController {
     private static function nullSiVacio($valor): ?string {
         $texto = trim((string)$valor);
         return $texto === '' ? null : $texto;
+    }
+
+    /** Entero acotado: el encuadre no puede quedar fuera de la imagen. */
+    private static function porcentaje($valor, int $min, int $max): int {
+        return max($min, min($max, (int)$valor));
     }
 }

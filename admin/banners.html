@@ -109,6 +109,35 @@
           </div>
 
           <div class="form-group">
+            <label class="form-label">Encuadre</label>
+            <p style="font-size:0.7rem;color:var(--taupe);margin-bottom:0.7rem;">
+              La franja del inicio es más ancha que las imágenes, así que se recorta.
+              Con esto elegís qué parte queda a la vista. Para poder correrla a los
+              costados en pantallas anchas hay que acercarla un poco.
+            </p>
+            <div style="display:flex;flex-direction:column;gap:0.7rem;max-width:420px;">
+              <label style="display:flex;align-items:center;gap:0.7rem;font-size:0.72rem;color:var(--taupe);">
+                <span style="min-width:74px;">Horizontal</span>
+                <input type="range" id="f-foco-x" min="0" max="100" step="1" value="50" style="flex:1;">
+                <span id="f-foco-x-val" style="min-width:38px;text-align:right;">50%</span>
+              </label>
+              <label style="display:flex;align-items:center;gap:0.7rem;font-size:0.72rem;color:var(--taupe);">
+                <span style="min-width:74px;">Vertical</span>
+                <input type="range" id="f-foco-y" min="0" max="100" step="1" value="50" style="flex:1;">
+                <span id="f-foco-y-val" style="min-width:38px;text-align:right;">50%</span>
+              </label>
+              <label style="display:flex;align-items:center;gap:0.7rem;font-size:0.72rem;color:var(--taupe);">
+                <span style="min-width:74px;">Acercar</span>
+                <input type="range" id="f-zoom" min="100" max="200" step="1" value="100" style="flex:1;">
+                <span id="f-zoom-val" style="min-width:38px;text-align:right;">100%</span>
+              </label>
+              <button type="button" class="btn btn-secondary btn-sm" id="btn-encuadre-reset" style="align-self:flex-start;">
+                Volver al centro
+              </button>
+            </div>
+          </div>
+
+          <div class="form-group">
             <label class="form-label" for="f-boton-texto">Texto del botón (opcional)</label>
             <input type="text" id="f-boton-texto" class="form-input" maxlength="60" placeholder="Descubrir colección">
             <p style="font-size:0.7rem;color:var(--taupe);margin-top:0.35rem;">
@@ -135,6 +164,6 @@
   <script src="js/layout.js?v=9"></script>
   <script src="js/demo.js?v=9"></script>
   <script src="js/auth.js?v=7"></script>
-  <script src="js/banners.js?v=8"></script>
+  <script src="js/banners.js?v=9"></script>
 </body>
 </html>

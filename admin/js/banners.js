@@ -134,9 +134,61 @@ function renderPreview(slot) {
 
   if (!img) { cont.innerHTML = ''; return; }
 
-  const alto = slot === 'mobile' ? 130 : 90;
-  cont.innerHTML = `<img src="${img.preview || mediaUrl(img.url)}"
-    style="max-width:100%;height:${alto}px;object-fit:cover;border-radius:4px;border:1px solid var(--champagne);">`;
+  if (slot === 'mobile') {
+    cont.innerHTML = `<img src="${img.preview || mediaUrl(img.url)}"
+      style="max-width:100%;height:130px;object-fit:cover;border-radius:4px;border:1px solid var(--champagne);">`;
+    return;
+  }
+
+  // Escritorio: se muestra con la misma proporción que la franja del inicio
+  // (3.5:1) y con el encuadre elegido, así lo que se ve acá es lo que se va a
+  // ver en la tienda.
+  cont.innerHTML = `
+    <div style="width:100%;max-width:420px;aspect-ratio:35/10;overflow:hidden;border-radius:4px;border:1px solid var(--champagne);">
+      <img id="preview-encuadre-img" src="${img.preview || mediaUrl(img.url)}"
+           style="width:100%;height:100%;object-fit:cover;display:block;">
+    </div>`;
+  aplicarEncuadre();
+}
+
+// ---- Encuadre ----
+function valoresEncuadre() {
+  const leer = (id, porDefecto) => {
+    const el = document.getElementById(id);
+    const n  = el ? parseInt(el.value) : NaN;
+    return Number.isFinite(n) ? n : porDefecto;
+  };
+  return {
+    foco_x: leer('f-foco-x', 50),
+    foco_y: leer('f-foco-y', 50),
+    zoom:   leer('f-zoom', 100),
+  };
+}
+
+function aplicarEncuadre() {
+  const { foco_x, foco_y, zoom } = valoresEncuadre();
+
+  const etiqueta = (id, valor) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = valor + '%';
+  };
+  etiqueta('f-foco-x-val', foco_x);
+  etiqueta('f-foco-y-val', foco_y);
+  etiqueta('f-zoom-val',   zoom);
+
+  const img = document.getElementById('preview-encuadre-img');
+  if (!img) return;
+  img.style.objectPosition  = `${foco_x}% ${foco_y}%`;
+  img.style.transform       = `scale(${zoom / 100})`;
+  img.style.transformOrigin = `${foco_x}% ${foco_y}%`;
+}
+
+function setEncuadre(b) {
+  const poner = (id, valor) => { const el = document.getElementById(id); if (el) el.value = valor; };
+  poner('f-foco-x', b && b.foco_x != null ? b.foco_x : 50);
+  poner('f-foco-y', b && b.foco_y != null ? b.foco_y : 50);
+  poner('f-zoom',   b && b.zoom   != null ? b.zoom   : 100);
+  aplicarEncuadre();
 }
 
 function elegirArchivo(slot, file) {
@@ -161,12 +213,14 @@ async function openModal(id = null) {
       document.getElementById('f-titulo').value = b.titulo || '';
       document.getElementById('f-link').value   = b.link   || '';
       document.getElementById('f-boton-texto').value = b.boton_texto || '';
+      setEncuadre(b);
       document.getElementById('f-activo').checked = parseInt(b.activo) === 1;
       if (b.imagen_desktop) imagenes.desktop = { url: b.imagen_desktop };
       if (b.imagen_mobile)  imagenes.mobile  = { url: b.imagen_mobile };
     }
   } else {
     document.getElementById('f-activo').checked = true;
+    setEncuadre(null);
   }
 
   renderPreview('desktop');
@@ -212,6 +266,7 @@ async function saveBanner() {
       imagen_mobile:  await subirSiHaceFalta('mobile'),
       link:           document.getElementById('f-link').value.trim(),
       boton_texto:    document.getElementById('f-boton-texto').value.trim(),
+      ...valoresEncuadre(),
       activo:         document.getElementById('f-activo').checked ? 1 : 0,
     };
 
@@ -273,6 +328,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   fetchBanners();
 
   document.getElementById('btn-nuevo-banner')?.addEventListener('click', () => openModal(null));
+
+  // Encuadre: la vista previa se actualiza mientras se mueve cada control.
+  ['f-foco-x', 'f-foco-y', 'f-zoom'].forEach(id => {
+    document.getElementById(id)?.addEventListener('input', aplicarEncuadre);
+  });
+  document.getElementById('btn-encuadre-reset')?.addEventListener('click', () => setEncuadre(null));
   document.getElementById('btn-save')?.addEventListener('click', saveBanner);
   document.getElementById('btn-cancel-modal')?.addEventListener('click', closeModal);
   document.getElementById('btn-close-modal')?.addEventListener('click', closeModal);
