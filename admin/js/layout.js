@@ -22,6 +22,7 @@ const SIDEBAR_SECCIONES = [
     label: 'Ajustes',
     links: [
       { page: 'configuracion', href: 'configuracion.html', icon: '⚙', text: 'Configuración' },
+      { page: 'ayuda',         href: 'ayuda.html',         icon: '?', text: 'Página de Ayuda' },
       // Solo el principal administra quien entra al panel.
       { page: 'usuarios', href: 'usuarios.html', icon: '☺', text: 'Usuarios', soloSuper: true },
     ],

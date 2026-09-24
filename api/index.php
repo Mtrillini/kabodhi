@@ -226,6 +226,16 @@ if ($seg0 === 'configuracion') {
     exit;
 }
 
+// --- PREGUNTAS FRECUENTES (pagina de Ayuda) ---
+if ($seg0 === 'faq') {
+    require_once __DIR__ . '/controllers/FaqController.php';
+    $ctrl = new FaqController();
+    if ($method === 'GET')       $ctrl->index();
+    elseif ($method === 'PUT')   $ctrl->replace();
+    else { http_response_code(405); echo json_encode(['success' => false, 'message' => 'Método no permitido.']); }
+    exit;
+}
+
 // --- CATEGORIAS ---
 if ($seg0 === 'categorias') {
     require_once __DIR__ . '/controllers/CategoriaController.php';

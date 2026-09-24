@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ayuda — KABODHI Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/admin.css?v=8">
+</head>
+<body>
+
+  <aside class="sidebar" id="sidebar" data-page="ayuda"></aside>
+
+  <div class="main">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:1rem;">
+        <button class="hamburger-admin" id="hamburger-admin" aria-label="Menú">
+          <span></span><span></span><span></span>
+        </button>
+        <span class="topbar__title">Página de Ayuda</span>
+      </div>
+      <div class="topbar__actions">
+        <button id="btn-guardar" class="btn btn-primary">Guardar cambios</button>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="panel" style="max-width:820px;">
+        <div class="panel__header" style="padding:1rem 1.5rem;border-bottom:1px solid var(--champagne);">
+          <p style="font-size:0.78rem;color:var(--taupe);">
+            Es lo que se ve en
+            <a href="../ayuda" target="_blank" style="color:var(--negro);">kabodhi.online/ayuda</a>.
+            Dejá un renglón en blanco entre párrafos. Una línea que empieza con
+            <code>-</code> se muestra como ítem de una lista.
+          </p>
+        </div>
+
+        <div style="padding:1.5rem;">
+
+          <!-- Envíos -->
+          <div class="form-group">
+            <label class="form-label" for="f-envios-titulo">Título del primer bloque</label>
+            <input type="text" id="f-envios-titulo" class="form-input" placeholder="Envíos y entregas">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="f-envios-texto">Texto</label>
+            <textarea id="f-envios-texto" class="form-textarea" rows="10" style="line-height:1.7;"></textarea>
+          </div>
+
+          <!-- Cambios -->
+          <div class="form-group" style="margin-top:2rem;">
+            <label class="form-label" for="f-cambios-titulo">Título del segundo bloque</label>
+            <input type="text" id="f-cambios-titulo" class="form-input" placeholder="Cambios y devoluciones">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="f-cambios-texto">Texto</label>
+            <textarea id="f-cambios-texto" class="form-textarea" rows="10" style="line-height:1.7;"></textarea>
+          </div>
+
+          <!-- Preguntas frecuentes -->
+          <div class="form-group" style="margin-top:2rem;">
+            <label class="form-label" for="f-faq-titulo">Título de las preguntas</label>
+            <input type="text" id="f-faq-titulo" class="form-input" placeholder="Preguntas frecuentes">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Preguntas frecuentes</label>
+            <p style="font-size:0.7rem;color:var(--taupe);margin-bottom:0.8rem;">
+              Se muestran en este orden. Destildá "Visible" para ocultar una sin borrarla.
+            </p>
+            <div id="faq-lista" style="display:flex;flex-direction:column;gap:0.8rem;margin-bottom:0.9rem;"></div>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="addPregunta()">+ Agregar pregunta</button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/config.js?v=7"></script>
+  <script src="js/layout.js?v=9"></script>
+  <script src="js/demo.js?v=9"></script>
+  <script src="js/auth.js?v=7"></script>
+  <script src="js/ayuda.js?v=1"></script>
+</body>
+</html>

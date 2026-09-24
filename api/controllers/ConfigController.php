@@ -60,6 +60,15 @@ class ConfigController {
             return;
         }
 
+        // Los de Ayuda, por lo mismo.
+        foreach (['ayuda_envios_texto' => 'Envíos', 'ayuda_cambios_texto' => 'Cambios y devoluciones'] as $clave => $titulo) {
+            if (isset($body[$clave]) && mb_strlen($body[$clave]) > 8000) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => "El texto de {$titulo} no puede superar los 8000 caracteres."]);
+                return;
+            }
+        }
+
         // --- Envios / Correo Argentino ---
         if (isset($body['envio_modo']) && !in_array($body['envio_modo'], ConfigService::ENVIO_MODOS, true)) {
             http_response_code(400);

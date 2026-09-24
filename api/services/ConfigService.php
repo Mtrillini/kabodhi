@@ -20,6 +20,13 @@ class ConfigService {
         // Contenido editable de la pagina Nosotros
         'nosotros_titulo'    => '',
         'nosotros_texto'     => '',
+        // Contenido editable de la pagina Ayuda. Las preguntas frecuentes van
+        // aparte, en la tabla `faq`.
+        'ayuda_envios_titulo'  => 'Envíos y entregas',
+        'ayuda_envios_texto'   => '',
+        'ayuda_cambios_titulo' => 'Cambios y devoluciones',
+        'ayuda_cambios_texto'  => '',
+        'ayuda_faq_titulo'     => 'Preguntas frecuentes',
         // Envios: 'tabla' (tarifas por CP) o 'correo' (API de Correo Argentino,
         // con la tabla como respaldo si la API falla).
         'envio_modo'                => 'tabla',

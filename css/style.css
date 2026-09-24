@@ -3385,10 +3385,12 @@ body { padding-top: calc(var(--nav-h) + var(--nav-arch)); }
   content: "";
   position: absolute;
   bottom: 0; left: 0; right: 0;
-  height: 9%;
+  height: 20%;
   background: linear-gradient(to top,
-    rgba(255, 255, 255, 0.8) 0%,
-    rgba(255, 255, 255, 0.3) 45%,
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(255, 255, 255, 0.7) 25%,
+    rgba(255, 255, 255, 0.35) 55%,
+    rgba(255, 255, 255, 0.12) 78%,
     rgba(255, 255, 255, 0) 100%);
   z-index: 2;
   pointer-events: none;
@@ -4440,10 +4442,15 @@ select.form-input {
 /* ============================================================
    FICHA DE PRODUCTO (producto.html)
    ============================================================ */
+/* La ficha va sobre blanco: el crema del resto del sitio le quitaba limpieza
+   a la foto del producto, que es lo que manda en esta pagina. */
+body.page-producto { background: var(--blanco); }
+
 .pdp {
   max-width: 1180px;
   margin: 0 auto;
   padding: 2.5rem 2rem 4.5rem;
+  background: var(--blanco);
 }
 
 .pdp__cargando,
@@ -4481,7 +4488,7 @@ select.form-input {
 /* Sin alto fijo: la foto entra entera y con su forma, sea vertical u
    horizontal. Con un recuadro fijo quedaban bandas blancas o recorte. */
 .pdp__foto-wrap {
-  background: var(--crema);
+  background: var(--blanco);
   border-radius: 8px;
   overflow: hidden;
 }

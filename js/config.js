@@ -111,3 +111,4 @@ const configLista = (async () => {
 const loadBannersData   = () => fetchDatos('/banners',   'banners.json');
 const loadProductosData = () => fetchDatos('/productos', 'productos.json');
 const loadHongosData    = () => fetchDatos('/hongos',    'hongos.json');
+const loadFaqData       = () => fetchDatos('/faq',       'faq.json');

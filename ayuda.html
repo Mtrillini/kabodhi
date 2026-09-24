@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
@@ -18,56 +18,115 @@
     <p class="pagina-editorial__eyebrow">KABODHI</p>
     <h1 class="pagina-editorial__title">Ayuda</h1>
 
-    <h2 id="envios">Envíos y entregas</h2>
-    <p>Realizamos envíos a todo el país. Una vez acreditado el pago, despachamos tu pedido dentro de las 24 a 48 horas hábiles.</p>
-    <ul>
-      <li><strong>CABA y GBA:</strong> entrega estimada de 2 a 4 días hábiles.</li>
-      <li><strong>Interior del país:</strong> entrega estimada de 3 a 7 días hábiles, según destino.</li>
-    </ul>
-    <p>Todos los envíos incluyen código de seguimiento, que te enviamos por WhatsApp o email apenas despachamos tu pedido. El costo de envío se calcula automáticamente en el checkout según tu código postal.</p>
-    <p>Cada producto viaja protegido con embalaje especial para garantizar que llegue en perfectas condiciones.</p>
+    <!-- El contenido se edita desde el panel (Ajustes > Página de Ayuda).
+         Lo que está escrito acá es el respaldo: si la API no responde, la
+         página igual muestra algo en vez de quedar vacía. -->
+    <div id="ayuda-contenido">
+      <h2 id="envios">Envíos y entregas</h2>
+      <p>Realizamos envíos a todo el país. Una vez acreditado el pago, despachamos tu pedido dentro de las 24 a 48 horas hábiles.</p>
+      <ul>
+        <li>CABA y GBA: entrega estimada de 2 a 4 días hábiles.</li>
+        <li>Interior del país: entrega estimada de 3 a 7 días hábiles, según destino.</li>
+      </ul>
+      <p>Todos los envíos incluyen código de seguimiento, que te enviamos por WhatsApp o email apenas despachamos tu pedido. El costo de envío se calcula automáticamente en el checkout según tu código postal.</p>
 
-    <h2 id="cambios">Cambios y devoluciones</h2>
-    <p>Queremos que tu compra sea perfecta. Por tratarse de productos de consumo, aceptamos cambios y devoluciones únicamente cuando el producto se encuentra <strong>cerrado, sin uso y con su precinto o sellado original intacto</strong>.</p>
-    <ul>
-      <li>Tenés <strong>10 días corridos</strong> desde que recibís tu pedido para solicitar un cambio o devolución, conforme a la Ley de Defensa del Consumidor (Ley 24.240).</li>
-      <li>Si el producto llegó <strong>dañado o no corresponde</strong> a lo que compraste, escribinos dentro de las 48 horas de recibido, con fotos del producto y del embalaje, y lo reponemos sin costo.</li>
-      <li>Para iniciar un cambio o devolución, contactanos por WhatsApp indicando tu número de pedido.</li>
-    </ul>
-    <p>Una vez recibido y verificado el producto, gestionamos el cambio o el reintegro por el mismo medio de pago utilizado en la compra.</p>
-
-    <h2 id="faq">Preguntas frecuentes</h2>
-
-    <div class="faq-item">
-      <p class="faq-item__q">¿Qué son los adaptógenos?</p>
-      <p class="faq-item__a">Los adaptógenos son sustancias naturales —en nuestro caso, hongos funcionales— que ayudan al cuerpo a adaptarse al estrés y a recuperar su equilibrio. Acompañan la energía, el enfoque, el descanso y las defensas de forma natural.</p>
+      <h2 id="cambios">Cambios y devoluciones</h2>
+      <p>Queremos que tu compra sea perfecta. Por tratarse de productos de consumo, aceptamos cambios y devoluciones únicamente cuando el producto se encuentra cerrado, sin uso y con su precinto o sellado original intacto.</p>
+      <ul>
+        <li>Tenés 10 días corridos desde que recibís tu pedido para solicitar un cambio o devolución, conforme a la Ley de Defensa del Consumidor (Ley 24.240).</li>
+        <li>Si el producto llegó dañado o no corresponde a lo que compraste, escribinos dentro de las 48 horas de recibido, con fotos del producto y del embalaje, y lo reponemos sin costo.</li>
+      </ul>
     </div>
 
-    <div class="faq-item">
-      <p class="faq-item__q">¿Qué significa "doble extracción"?</p>
-      <p class="faq-item__a">Es un proceso que combina extracción en agua y en alcohol para conservar todos los principios activos del hongo (beta-glucanos y triterpenos). Así logramos la máxima biodisponibilidad y potencia en cada toma.</p>
-    </div>
-
-    <div class="faq-item">
-      <p class="faq-item__q">¿Cómo tomo los productos?</p>
-      <p class="faq-item__a">Las cápsulas se toman con agua según la dosis indicada en el envase. Los polvos se disuelven en agua, café, té o licuados. Podés incorporarlos a tu ritual diario, en el momento del día que más te acomode.</p>
-    </div>
-
-    <div class="faq-item">
-      <p class="faq-item__q">¿Qué medios de pago aceptan?</p>
-      <p class="faq-item__a">Aceptamos tarjetas de crédito y débito a través de Mercado Pago, con hasta 3 cuotas sin interés. El pago se procesa en un entorno 100% seguro.</p>
-    </div>
-
-    <div class="faq-item">
-      <p class="faq-item__q">¿Me pueden ayudar a elegir mi adaptógeno?</p>
-      <p class="faq-item__a">Por supuesto. Escribinos por WhatsApp o Instagram y contanos qué buscás —enfoque, energía, calma, defensas— y te recomendamos el hongo o el blend ideal para vos.</p>
-    </div>
+    <div id="ayuda-faq"></div>
   </main>
 
   <div id="footer"></div>
 
-  <script src="js/config.js?v=36"></script>
+  <script src="js/config.js?v=37"></script>
   <script src="js/main.js?v=43"></script>
   <script src="js/carrito.js?v=62"></script>
+  <script>
+    // ---- Contenido editable desde el panel ----
+    // Un renglón en blanco separa párrafos; una línea que empieza con "- " es
+    // un ítem de lista. Todo se inserta con textContent: lo que se carga en el
+    // panel no puede inyectar HTML en la página pública.
+    (async () => {
+      const cont = document.getElementById('ayuda-contenido');
+      const faqCont = document.getElementById('ayuda-faq');
+
+      try {
+        if (typeof configLista !== 'undefined') await configLista;
+        const cfg = (typeof CONFIG_TIENDA !== 'undefined' ? CONFIG_TIENDA : {}) || {};
+
+        const bloques = [
+          ['envios',  cfg.ayuda_envios_titulo,  cfg.ayuda_envios_texto],
+          ['cambios', cfg.ayuda_cambios_titulo, cfg.ayuda_cambios_texto],
+        ].filter(([, , texto]) => (texto || '').trim() !== '');
+
+        if (bloques.length) {
+          cont.innerHTML = '';
+          bloques.forEach(([id, titulo, texto]) => {
+            const h2 = document.createElement('h2');
+            h2.id = id;
+            h2.textContent = titulo || '';
+            cont.appendChild(h2);
+            renderTexto(cont, texto);
+          });
+        }
+      } catch {
+        /* queda el respaldo del HTML */
+      }
+
+      try {
+        if (typeof loadFaqData !== 'function') return;
+        const json = await loadFaqData();
+        const faq  = (json.data || []).filter(f => f.activo === undefined || parseInt(f.activo) === 1);
+        if (!faq.length) return;
+
+        const h2 = document.createElement('h2');
+        h2.id = 'faq';
+        h2.textContent = (typeof CONFIG_TIENDA !== 'undefined' && CONFIG_TIENDA.ayuda_faq_titulo) || 'Preguntas frecuentes';
+        faqCont.appendChild(h2);
+
+        faq.forEach(f => {
+          const item = document.createElement('div');
+          item.className = 'faq-item';
+          const q = document.createElement('p');
+          q.className = 'faq-item__q';
+          q.textContent = f.pregunta || '';
+          const a = document.createElement('p');
+          a.className = 'faq-item__a';
+          a.textContent = f.respuesta || '';
+          item.append(q, a);
+          faqCont.appendChild(item);
+        });
+      } catch {
+        /* sin preguntas, la página igual se lee */
+      }
+    })();
+
+    function renderTexto(contenedor, texto) {
+      (texto || '').split(/\n\s*\n/).forEach(bloque => {
+        const lineas = bloque.split('\n').map(l => l.trim()).filter(Boolean);
+        if (!lineas.length) return;
+
+        if (lineas.every(l => l.startsWith('-'))) {
+          const ul = document.createElement('ul');
+          lineas.forEach(l => {
+            const li = document.createElement('li');
+            li.textContent = l.replace(/^-\s*/, '');
+            ul.appendChild(li);
+          });
+          contenedor.appendChild(ul);
+          return;
+        }
+
+        const p = document.createElement('p');
+        p.textContent = lineas.join(' ');
+        contenedor.appendChild(p);
+      });
+    }
+  </script>
 </body>
 </html>
