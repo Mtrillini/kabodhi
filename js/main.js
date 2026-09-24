@@ -2,14 +2,10 @@
 // KABODHI — main.js
 // ============================================================
 
-// ---- Inject Font Awesome ----
-function injectFontAwesome() {
-  if (document.querySelector('link[href*="font-awesome"]')) return;
-  const fa = document.createElement('link');
-  fa.rel = 'stylesheet';
-  fa.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css';
-  document.head.appendChild(fa);
-}
+// ---- Iconos ----
+// Van como SVG en la pagina: Font Awesome eran 103 KB de CSS mas sus fuentes,
+// traidos de otro dominio, para dos iconos.
+const ICONO_BOLSA = '<svg class="icono" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>';
 
 // ---- Navbar HTML ----
 function getNavbarHTML() {
@@ -34,7 +30,7 @@ function getNavbarHTML() {
         <!-- Sin icono de perfil: la tienda no tiene cuentas de cliente y solo
              llevaba al login del panel, que usa la administradora. -->
         <a href="${PAGES_BASE}/carrito" class="navbar__cart" aria-label="Carrito">
-          <i class="fa-solid fa-bag-shopping"></i>
+          ${ICONO_BOLSA}
           <span class="cart-badge" id="cart-badge" style="display:none;">0</span>
         </a>
         <button class="navbar__hamburger" id="hamburger-btn" aria-label="Menú">
@@ -95,7 +91,7 @@ function getFooterHTML() {
       <div class="footer__top-wrap">
       <div class="footer__top">
         <div>
-          <img src="images/logo-footer-kabodhi.webp?v=2" alt="KABODHI — Adaptógenos naturales para tu bienestar diario" class="footer__logo-img">
+          <img src="images/logo-footer-kabodhi.webp?v=2" alt="KABODHI — Adaptógenos naturales para tu bienestar diario" class="footer__logo-img" loading="lazy" decoding="async">
         </div>
 
         <div>
@@ -313,7 +309,6 @@ window.formatMoney = function(amount) {
 // DOMContentLoaded init
 // ============================================================
 document.addEventListener('DOMContentLoaded', () => {
-  injectFontAwesome();
 
   // Inject navbar
   const navbarEl = document.getElementById('navbar');

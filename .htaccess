@@ -32,3 +32,18 @@ Options -Indexes
   # URLs limpias: /productos -> productos.html
   RewriteRule ^([a-z][a-z0-9-]*)/?$ $1.html [L]
 </IfModule>
+
+
+# --- Cache de imagenes ---
+# Las fotos que sube el panel llevan un nombre unico (prod_xxx.webp) y las de
+# la marca cambian de nombre cuando cambian, asi que se pueden guardar mucho
+# tiempo en el navegador: en la segunda visita no se vuelven a bajar.
+# El HTML no se cachea, para que un cambio se vea enseguida.
+<IfModule mod_headers.c>
+  <FilesMatch "\.(webp|jpg|jpeg|png|gif|svg|ico|woff2?)$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </FilesMatch>
+  <FilesMatch "\.html$">
+    Header set Cache-Control "no-cache"
+  </FilesMatch>
+</IfModule>
