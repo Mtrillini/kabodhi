@@ -56,6 +56,16 @@ class UploadController {
             return;
         }
 
+        // Se guarda achicada y en WebP: un banner de 2 MB queda en ~150 KB y
+        // el visitante deja de esperarlo. Si el hosting no puede convertir,
+        // queda el archivo original y todo sigue igual.
+        require_once __DIR__ . '/../services/ImagenOptimizer.php';
+        $webp = ImagenOptimizer::aWebp($destPath, $mime);
+        if ($webp !== null) {
+            @unlink($destPath);
+            $filename = basename($webp);
+        }
+
         // Ruta relativa a la raiz del sitio, igual que el resto de las imagenes.
         // Guardar APP_URL absoluta ataba las imagenes al dominio del .env.
         $url = 'uploads/' . $filename;

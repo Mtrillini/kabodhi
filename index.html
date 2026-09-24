@@ -268,10 +268,19 @@
       const dots  = Array.from(document.querySelectorAll('.hero__dot'));
       let current = 0;
 
-      function goTo(i) {
+      function goTo(i, precargar = true) {
         current = (i + total) % total;
         track.style.transform = `translateX(-${current * 100}%)`;
         dots.forEach((d, x) => d.classList.toggle('active', x === current));
+        if (precargar) precargarSiguiente();
+      }
+
+      // El banner que viene se empieza a bajar apenas se muestra el actual,
+      // asi llega cargado y no se ve el hueco al pasar de uno a otro.
+      function precargarSiguiente() {
+        const siguiente = track.children[(current + 1) % total];
+        const img = siguiente && siguiente.querySelector('img');
+        if (img && img.loading === 'lazy') img.loading = 'eager';
       }
       function startAuto() { heroTimer = setInterval(() => goTo(current + 1), 5500); }
 
@@ -285,8 +294,14 @@
         });
       });
 
-      goTo(0);
-      if (total > 1) startAuto();
+      // El primer goTo no precarga: al abrir la pagina lo unico que tiene que
+      // bajarse es el banner que se ve. El segundo empieza un rato despues,
+      // cuando el resto del inicio ya cargo.
+      goTo(0, false);
+      if (total > 1) {
+        startAuto();
+        setTimeout(precargarSiguiente, 1500);
+      }
     }
 
     iniciarHero();
@@ -302,12 +317,19 @@
         const track = document.getElementById('hero-track');
         if (!track) return;
 
-        track.innerHTML = banners.map(b => {
+        track.innerHTML = banners.map((b, i) => {
           const desktop = b.imagen_desktop || '';
           const mobile  = b.imagen_mobile || desktop;
+          // Solo el primer banner se baja de entrada; los demas recien cuando
+          // el carrusel los va a mostrar. Con 4 banners pesados, cargarlos
+          // todos juntos hacia esperar al visitante por imagenes que todavia
+          // no veia.
+          const carga = i === 0
+            ? 'fetchpriority="high" decoding="async"'
+            : 'loading="lazy" decoding="async"';
           const img = `<picture>
                 <source media="(max-width: 768px)" srcset="${escAtributo(mobile)}">
-                <img class="hero__img" src="${escAtributo(desktop)}" alt="${escAtributo(b.titulo || '')}">
+                <img class="hero__img" src="${escAtributo(desktop)}" alt="${escAtributo(b.titulo || '')}" ${carga}>
               </picture>`;
 
           // Con texto de boton se dibuja el boton y la imagen deja de ser un
