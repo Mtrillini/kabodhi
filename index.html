@@ -285,8 +285,11 @@
           // link (un <a> dentro de otro <a> no es HTML valido).
           const conBoton = b.boton_texto && b.link;
           if (conBoton) {
+            // Cada banner trae su texto a distinta distancia del borde, asi que
+            // el boton se alinea con el de SU banner.
+            const bx = Number.isFinite(+b.boton_x) ? +b.boton_x : 12;
             return `<div class="hero__slide">${img}
-              <a class="hero__btn" href="${escAtributo(b.link)}">
+              <a class="hero__btn" style="left:${bx}%" href="${escAtributo(b.link)}">
                 ${escAtributo(b.boton_texto)}<span class="hero__btn-flecha" aria-hidden="true">&#10230;</span>
               </a>
             </div>`;

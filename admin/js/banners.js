@@ -159,6 +159,7 @@ function valoresEncuadre() {
     return Number.isFinite(n) ? n : porDefecto;
   };
   return {
+    boton_x: leer('f-boton-x', 12),
     foco_x: leer('f-foco-x', 50),
     foco_y: leer('f-foco-y', 50),
     zoom:   leer('f-zoom', 100),
@@ -175,6 +176,8 @@ function aplicarEncuadre() {
   etiqueta('f-foco-x-val', foco_x);
   etiqueta('f-foco-y-val', foco_y);
   etiqueta('f-zoom-val',   zoom);
+  const bx = document.getElementById('f-boton-x');
+  if (bx) etiqueta('f-boton-x-val', parseInt(bx.value));
 
   const img = document.getElementById('preview-encuadre-img');
   if (!img) return;
@@ -188,6 +191,7 @@ function setEncuadre(b) {
   poner('f-foco-x', b && b.foco_x != null ? b.foco_x : 50);
   poner('f-foco-y', b && b.foco_y != null ? b.foco_y : 50);
   poner('f-zoom',   b && b.zoom   != null ? b.zoom   : 100);
+  poner('f-boton-x', b && b.boton_x != null ? b.boton_x : 12);
   aplicarEncuadre();
 }
 
@@ -330,7 +334,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('btn-nuevo-banner')?.addEventListener('click', () => openModal(null));
 
   // Encuadre: la vista previa se actualiza mientras se mueve cada control.
-  ['f-foco-x', 'f-foco-y', 'f-zoom'].forEach(id => {
+  ['f-foco-x', 'f-foco-y', 'f-zoom', 'f-boton-x'].forEach(id => {
     document.getElementById(id)?.addEventListener('input', aplicarEncuadre);
   });
   document.getElementById('btn-encuadre-reset')?.addEventListener('click', () => setEncuadre(null));

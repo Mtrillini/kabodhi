@@ -18,7 +18,7 @@ class BannerController {
     public function index(): void {
         $todos = Auth::isAdmin() && !empty($_GET['all']);
 
-        $sql = "SELECT id, titulo, imagen_desktop, imagen_mobile, link, boton_texto, foco_x, foco_y, zoom, orden, activo
+        $sql = "SELECT id, titulo, imagen_desktop, imagen_mobile, link, boton_texto, foco_x, foco_y, zoom, boton_x, orden, activo
                 FROM banners"
              . ($todos ? '' : ' WHERE activo = 1')
              . ' ORDER BY orden ASC, id ASC';
@@ -58,8 +58,8 @@ class BannerController {
             : (int)$this->db->query("SELECT COALESCE(MAX(orden), 0) + 1 FROM banners")->fetchColumn();
 
         $stmt = $this->db->prepare(
-            "INSERT INTO banners (titulo, imagen_desktop, imagen_mobile, link, boton_texto, foco_x, foco_y, zoom, orden, activo)
-             VALUES (:titulo, :desktop, :mobile, :link, :boton_texto, :foco_x, :foco_y, :zoom, :orden, :activo)"
+            "INSERT INTO banners (titulo, imagen_desktop, imagen_mobile, link, boton_texto, foco_x, foco_y, zoom, boton_x, orden, activo)
+             VALUES (:titulo, :desktop, :mobile, :link, :boton_texto, :foco_x, :foco_y, :zoom, :boton_x, :orden, :activo)"
         );
         $stmt->execute([
             ':titulo'  => trim($body['titulo']),
@@ -72,6 +72,8 @@ class BannerController {
             ':foco_x' => self::porcentaje($body['foco_x'] ?? 50, 0, 100),
             ':foco_y' => self::porcentaje($body['foco_y'] ?? 50, 0, 100),
             ':zoom'   => self::porcentaje($body['zoom']   ?? 100, 100, 200),
+            // Donde arranca el boton, para que quede a la par del texto del banner.
+            ':boton_x' => self::porcentaje($body['boton_x'] ?? 12, 0, 60),
             ':orden'   => $orden,
             ':activo'  => isset($body['activo']) ? (int)$body['activo'] : 1,
         ]);
@@ -116,6 +118,7 @@ class BannerController {
             'foco_x'         => 'foco_x',
             'foco_y'         => 'foco_y',
             'zoom'           => 'zoom',
+            'boton_x'        => 'boton_x',
             'orden'          => 'orden',
             'activo'         => 'activo',
         ];
@@ -127,6 +130,8 @@ class BannerController {
                 $params[":{$columna}"] = (int)$body[$clave];
             } elseif ($clave === 'zoom') {
                 $params[":{$columna}"] = self::porcentaje($body[$clave], 100, 200);
+            } elseif ($clave === 'boton_x') {
+                $params[":{$columna}"] = self::porcentaje($body[$clave], 0, 60);
             } elseif ($clave === 'foco_x' || $clave === 'foco_y') {
                 $params[":{$columna}"] = self::porcentaje($body[$clave], 0, 100);
             } elseif (in_array($clave, ['imagen_mobile', 'link', 'boton_texto'], true)) {
