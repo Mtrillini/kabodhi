@@ -120,6 +120,9 @@ function getFooterHTML() {
         <p class="footer__copy">
           &copy; ${new Date().getFullYear()} KABODHI . Todos los derechos reservados.
         </p>
+        <p class="footer__credito">
+          Hecho por <a href="https://www.margonsoftware.com/" target="_blank" rel="noopener noreferrer">MargonSoftware</a>
+        </p>
       </div>
     </footer>
   `;

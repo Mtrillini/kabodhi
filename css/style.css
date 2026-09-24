@@ -1192,6 +1192,27 @@ h1, h2, h3, h4, h5, h6 {
   letter-spacing: 0.08em;
 }
 
+.footer__credito {
+  font-family: var(--font-secondary);
+  font-size: 0.68rem;
+  font-weight: 400;
+  color: var(--tierra);
+  letter-spacing: 0.06em;
+  margin-top: 0.3rem;
+  padding-bottom: 1rem;
+}
+
+.footer__credito a {
+  color: var(--tierra);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: color var(--transition);
+}
+
+.footer__credito a:hover {
+  color: var(--negro);
+}
+
 /* ============================================================
    BUTTONS
    ============================================================ */
