@@ -1721,6 +1721,20 @@ h1, h2, h3, h4, h5, h6 {
   background: #26506B;
 }
 
+/* El de comprar es la accion principal: macizo, para que se distinga del
+   secundario. Con el relieve claro los dos se veian igual y ninguno invitaba
+   a apretar. */
+.order-summary__btn-primary,
+.checkout-submit__btn {
+  box-shadow: 0 4px 14px rgba(28, 58, 79, 0.18);
+}
+
+.order-summary__btn-primary:active,
+.checkout-submit__btn:active {
+  transform: translateY(1px);
+  box-shadow: 0 2px 8px rgba(28, 58, 79, 0.2);
+}
+
 .order-summary__btn-primary.disabled {
   pointer-events: none;
   opacity: 0.4;
@@ -3996,8 +4010,6 @@ body { padding-top: calc(var(--nav-h) + var(--nav-arch)); }
 .nuve-card__btn,
 .prod-modal__btn,
 .hongos__footer-btn,
-.order-summary__btn-primary,
-.checkout-submit__btn,
 .cart-empty__btn {
   background: linear-gradient(145deg, #ffffff, #e8e8e8);
   color: var(--bosque);
@@ -4013,8 +4025,6 @@ body { padding-top: calc(var(--nav-h) + var(--nav-arch)); }
 .nuve-card__btn:hover,
 .prod-modal__btn:hover,
 .hongos__footer-btn:hover,
-.order-summary__btn-primary:hover,
-.checkout-submit__btn:hover,
 .cart-empty__btn:hover {
   background: linear-gradient(145deg, #ffffff, #e2e2e2);
   color: var(--bosque);
@@ -4027,8 +4037,6 @@ body { padding-top: calc(var(--nav-h) + var(--nav-arch)); }
 .nuve-card__btn:active,
 .prod-modal__btn:active,
 .hongos__footer-btn:active,
-.order-summary__btn-primary:active,
-.checkout-submit__btn:active,
 .cart-empty__btn:active {
   box-shadow:
     inset 4px 4px 9px rgba(28, 58, 79, 0.20),
@@ -4291,7 +4299,7 @@ select.form-input {
   display: block;
   font-family: var(--font-secondary);
   font-size: 0.72rem;
-  color: #3a7a3a;
+  color: var(--champagne);
   margin-top: 0.35rem;
   min-height: 0;
 }
