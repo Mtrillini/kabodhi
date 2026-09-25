@@ -60,6 +60,10 @@ async function fetchConfig() {
       document.getElementById('f-banner-detalles').value = '';
     }
 
+    // Retiro en punto de encuentro
+    document.getElementById('f-retiro-activo').checked = String(cfg.retiro_punto_encuentro_activo) === '1';
+    document.getElementById('f-retiro-info').value = cfg.retiro_punto_encuentro_info || '';
+
     renderEstado(cfg);
   } catch (err) {
     showToast(err.message, 'error');
@@ -122,6 +126,9 @@ async function guardarConfig() {
     nosotros_texto:     document.getElementById('f-nosotros-texto').value.trim(),
     instagram_usuario:  document.getElementById('f-instagram').value.trim(),
     direccion:          document.getElementById('f-direccion').value.trim(),
+
+    retiro_punto_encuentro_activo: document.getElementById('f-retiro-activo').checked ? '1' : '0',
+    retiro_punto_encuentro_info:   document.getElementById('f-retiro-info').value.trim(),
   };
 
   // Banner de detalles: convertir saltos de línea a JSON array.

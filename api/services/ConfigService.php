@@ -56,6 +56,9 @@ class ConfigService {
         // Banner de detalles: JSON con array de strings que se muestran en el
         // ticker animado del sitio. Por defecto vacio (no se muestra banner).
         'banner_detalles'           => '',
+        // Retiro en punto de encuentro: alternativa al envío a domicilio.
+        'retiro_punto_encuentro_activo' => '0',
+        'retiro_punto_encuentro_info'   => '',
     ];
 
     public const ENVIO_MODOS      = ['tabla', 'correo'];

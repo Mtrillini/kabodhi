@@ -238,7 +238,32 @@ class EnvioService {
             'plazo'             => null,
             'requiere_sucursal' => false,
         ]];
+
+        $this->agregarRetiroPuntoEncuentro($resultado);
         return $resultado;
+    }
+
+    private function agregarRetiroPuntoEncuentro(array &$resultado): void {
+        $cfg = (new ConfigService())->getAll();
+        if (($cfg['retiro_punto_encuentro_activo'] ?? '0') !== '1') return;
+        $info = trim($cfg['retiro_punto_encuentro_info'] ?? '');
+        if ($info === '') return;
+
+        $resultado['opciones'][] = [
+            'id'                => 'retiro_punto',
+            'proveedor'         => 'retiro',
+            'tipo_entrega'      => 'retiro',
+            'producto'          => null,
+            'nombre'            => 'Retiro en punto de encuentro',
+            'precio'            => 0.0,
+            'precio_lista'      => 0.0,
+            'bonificado'        => true,
+            'plazo_min'         => null,
+            'plazo_max'         => null,
+            'plazo'             => 'Coordinamos la fecha',
+            'requiere_sucursal' => false,
+            'info_especial'     => $info,
+        ];
     }
 
     private function cotizarCorreo(string $cpDestino, array $bulto, float $subtotal, array $config): array {

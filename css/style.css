@@ -5071,23 +5071,17 @@ body.page-producto { background: var(--blanco); }
 }
 
 .banner-scroll {
-  display: flex;
-  animation: scrollBanner 40s linear infinite;
-  width: max-content;
+  display: inline-flex;
+  animation: scrollBanner 50s linear infinite;
 }
 
 .banner-content {
   flex-shrink: 0;
-  padding: 0 3rem;
+  padding: 0 2rem;
   white-space: nowrap;
-  display: inline-block;
-}
-
-.banner-content:first-child {
-  animation: none;
 }
 
 @keyframes scrollBanner {
   0% { transform: translateX(0); }
-  100% { transform: translateX(calc(-50% - 3rem)); }
+  100% { transform: translateX(-50%); }
 }
