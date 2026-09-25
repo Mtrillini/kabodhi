@@ -137,7 +137,7 @@ function render() {
                     <img src="${escTxt(v.img || fotoPrincipal())}" alt="">
                   </span>
                   <span class="pdp__opcion-nombre">${escTxt(v.nombre)}</span>
-                  <span class="pdp__opcion-stock">${v.stock === 0 ? 'Sin stock' : v.stock + ' disponibles'}</span>
+                  ${v.stock === 0 ? `<span class="pdp__opcion-stock">SIN STOCK</span>` : ''}
                 </button>`).join('')}
             </div>
           </div>` : ''}
@@ -169,10 +169,9 @@ function fotoPrincipal() {
 }
 
 function textoStock() {
-  const s = stockActual();
-  if (s === 0)  return 'Sin stock por el momento.';
-  if (s <= 3)   return `¡Últimas ${s} unidades!`;
-  return `${s} unidades disponibles`;
+  // No se muestra la cantidad de stock (ni "quedan pocas"): solo interesa
+  // si esta disponible o no.
+  return stockActual() === 0 ? 'Sin stock por el momento.' : '';
 }
 
 function actualizarCuotas() {
