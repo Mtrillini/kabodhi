@@ -125,12 +125,15 @@ async function guardarConfig() {
   };
 
   // Banner de detalles: convertir saltos de línea a JSON array.
-  const bannerTextarea = document.getElementById('f-banner-detalles').value.trim();
-  if (bannerTextarea !== '') {
-    const lineas = bannerTextarea.split('\n').map(l => l.trim()).filter(l => l !== '');
-    payload.banner_detalles = JSON.stringify(lineas);
-  } else {
-    payload.banner_detalles = '';
+  const bannerEl = document.getElementById('f-banner-detalles');
+  if (bannerEl) {
+    const bannerTextarea = bannerEl.value.trim();
+    if (bannerTextarea !== '') {
+      const lineas = bannerTextarea.split('\n').map(l => l.trim()).filter(l => l !== '');
+      payload.banner_detalles = JSON.stringify(lineas);
+    } else {
+      payload.banner_detalles = '';
+    }
   }
 
   try {
