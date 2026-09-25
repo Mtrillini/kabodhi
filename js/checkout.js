@@ -251,14 +251,18 @@ async function initTipoEntrega() {
     if (preview) preview.textContent = RETIRO_CONFIG.info;
   }
 
-  // Si ya habia un envio de tipo retiro guardado (volvio de una pestaña
-  // anterior), refleja esa eleccion en el radio.
+  // Si ya habia un envio de tipo retiro guardado (volvio del carrito o de
+  // una pestaña anterior), refleja esa eleccion en el radio Y en el texto
+  // del bloque (antes solo se llenaba al hacer click en el radio a mano,
+  // asi que quedaba vacio si la eleccion venia precargada).
   const envioActual = getEnvioGuardado();
   if (envioActual && envioActual.tipo_entrega === 'retiro' && RETIRO_CONFIG.activo) {
     const radioRetiro = document.querySelector('input[name="tipo-entrega"][value="retiro"]');
     if (radioRetiro) radioRetiro.checked = true;
     marcarTipoEntregaActivo('retiro');
     mostrarBloqueSegunTipoEntrega('retiro');
+    const textoInfo = document.getElementById('retiro-info-texto');
+    if (textoInfo) textoInfo.textContent = envioActual.info_especial || RETIRO_CONFIG.info;
   } else {
     mostrarBloqueSegunTipoEntrega('domicilio');
   }
