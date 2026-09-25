@@ -5072,16 +5072,22 @@ body.page-producto { background: var(--blanco); }
 
 .banner-scroll {
   display: flex;
-  animation: scrollBanner 30s linear infinite;
+  animation: scrollBanner 40s linear infinite;
+  width: max-content;
 }
 
 .banner-content {
   flex-shrink: 0;
-  padding: 0 2rem;
+  padding: 0 3rem;
   white-space: nowrap;
+  display: inline-block;
+}
+
+.banner-content:first-child {
+  animation: none;
 }
 
 @keyframes scrollBanner {
   0% { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
+  100% { transform: translateX(calc(-50% - 3rem)); }
 }
