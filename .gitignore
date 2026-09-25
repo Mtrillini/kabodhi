@@ -12,3 +12,9 @@ vendor/
 
 # Mails guardados en desarrollo (contienen datos de clientes)
 storage/
+
+# Script de alta del primer admin: se usa una vez en el servidor y se borra
+# ahi mismo. No va versionado porque permite crear un usuario con acceso
+# total al panel, y porque si queda en el repo un `git pull` en el hosting
+# choca con el archivo que ya está corriendo ahí (untracked).
+crear-admin.php
