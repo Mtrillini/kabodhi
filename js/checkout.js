@@ -117,7 +117,7 @@ function renderCheckoutSummary() {
       <div id="checkout-cuotas" class="order-summary__cuotas"></div>
       ${PAGO_CONFIG.transferencia.activa && PAGO_CONFIG.transferencia.descuento > 0 ? `
       <div style="font-size:0.7rem;color:#8B7966;margin-top:0.8rem;padding-top:0.8rem;border-top:1px solid #E0D5C0;">
-        ${PAGO_CONFIG.transferencia.descuento}% de descuento en transferencia
+        <strong style="color:#1C3A4F;">${PAGO_CONFIG.transferencia.descuento}% de descuento</strong> en transferencia
       </div>` : ''}
     </div>
   `;

@@ -3577,9 +3577,6 @@ body { padding-top: calc(var(--nav-h) + var(--nav-arch)); }
   .hero { height: 68vh; min-height: 440px; }
   .hero__img { object-position: center; }
   .hero__cta { padding: 0.85rem 2.6rem; font-size: 0.72rem; bottom: 8%; }
-
-  /* Banner de detalles: mas chico para que ocupe menos alto en mobile. */
-  #banner-detalles { font-size: 0.58rem; padding: 0.5rem 0; }
 }
 
 
@@ -5087,6 +5084,10 @@ body.page-producto { background: var(--blanco); }
   overflow: hidden;
   padding: 0.8rem 0;
   white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+  #banner-detalles { font-size: 10px; padding: 0.5rem 0; }
 }
 
 /* js/banner.js mide el ancho real del texto y arma DOS copias identicas de

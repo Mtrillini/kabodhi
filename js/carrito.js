@@ -340,7 +340,7 @@ function renderSummary(carrito) {
       if (!el) return;
       if (cfg.transferencia.activa && cfg.transferencia.descuento > 0) {
         el.innerHTML = `<div style="font-size:0.7rem;color:#8B7966;margin-top:0.8rem;padding-top:0.8rem;border-top:1px solid #E0D5C0;">
-          ${cfg.transferencia.descuento}% de descuento en transferencia
+          <strong style="color:#1C3A4F;">${cfg.transferencia.descuento}% de descuento</strong> en transferencia
         </div>`;
       }
     });

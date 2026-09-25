@@ -187,7 +187,7 @@ async function mostrarDescuentoTransferencia() {
   const cfg = await Pagos.config();
   el.innerHTML = (cfg.transferencia.activa && cfg.transferencia.descuento > 0)
     ? `<div style="font-size:0.75rem;color:#8B7966;margin:0.4rem 0 0.6rem;">
-        ${cfg.transferencia.descuento}% de descuento en transferencia
+        <strong style="color:#1C3A4F;">${cfg.transferencia.descuento}% de descuento</strong> en transferencia
       </div>`
     : '';
 }
