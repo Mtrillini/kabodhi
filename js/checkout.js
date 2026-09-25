@@ -409,13 +409,26 @@ async function cotizarEnCheckout() {
       return;
     }
 
+    // El retiro en punto de encuentro ya se elige en el primer paso del
+    // checkout (arriba de "Tus datos"): si volviera a aparecer aca, dentro
+    // de la lista de opciones de "Envío a domicilio", quedaria duplicado.
+    const opciones = r.opciones.filter(o => o.id !== 'retiro_punto');
+    if (!opciones.length) {
+      if (msg) msg.textContent = 'No hay envíos disponibles para ese código postal.';
+      if (box) box.innerHTML = '';
+      window.Envio.clear();
+      renderCheckoutSummary();
+      aplicarTipoEntrega();
+      return;
+    }
+
     const previa  = window.Envio.get();
-    const elegida = r.opciones.find(o => previa && o.id === previa.opcion_id && previa.cp === r.cp) || r.opciones[0];
+    const elegida = opciones.find(o => previa && o.id === previa.opcion_id && previa.cp === r.cp) || opciones[0];
     window.Envio.elegir(r.cp, elegida);
-    if (msg) msg.textContent = r.aviso || (r.opciones.length > 1 ? 'Elegí cómo querés recibirlo:' : '');
+    if (msg) msg.textContent = r.aviso || (opciones.length > 1 ? 'Elegí cómo querés recibirlo:' : '');
 
     if (box) {
-      window.Envio.renderOpciones(box, r.opciones, elegida.id, opcion => {
+      window.Envio.renderOpciones(box, opciones, elegida.id, opcion => {
         window.Envio.elegir(r.cp, opcion);
         renderCheckoutSummary();
         aplicarTipoEntrega();
