@@ -112,7 +112,9 @@ const Envio = {
         </span>
         <span class="envio-opcion__precio">
           ${o.bonificado
-            ? `<s style="color:#999;font-weight:400;">${fmt(o.precio_lista)}</s> Gratis`
+            ? (o.precio_lista > 0
+                ? `<s style="color:#999;font-weight:400;">${fmt(o.precio_lista)}</s>&nbsp;Gratis`
+                : 'Gratis')
             : fmt(o.precio)}
         </span>
       </label>

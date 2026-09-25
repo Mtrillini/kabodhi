@@ -4234,7 +4234,7 @@ body { padding-top: calc(var(--nav-h) + var(--nav-arch)); }
 
 .envio-opcion {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.7rem;
   padding: 0.7rem 0.9rem;
   border: 1px solid #DBCFBB;
@@ -4253,12 +4253,15 @@ body { padding-top: calc(var(--nav-h) + var(--nav-arch)); }
   background: rgba(28, 58, 79, 0.05);
 }
 
+/* align-items: flex-start deja el radio y el precio arriba de todo; este
+   margin los baja para que queden a la altura de la primera linea de texto
+   (el nombre), sea cual sea la cantidad de lineas que tenga cada opcion. */
 .envio-opcion input[type="radio"] {
   accent-color: #1C3A4F;
   width: 16px;
   height: 16px;
   flex-shrink: 0;
-  margin: 0;
+  margin: 0.1rem 0 0;
 }
 
 .envio-opcion__texto {
@@ -4279,6 +4282,7 @@ body { padding-top: calc(var(--nav-h) + var(--nav-arch)); }
 .envio-opcion__precio {
   font-weight: 600;
   white-space: nowrap;
+  margin-top: 0.1rem;
 }
 
 select.form-input {
