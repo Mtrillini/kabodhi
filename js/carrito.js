@@ -313,6 +313,7 @@ function renderSummary(carrito) {
         <span>${fmt(total)}</span>
       </div>
       <div id="cart-cuotas" class="order-summary__cuotas"></div>
+      <div id="cart-descuento-transferencia"></div>
       <div class="order-summary__actions">
         ${IS_STATIC
           ? `<button onclick="pedirPorWhatsApp()" class="order-summary__btn-primary${isEmpty ? ' disabled' : ''}">
@@ -331,6 +332,19 @@ function renderSummary(carrito) {
 
   // Cuotas sin interes de Mercado Pago para el total.
   if (window.Pagos && !isEmpty && !IS_STATIC) Pagos.renderCuotas(document.getElementById('cart-cuotas'), total);
+
+  // Aviso del descuento por transferencia (mismo texto que en el checkout).
+  if (window.Pagos && !isEmpty && !IS_STATIC) {
+    Pagos.config().then(cfg => {
+      const el = document.getElementById('cart-descuento-transferencia');
+      if (!el) return;
+      if (cfg.transferencia.activa && cfg.transferencia.descuento > 0) {
+        el.innerHTML = `<div style="font-size:0.7rem;color:#8B7966;margin-top:0.8rem;padding-top:0.8rem;border-top:1px solid #E0D5C0;">
+          ${cfg.transferencia.descuento}% de descuento en transferencia
+        </div>`;
+      }
+    });
+  }
 
   // Allow Enter key in CP input
   const cpInput = document.getElementById('cp-envio-input');
