@@ -122,6 +122,7 @@ function render() {
           <span class="pdp__precio" id="pdp-precio">${fmtPrecio(precioActual())}</span>
           <span class="pdp__cuotas" id="pdp-cuotas"></span>
         </div>
+        <div id="pdp-descuento-transferencia"></div>
 
         ${p.descripcion ? `<p class="pdp__desc">${escTxt(p.descripcion)}</p>` : ''}
 
@@ -176,6 +177,19 @@ function textoStock() {
 
 function actualizarCuotas() {
   if (window.Pagos) Pagos.renderCuotas(document.getElementById('pdp-cuotas'), precioActual());
+  mostrarDescuentoTransferencia();
+}
+
+// Aviso del descuento por transferencia (mismo texto que carrito/checkout).
+async function mostrarDescuentoTransferencia() {
+  const el = document.getElementById('pdp-descuento-transferencia');
+  if (!el || !window.Pagos) return;
+  const cfg = await Pagos.config();
+  el.innerHTML = (cfg.transferencia.activa && cfg.transferencia.descuento > 0)
+    ? `<div style="font-size:0.75rem;color:#8B7966;margin:0.4rem 0 0.6rem;">
+        ${cfg.transferencia.descuento}% de descuento en transferencia
+      </div>`
+    : '';
 }
 
 function enlazarEventos() {
