@@ -111,6 +111,25 @@ $seg0     = $segments[0] ?? '';
 $seg1     = $segments[1] ?? '';
 $seg2     = $segments[2] ?? '';
 
+// ---------------------------------------------------------------------
+// 4b. Cache corto para catalogo publico
+// ---------------------------------------------------------------
+// session_start() deja el "cache limiter" de PHP en nocache, que manda
+// Cache-Control: no-store en TODAS las respuestas (incluidas las de solo
+// lectura que no dependen de sesion). En la practica, cada navegacion entre
+// paginas volvia a pedir productos/config/hongos/promos/banners desde cero,
+// sin que el navegador pudiera reusar nada.
+//
+// Estas rutas son publicas, de solo lectura, y no cambian segundo a
+// segundo, asi que un cache corto (30s) evita esas repeticiones sin
+// arriesgar mostrar algo muy desactualizado. El admin logueado en el
+// panel sigue recibiendo no-cache siempre: necesita ver sus propios
+// cambios al instante al probarlos.
+$rutasCacheables = ['productos', 'hongos', 'promos', 'banners', 'configuracion', 'faq'];
+if ($method === 'GET' && in_array($seg0, $rutasCacheables, true) && !Auth::isAdmin()) {
+    header('Cache-Control: public, max-age=30');
+}
+
 // ---------------------------------------------------------------
 // 5. Router
 // ---------------------------------------------------------------

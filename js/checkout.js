@@ -235,12 +235,13 @@ let RETIRO_CONFIG = { activo: false, info: '' };
  * ni se muestra y el checkout funciona como antes.
  */
 async function initTipoEntrega() {
+  // config.js ya pide /configuracion una sola vez para toda la pagina (queda
+  // en CONFIG_TIENDA): se espera esa misma promesa en vez de volver a pedirla.
   try {
-    const res  = await fetch(API_URL + '/configuracion');
-    const json = await res.json();
-    if (json.success && json.data) {
-      RETIRO_CONFIG.activo = String(json.data.retiro_punto_encuentro_activo) === '1';
-      RETIRO_CONFIG.info   = (json.data.retiro_punto_encuentro_info || '').trim();
+    if (typeof configLista !== 'undefined') await configLista;
+    if (typeof CONFIG_TIENDA !== 'undefined') {
+      RETIRO_CONFIG.activo = String(CONFIG_TIENDA.retiro_punto_encuentro_activo) === '1';
+      RETIRO_CONFIG.info   = (CONFIG_TIENDA.retiro_punto_encuentro_info || '').trim();
     }
   } catch (e) { /* si falla, el checkout sigue con envío a domicilio nomas */ }
 

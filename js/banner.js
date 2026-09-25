@@ -5,29 +5,17 @@
 // ============================================================
 
 async function loadBannerDetalles() {
+  // config.js ya pide /configuracion una sola vez para toda la pagina y la
+  // deja en CONFIG_TIENDA: banner.js espera esa misma promesa en vez de
+  // volver a pedirla (evita una llamada a la API duplicada en cada pagina).
   try {
-    // Los detalles viven en la config general (clave banner_detalles, JSON array).
-    const res = await fetch(API_URL + '/configuracion');
-    if (res.ok) {
-      const json = await res.json();
-      const bd = json.success && json.data ? json.data.banner_detalles : null;
-      if (typeof bd === 'string' && bd.trim() !== '') {
-        try {
-          const arr = JSON.parse(bd);
-          if (Array.isArray(arr)) {
-            return arr.map(d => String(d).trim()).filter(Boolean);
-          }
-        } catch (e) { }
-      }
-    }
-  } catch (e) {
-    // Silenciosamente falla y cae al fallback.
-  }
+    if (typeof configLista !== 'undefined') await configLista;
+  } catch (e) { /* si config.js fallo, se sigue igual: CONFIG_TIENDA queda {} */ }
 
-  // Fallback: si la pagina expone CONFIG_TIENDA con el mismo dato (demo estatica).
-  if (typeof CONFIG_TIENDA !== 'undefined' && CONFIG_TIENDA.banner_detalles) {
+  const bd = typeof CONFIG_TIENDA !== 'undefined' ? CONFIG_TIENDA.banner_detalles : null;
+  if (typeof bd === 'string' && bd.trim() !== '') {
     try {
-      const arr = JSON.parse(CONFIG_TIENDA.banner_detalles);
+      const arr = JSON.parse(bd);
       if (Array.isArray(arr)) return arr.map(d => String(d).trim()).filter(Boolean);
     } catch (e) { }
   }
