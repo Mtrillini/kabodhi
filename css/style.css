@@ -4758,15 +4758,22 @@ body.page-producto { background: var(--blanco); }
   padding: 3rem 0;
 }
 
+/* flex en vez de grid: con grid de columnas fijas, un solo combo (o dos)
+   quedaba pegado a la izquierda porque igual ocupaba las 3 columnas del
+   contenedor. Con flex + justify-content:center, las cards mantienen un
+   ancho propio y wrappean centradas sea cual sea la cantidad. */
 .promos-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: 1.5rem;
 }
 
 .promo-card {
   display: flex;
   flex-direction: column;
+  flex: 1 1 300px;
+  max-width: 360px;
   background: var(--blanco);
   border: 1px solid var(--arena);
   border-radius: 8px;
@@ -4950,17 +4957,18 @@ body.page-producto { background: var(--blanco); }
 .cart-item--combo .cart-item__combo-lista li::before { content: "· "; }
 
 @media (max-width: 860px) {
-  .promos-grid { grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+  .promos-grid { gap: 1rem; }
+  .promo-card { flex-basis: 260px; }
   .promo-armador { padding: 1.2rem 1.2rem 5rem; }
+}
+
+@media (max-width: 520px) {
+  .promo-card { flex-basis: 100%; max-width: 420px; }
 }
 
 @media (max-width: 480px) {
   .promo-item { flex-direction: column; }
   .promo-item__img-wrap { width: 100%; height: 140px; }
-}
-
-@media (max-width: 520px) {
-  .promos-grid { grid-template-columns: 1fr; }
 }
 
 /* ---- Combos y ofertas (seccion del home) ---- */
