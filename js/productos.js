@@ -99,6 +99,29 @@ async function fetchAllProductos() {
   }
 }
 
+// ---- Combos: se listan aparte, con su propio filtro "Combos" ----
+let PROMOS = [];
+const COMBOS_SLUG = '__combos__';
+
+async function fetchAllPromos() {
+  try {
+    const json = await loadPromosData();
+    if (!json.success) throw new Error(json.message);
+    PROMOS = (json.data || []).filter(p => p.activo === undefined || parseInt(p.activo) === 1);
+  } catch (e) {
+    console.error('Error cargando combos:', e);
+    PROMOS = [];
+  }
+}
+
+/** Imagen del combo: la que cargo el admin o, si no hay, la del primer producto que lo forma. */
+function imagenCombo(promo) {
+  if (promo.imagen_url) return promo.imagen_url;
+  const primerId = (promo.producto_ids || [])[0];
+  const p = PRODUCTOS.find(x => parseInt(x.id) === parseInt(primerId));
+  return p ? (p.img || (p.imagenes && p.imagenes[0]) || '') : '';
+}
+
 // ---- Render cards (productos.html) ----
 function renderProductos(lista) {
   const container = document.getElementById('productos-grid');
@@ -143,6 +166,44 @@ function renderProductos(lista) {
   if (window.observeReveals) window.observeReveals(container);
 }
 
+// ---- Render cards de combos (mismo layout que las de producto) ----
+function renderCombos(lista) {
+  const container = document.getElementById('productos-grid');
+  if (!container) return;
+
+  const count = document.getElementById('result-count');
+  if (count) count.textContent = `${lista.length} combo${lista.length !== 1 ? 's' : ''}`;
+
+  if (!lista.length) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state__title">Por ahora no hay combos activos</div>
+        <p class="empty-state__text">Volvé pronto o mirá el resto de los productos.</p>
+      </div>`;
+    return;
+  }
+
+  container.innerHTML = lista.map(p => {
+    const img = imagenCombo(p);
+    const ficha = `${PAGES_BASE}/promo?id=${p.id}`;
+    return `
+    <div class="nuve-card reveal reveal--up" onclick="window.location.href='${ficha}'">
+      <div class="nuve-card__img-wrap">
+        ${img ? `<img class="card-slider__img" src="${escAttr(img)}" alt="${escAttr(p.nombre)}" loading="lazy">` : ''}
+      </div>
+      <div class="nuve-card__body">
+        <div class="nuve-card__nombre">${escTexto(p.nombre)}</div>
+        <div class="nuve-card__tipo">Incluye ${p.cantidad_items} productos</div>
+        <div class="nuve-card__precio">${fmt(parseFloat(p.precio))}</div>
+        <a class="nuve-card__btn" href="${ficha}" onclick="event.stopPropagation();">VER COMBO</a>
+      </div>
+    </div>
+  `;
+  }).join('');
+
+  if (window.observeReveals) window.observeReveals(container);
+}
+
 // ---- Filtro + sort ----
 let generoActivo = '';
 let categoriaActiva = document.body.dataset.categoria || '';
@@ -158,9 +219,10 @@ function renderFiltrosCategoria() {
   PRODUCTOS.forEach(p => {
     if (p.categoria_slug) categorias.set(p.categoria_slug, p.categoria_nombre || p.categoria_slug);
   });
+  const hayCombos = PROMOS.length > 0;
 
-  // Con una sola categoria el filtro no filtra nada: no se muestra.
-  if (categorias.size < 2) {
+  // Con una sola categoria y sin combos, el filtro no filtra nada: no se muestra.
+  if (categorias.size < 2 && !hayCombos) {
     cont.innerHTML = '';
     cont.style.display = 'none';
     return;
@@ -168,6 +230,8 @@ function renderFiltrosCategoria() {
 
   const ordenadas = [...categorias.entries()].sort((a, b) => a[1].localeCompare(b[1], 'es'));
   const opciones  = [['', 'Todos'], ...ordenadas];
+  // "Combos" va siempre al final, aparte de las categorias de producto.
+  if (hayCombos) opciones.push([COMBOS_SLUG, 'Combos']);
 
   cont.style.display = '';
   cont.innerHTML = opciones.map(([slug, nombre]) => `
@@ -185,9 +249,10 @@ function seleccionarCategoria(slug) {
   categoriaActiva = slug || '';
 
   // La URL acompaña al filtro: asi el link se puede compartir y es el mismo
-  // formato que usan los botones de los banners (?categoria=velas).
+  // formato que usan los botones de los banners (?categoria=velas). Combos
+  // usa el alias "combos" en la URL en vez del slug interno.
   const url = new URL(window.location.href);
-  if (categoriaActiva) url.searchParams.set('categoria', categoriaActiva);
+  if (categoriaActiva) url.searchParams.set('categoria', categoriaActiva === COMBOS_SLUG ? 'combos' : categoriaActiva);
   else                 url.searchParams.delete('categoria');
   history.replaceState(null, '', url);
 
@@ -198,6 +263,18 @@ function seleccionarCategoria(slug) {
 function aplicarFiltros() {
   const search = (document.getElementById('search-input')?.value || '').toLowerCase();
   const sort   = document.getElementById('sort-select')?.value || 'recent';
+
+  // El filtro "Combos" reemplaza la grilla entera: los combos no tienen
+  // categoria/genero, asi que se listan aparte en vez de mezclarse.
+  if (categoriaActiva === COMBOS_SLUG) {
+    let combos = PROMOS.filter(p => p.nombre.toLowerCase().includes(search));
+    const precioNum = p => parseFloat(p.precio);
+    if (sort === 'price-asc')  combos.sort((a, b) => precioNum(a) - precioNum(b));
+    if (sort === 'price-desc') combos.sort((a, b) => precioNum(b) - precioNum(a));
+    if (sort === 'name')       combos.sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
+    renderCombos(combos);
+    return;
+  }
 
   let lista = PRODUCTOS.filter(p => {
     const matchSearch    = p.nombre.toLowerCase().includes(search);
@@ -534,12 +611,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (generoUrl) {
     generoActivo = generoUrl;
   } else if (categoriaUrl) {
-    categoriaActiva = categoriaUrl;
+    // ?categoria=combos es el alias amigable de compartir/linkear para el
+    // filtro de combos (ver seleccionarCategoria, que arma la URL al reves).
+    categoriaActiva = categoriaUrl === 'combos' ? COMBOS_SLUG : categoriaUrl;
   }
 
   // Only fetch + render grid on productos.html
   if (document.getElementById('productos-grid')) {
-    await fetchAllProductos();
+    await Promise.all([fetchAllProductos(), fetchAllPromos()]);
     renderFiltrosCategoria();
     aplicarFiltros();
 
