@@ -3568,15 +3568,18 @@ body { padding-top: calc(var(--nav-h) + var(--nav-arch)); }
   .navbar__hamburger { display: flex; }
 }
 @media (max-width: 768px) {
-  :root { --nav-h: 60px; --nav-arch: 26px; }
+  :root { --nav-h: 68px; --nav-arch: 26px; }
   .navbar { padding: 0 1rem; }
-  .navbar__logo-circle { height: 38px; }
-  .navbar__logo-name { height: 22px; }
+  .navbar__logo-circle { height: 50px; }
+  .navbar__logo-name { height: 30px; }
   .navbar__logo-link { gap: 8px; }
   .navbar__icons { gap: 1rem; }
   .hero { height: 68vh; min-height: 440px; }
   .hero__img { object-position: center; }
   .hero__cta { padding: 0.85rem 2.6rem; font-size: 0.72rem; bottom: 8%; }
+
+  /* Banner de detalles: mas chico para que ocupe menos alto en mobile. */
+  #banner-detalles { font-size: 0.58rem; padding: 0.5rem 0; }
 }
 
 
