@@ -6,12 +6,20 @@
 
 async function loadBannerDetalles() {
   try {
-    // Primero intenta cargar desde la API.
-    const res = await fetch(API_URL + '/config/banner-detalles');
+    // Primero intenta cargar desde la API: busca banner_detalles en la config general.
+    const res = await fetch(API_URL + '/configuracion');
     if (res.ok) {
       const json = await res.json();
-      if (json.success && json.detalles && Array.isArray(json.detalles)) {
-        return json.detalles.filter(d => d && String(d).trim() !== '');
+      if (json.success && json.data && json.data.banner_detalles) {
+        const bd = json.data.banner_detalles;
+        if (typeof bd === 'string' && bd.trim() !== '') {
+          try {
+            const arr = JSON.parse(bd);
+            if (Array.isArray(arr)) {
+              return arr.filter(d => d && String(d).trim() !== '');
+            }
+          } catch (e) { }
+        }
       }
     }
   } catch (e) {
