@@ -281,7 +281,7 @@ function renderSummary(carrito) {
           <span>${envio ? (envio.bonificado ? 'Gratis' : fmt(envioTotal)) : '—'}</span>
         </div>
         ${envio && !cotizacion ? `<div style="font-size:0.7rem;color:#888;margin-bottom:0.5rem;">${window.Envio.descripcion(envio)} (CP ${envio.cp})</div>` : ''}
-        <div style="display:flex;gap:0.5rem;align-items:center;">
+        <div style="display:flex;flex-wrap:wrap;gap:0.5rem;align-items:center;">
           <input
             type="text"
             id="cp-envio-input"
@@ -289,17 +289,17 @@ function renderSummary(carrito) {
             maxlength="8"
             inputmode="numeric"
             value="${envio ? envio.cp : ''}"
-            style="flex:1;padding:0.75rem 0.9rem;border:1px solid #d6c6ad;border-radius:999px;font-family:inherit;font-size:0.85rem;min-height:44px;outline:none;"
+            style="flex:1 1 120px;min-width:0;padding:0.75rem 0.9rem;border:1px solid #d6c6ad;border-radius:999px;font-family:inherit;font-size:0.85rem;min-height:44px;outline:none;"
           >
           <button
             onclick="calcularEnvioCarrito()"
-            style="padding:0.75rem 1.3rem;background:#1C3A4F;color:#F5F1E8;border:1px solid #1C3A4F;border-radius:999px;font-family:inherit;font-size:0.78rem;font-weight:600;letter-spacing:1px;min-height:44px;cursor:pointer;white-space:nowrap;"
+            style="flex:0 0 auto;padding:0.75rem 1.1rem;background:#1C3A4F;color:#F5F1E8;border:1px solid #1C3A4F;border-radius:999px;font-family:inherit;font-size:0.78rem;font-weight:600;letter-spacing:1px;min-height:44px;cursor:pointer;white-space:nowrap;"
           >Calcular</button>
           ${envio ? `
           <button
             onclick="limpiarEnvioCarrito()"
             title="Limpiar código postal"
-            style="padding:0.75rem 1.1rem;background:transparent;color:#888;border:1px solid #d6c6ad;border-radius:999px;font-family:inherit;font-size:0.78rem;min-height:44px;cursor:pointer;white-space:nowrap;"
+            style="flex:0 0 auto;padding:0.75rem 1rem;background:transparent;color:#888;border:1px solid #d6c6ad;border-radius:999px;font-family:inherit;font-size:0.78rem;min-height:44px;cursor:pointer;white-space:nowrap;"
           >Limpiar</button>
           ` : ''}
         </div>
