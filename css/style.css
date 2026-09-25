@@ -5064,24 +5064,32 @@ body.page-producto { background: var(--blanco); }
   color: #F5F1E8;
   font-family: var(--font-secondary);
   font-size: 0.7rem;
+  font-weight: 600;
   letter-spacing: 1.5px;
   text-transform: uppercase;
   overflow: hidden;
   padding: 0.8rem 0;
+  white-space: nowrap;
 }
 
+/* js/banner.js mide el ancho real del texto y arma DOS copias identicas de
+   un bloque ya repetido lo suficiente como para llenar la pantalla; por eso
+   translateX(-50%) siempre cae justo donde termina la copia 1 y empieza la
+   copia 2 (mismo contenido, mismo ancho), sin importar cuanto texto haya. */
 .banner-scroll {
-  display: flex;
-  animation: scrollBanner 45s linear infinite;
-  gap: 0;
+  display: inline-block;
+  animation-name: scrollBanner;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  white-space: nowrap;
 }
 
 .banner-content {
-  flex-shrink: 0;
+  display: inline;
   white-space: nowrap;
 }
 
 @keyframes scrollBanner {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(calc(-200% / 3)); }
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
 }
