@@ -5068,22 +5068,20 @@ body.page-producto { background: var(--blanco); }
   text-transform: uppercase;
   overflow: hidden;
   padding: 0.8rem 0;
-  line-height: 1;
 }
 
 .banner-scroll {
   display: flex;
-  animation: scrollBanner 60s linear infinite;
-  will-change: transform;
+  animation: scrollBanner 45s linear infinite;
+  gap: 0;
 }
 
 .banner-content {
   flex-shrink: 0;
   white-space: nowrap;
-  padding-right: 3rem;
 }
 
 @keyframes scrollBanner {
   0% { transform: translateX(0); }
-  100% { transform: translateX(calc(-100% / 2)); }
+  100% { transform: translateX(calc(-100% / 3)); }
 }

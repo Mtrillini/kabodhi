@@ -50,15 +50,13 @@ async function renderBanner() {
   }
 
   const texto = detalles.map(d => d.trim()).filter(Boolean).join(' — ');
+  const textoConEspacios = texto + ' · ';
 
   cont.innerHTML = `
     <div class="banner-scroll">
-      <div class="banner-content">
-        ${texto}
-      </div>
-      <div class="banner-content" aria-hidden="true">
-        ${texto}
-      </div>
+      <div class="banner-content">${textoConEspacios}</div>
+      <div class="banner-content">${textoConEspacios}</div>
+      <div class="banner-content" aria-hidden="true">${textoConEspacios}</div>
     </div>
   `;
 
