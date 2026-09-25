@@ -82,6 +82,8 @@ const Envio = {
       sucursal_codigo:   mismaSucursal ? previo.sucursal_codigo : null,
       sucursal_nombre:   mismaSucursal ? previo.sucursal_nombre : null,
       provincia:         previo.provincia || null,
+      // Retiro en punto de encuentro: la direccion/horario que cargo el admin.
+      info_especial:     opcion.info_especial || null,
     });
   },
 
@@ -106,6 +108,7 @@ const Envio = {
           <span class="envio-opcion__nombre">${Envio._esc(o.nombre)}</span>
           ${o.plazo ? `<span class="envio-opcion__plazo">${Envio._esc(o.plazo)}</span>` : ''}
           ${o.requiere_sucursal ? `<span class="envio-opcion__plazo">Elegís la sucursal al finalizar la compra.</span>` : ''}
+          ${o.info_especial ? `<span class="envio-opcion__plazo" style="white-space:pre-line;">${Envio._esc(o.info_especial)}</span>` : ''}
         </span>
         <span class="envio-opcion__precio">
           ${o.bonificado

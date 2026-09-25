@@ -45,9 +45,30 @@
         </div>
       </div>
 
-      <h2 class="checkout-form__title">Tus datos</h2>
+      <h2 class="checkout-form__title">¿Cómo querés recibir tu pedido?</h2>
 
       <form id="checkout-form" novalidate>
+
+        <div class="envio-opciones" id="tipo-entrega-opciones">
+          <label class="envio-opcion envio-opcion--activa" id="opcion-tipo-domicilio">
+            <input type="radio" name="tipo-entrega" value="domicilio" checked>
+            <span class="envio-opcion__texto">
+              <span class="envio-opcion__nombre">Envío a domicilio</span>
+              <span class="envio-opcion__plazo">Calculamos el costo según tu código postal</span>
+            </span>
+          </label>
+          <label class="envio-opcion" id="opcion-tipo-retiro" hidden>
+            <input type="radio" name="tipo-entrega" value="retiro">
+            <span class="envio-opcion__texto">
+              <span class="envio-opcion__nombre">Retiro en punto de encuentro</span>
+              <span class="envio-opcion__plazo" id="retiro-info-preview" style="white-space:pre-line;"></span>
+            </span>
+            <span class="envio-opcion__precio">Gratis</span>
+          </label>
+        </div>
+
+        <h2 class="checkout-form__title" style="margin-top:2rem;">Tus datos</h2>
+
         <div class="form-grid">
 
           <div class="form-group">
@@ -86,6 +107,7 @@
 
         </div>
 
+        <div id="bloque-envio-domicilio">
         <h2 class="checkout-form__title" style="margin-top:2rem;">Envío</h2>
 
         <div class="form-grid">
@@ -150,6 +172,15 @@
           </div>
 
         </div>
+        </div>
+
+        <!-- Retiro en punto de encuentro: reemplaza todo el bloque de arriba -->
+        <div id="bloque-retiro-info" hidden style="margin-top:2rem;">
+          <h2 class="checkout-form__title">Punto de encuentro</h2>
+          <div class="form-group form-group--full" style="background:#F5F1E8;border:1px solid #E7DECD;border-radius:6px;padding:1rem 1.25rem;">
+            <p style="white-space:pre-line;font-size:0.85rem;color:var(--negro);margin:0;" id="retiro-info-texto"></p>
+          </div>
+        </div>
 
         <h2 class="checkout-form__title" style="margin-top:2rem;">Forma de pago</h2>
 
@@ -197,8 +228,8 @@
   <script src="js/main.js?v=47"></script>
   <script src="js/carrito.js?v=65"></script>
   <script src="js/pagos.js?v=2"></script>
-  <script src="js/envio.js?v=3"></script>
-  <script src="js/checkout.js?v=40"></script>
+  <script src="js/envio.js?v=4"></script>
+  <script src="js/checkout.js?v=41"></script>
   <script src="js/banner.js?v=4"></script>
 </body>
 </html>

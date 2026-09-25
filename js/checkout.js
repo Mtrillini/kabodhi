@@ -79,7 +79,9 @@ function renderCheckoutSummary() {
   }).join('');
 
   let envioDetalle = '';
-  if (envio) {
+  if (envio && envio.tipo_entrega === 'retiro') {
+    envioDetalle = `<div style="font-size:0.7rem;color:#888;margin-bottom:0.4rem;white-space:pre-line;">Retiro en punto de encuentro${envio.info_especial ? ': ' + window.Envio._esc(envio.info_especial) : ''}</div>`;
+  } else if (envio) {
     envioDetalle = `<div style="font-size:0.7rem;color:#888;margin-bottom:0.4rem;">${window.Envio.descripcion(envio)} (CP ${envio.cp})</div>`;
     if (envio.requiere_sucursal) {
       envioDetalle += `<div style="font-size:0.7rem;color:#888;margin-bottom:0.4rem;">${
@@ -201,15 +203,18 @@ async function initFormaPago() {
 function aplicarTipoEntrega() {
   const envio     = getEnvioGuardado();
   const sucursal  = !!(envio && envio.requiere_sucursal);
+  const retiro    = !!(envio && envio.tipo_entrega === 'retiro');
   const domicilio = ['grupo-calle', 'grupo-numero', 'grupo-piso', 'grupo-ciudad'];
 
+  // Retiro en punto de encuentro: no hace falta domicilio ni sucursal, el
+  // lugar ya lo puso el admin y se muestra en el resumen del pedido.
   domicilio.forEach(id => {
     const g = document.getElementById(id);
     if (!g) return;
-    g.hidden = sucursal;
+    g.hidden = sucursal || retiro;
     g.querySelectorAll('input').forEach(i => {
       if (i.id === 'piso_depto') return;
-      i.required = !sucursal;
+      i.required = !sucursal && !retiro;
     });
   });
 
@@ -219,6 +224,113 @@ function aplicarTipoEntrega() {
   if (sel) sel.required = sucursal;
 
   if (sucursal) cargarSucursales();
+}
+
+/** Config del retiro en punto de encuentro (activo + info), leida una vez. */
+let RETIRO_CONFIG = { activo: false, info: '' };
+
+/**
+ * Primer paso del checkout: elegir entre envío a domicilio o retiro en
+ * punto de encuentro. Si el retiro no está activado en el panel, la opción
+ * ni se muestra y el checkout funciona como antes.
+ */
+async function initTipoEntrega() {
+  try {
+    const res  = await fetch(API_URL + '/configuracion');
+    const json = await res.json();
+    if (json.success && json.data) {
+      RETIRO_CONFIG.activo = String(json.data.retiro_punto_encuentro_activo) === '1';
+      RETIRO_CONFIG.info   = (json.data.retiro_punto_encuentro_info || '').trim();
+    }
+  } catch (e) { /* si falla, el checkout sigue con envío a domicilio nomas */ }
+
+  const opcionRetiro = document.getElementById('opcion-tipo-retiro');
+  if (RETIRO_CONFIG.activo && RETIRO_CONFIG.info !== '' && opcionRetiro) {
+    opcionRetiro.hidden = false;
+    const preview = document.getElementById('retiro-info-preview');
+    if (preview) preview.textContent = RETIRO_CONFIG.info;
+  }
+
+  // Si ya habia un envio de tipo retiro guardado (volvio de una pestaña
+  // anterior), refleja esa eleccion en el radio.
+  const envioActual = getEnvioGuardado();
+  if (envioActual && envioActual.tipo_entrega === 'retiro' && RETIRO_CONFIG.activo) {
+    const radioRetiro = document.querySelector('input[name="tipo-entrega"][value="retiro"]');
+    if (radioRetiro) radioRetiro.checked = true;
+    marcarTipoEntregaActivo('retiro');
+    mostrarBloqueSegunTipoEntrega('retiro');
+  } else {
+    mostrarBloqueSegunTipoEntrega('domicilio');
+  }
+
+  document.querySelectorAll('input[name="tipo-entrega"]').forEach(input => {
+    input.addEventListener('change', () => {
+      marcarTipoEntregaActivo(input.value);
+      if (input.value === 'retiro') {
+        seleccionarRetiroPunto();
+      } else {
+        volverAEnvioDomicilio();
+      }
+    });
+  });
+}
+
+function marcarTipoEntregaActivo(valor) {
+  document.querySelectorAll('#tipo-entrega-opciones .envio-opcion').forEach(l => l.classList.remove('envio-opcion--activa'));
+  const input = document.querySelector(`input[name="tipo-entrega"][value="${valor}"]`);
+  input?.closest('.envio-opcion')?.classList.add('envio-opcion--activa');
+}
+
+function mostrarBloqueSegunTipoEntrega(valor) {
+  const bloqueEnvio  = document.getElementById('bloque-envio-domicilio');
+  const bloqueRetiro = document.getElementById('bloque-retiro-info');
+  if (bloqueEnvio)  bloqueEnvio.hidden  = valor === 'retiro';
+  if (bloqueRetiro) bloqueRetiro.hidden = valor !== 'retiro';
+}
+
+/** El retiro es gratis y fijo: se guarda directo, sin pasar por /envios/cotizar. */
+function seleccionarRetiroPunto() {
+  mostrarBloqueSegunTipoEntrega('retiro');
+
+  const textoInfo = document.getElementById('retiro-info-texto');
+  if (textoInfo) textoInfo.textContent = RETIRO_CONFIG.info;
+
+  window.Envio.set({
+    cp: null,
+    opcion_id:         'retiro_punto',
+    proveedor:          'retiro',
+    tipo_entrega:       'retiro',
+    producto:           null,
+    nombre:             'Retiro en punto de encuentro',
+    precio:             0,
+    precio_lista:       0,
+    bonificado:         true,
+    plazo:              'Coordinamos la fecha',
+    requiere_sucursal:  false,
+    sucursal_codigo:    null,
+    sucursal_nombre:    null,
+    provincia:          null,
+    info_especial:      RETIRO_CONFIG.info,
+  });
+
+  renderCheckoutSummary();
+}
+
+/** Vuelve al flujo normal: si habia un CP cargado, se vuelve a cotizar. */
+function volverAEnvioDomicilio() {
+  mostrarBloqueSegunTipoEntrega('domicilio');
+
+  const envioActual = getEnvioGuardado();
+  if (envioActual && envioActual.tipo_entrega === 'retiro') {
+    window.Envio.clear();
+  }
+
+  const cpInput = document.getElementById('cp');
+  if (cpInput && cpInput.value.replace(/\D/g, '').length === 4) {
+    cotizarEnCheckout();
+  } else {
+    renderCheckoutSummary();
+  }
 }
 
 let _sucursalesProvincia = null;
@@ -410,19 +522,27 @@ async function submitCheckout(e) {
     return;
   }
 
-  const envio = getEnvioGuardado();
-  const cp    = (document.getElementById('cp')?.value || '').replace(/\D/g, '').slice(0, 4);
+  const envio    = getEnvioGuardado();
+  const esRetiro = !!(envio && envio.tipo_entrega === 'retiro');
+  const cp       = (document.getElementById('cp')?.value || '').replace(/\D/g, '').slice(0, 4);
 
-  // El CP del formulario manda: si difiere del cotizado, se vuelve a cotizar.
-  if (!envio || envio.cp !== cp) {
-    showToast('Calculá el envío para tu código postal antes de pagar.', 'error');
-    await cotizarEnCheckout();
+  if (!envio) {
+    showToast('Elegí cómo querés recibir tu pedido.', 'error');
     return;
   }
-  if (envio.requiere_sucursal && !envio.sucursal_codigo) {
-    showToast('Elegí la sucursal donde querés retirar el pedido.', 'error');
-    document.getElementById('sucursal')?.focus();
-    return;
+  // El retiro no depende de un CP: se valida aparte, sin recotizar.
+  if (!esRetiro) {
+    // El CP del formulario manda: si difiere del cotizado, se vuelve a cotizar.
+    if (envio.cp !== cp) {
+      showToast('Calculá el envío para tu código postal antes de pagar.', 'error');
+      await cotizarEnCheckout();
+      return;
+    }
+    if (envio.requiere_sucursal && !envio.sucursal_codigo) {
+      showToast('Elegí la sucursal donde querés retirar el pedido.', 'error');
+      document.getElementById('sucursal')?.focus();
+      return;
+    }
   }
 
   const btn = document.getElementById('btn-pagar');
@@ -441,11 +561,11 @@ async function submitCheckout(e) {
     // Solo digitos: la mitad de la gente lo escribe con puntos.
     dni:       (document.getElementById('dni')?.value || '').replace(/\D+/g, ''),
     // Direccion estructurada (la pide Correo Argentino) + texto completo.
-    calle:      envio.requiere_sucursal ? '' : (document.getElementById('calle')?.value.trim()      || ''),
-    numero:     envio.requiere_sucursal ? '' : (document.getElementById('numero')?.value.trim()     || ''),
-    piso_depto: envio.requiere_sucursal ? '' : (document.getElementById('piso_depto')?.value.trim() || ''),
-    ciudad:     envio.requiere_sucursal ? '' : (document.getElementById('ciudad')?.value.trim()     || ''),
-    provincia:  PROVINCIAS[provinciaCod] || provinciaCod,
+    calle:      (envio.requiere_sucursal || esRetiro) ? '' : (document.getElementById('calle')?.value.trim()      || ''),
+    numero:     (envio.requiere_sucursal || esRetiro) ? '' : (document.getElementById('numero')?.value.trim()     || ''),
+    piso_depto: (envio.requiere_sucursal || esRetiro) ? '' : (document.getElementById('piso_depto')?.value.trim() || ''),
+    ciudad:     (envio.requiere_sucursal || esRetiro) ? '' : (document.getElementById('ciudad')?.value.trim()     || ''),
+    provincia:  esRetiro ? '' : (PROVINCIAS[provinciaCod] || provinciaCod),
     direccion:  buildDireccion(envio),
     // Un combo manda el id del combo + que eligio en cada lugar; el servidor
     // lo abre en items normales y recalcula el precio (nunca confia en el
@@ -530,6 +650,10 @@ function buildDireccion(envio) {
   const provincia    = PROVINCIAS[provinciaCod] || provinciaCod;
   const cp           = document.getElementById('cp')?.value.trim();
 
+  if (envio && envio.tipo_entrega === 'retiro') {
+    return 'Retiro en punto de encuentro' + (envio.info_especial ? ': ' + envio.info_especial : '');
+  }
+
   if (envio && envio.requiere_sucursal) {
     return ['Retiro en sucursal Correo Argentino: ' + (envio.sucursal_nombre || envio.sucursal_codigo), provincia, cp]
       .filter(Boolean).join(', ');
@@ -549,6 +673,7 @@ function buildDireccion(envio) {
 
 // ---- Init ----
 document.addEventListener('DOMContentLoaded', async () => {
+  await initTipoEntrega();
   renderCheckoutSummary();
 
   // Un item que quedo invalido (opcion borrada, producto de baja) ya no
@@ -572,7 +697,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Envío: CP precargado desde el carrito, y se puede recotizar aca mismo.
   const envio = getEnvioGuardado();
   const cpInput = document.getElementById('cp');
-  if (cpInput && envio) cpInput.value = envio.cp;
+  if (cpInput && envio && envio.tipo_entrega !== 'retiro') cpInput.value = envio.cp;
 
   document.getElementById('btn-cotizar')?.addEventListener('click', cotizarEnCheckout);
   cpInput?.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); cotizarEnCheckout(); } });

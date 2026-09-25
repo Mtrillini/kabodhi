@@ -198,7 +198,9 @@ class EnvioService {
             try {
                 $correo = $this->cotizarCorreo($cpLimpio, $bulto, $subtotal, $config);
                 if (!empty($correo['opciones'])) {
-                    return array_merge($resultado, $correo, ['proveedor' => 'correo']);
+                    $final = array_merge($resultado, $correo, ['proveedor' => 'correo']);
+                    $this->agregarRetiroPuntoEncuentro($final);
+                    return $final;
                 }
                 $resultado['aviso'] = 'Correo Argentino no tiene servicio para ese código postal.';
             } catch (Throwable $e) {
@@ -213,13 +215,16 @@ class EnvioService {
             $tabla = $this->cotizarTabla((int)$cpLimpio, $bulto['peso_gramos'], $subtotal, $config);
             $resultado['proveedor'] = 'tabla';
             $resultado['opciones']  = $tabla;
+            $this->agregarRetiroPuntoEncuentro($resultado);
             return $resultado;
         }
 
         // Modo Correo sin tabla de respaldo: si la API no dio precio, no se
-        // inventa un envio gratis; el cliente reintenta.
+        // inventa un envio gratis; el cliente reintenta (pero igual puede
+        // optar por retirar en el punto de encuentro si esta activado).
         if ($config['modo'] === 'correo') {
             $resultado['aviso'] = $resultado['aviso'] ?: 'No pudimos calcular el envío. Probá de nuevo en unos minutos.';
+            $this->agregarRetiroPuntoEncuentro($resultado);
             return $resultado;
         }
 
@@ -558,6 +563,13 @@ class EnvioService {
      *               'descripcion' para pedidos.envio_descripcion.
      */
     public function resolverParaPedido(array $envioData, array $items): array {
+        // Retiro en punto de encuentro: no depende de un CP ni de tarifas, es
+        // un dato fijo de la tienda. Se valida server-side (nunca se confia en
+        // que el cliente eligio esto de verdad) y no pasa por la cotizacion.
+        if (trim((string)($envioData['opcion_id'] ?? '')) === 'retiro_punto') {
+            return $this->resolverRetiroPuntoEncuentro();
+        }
+
         $config = (new ConfigService())->getEnvioConfig();
 
         // Tienda sin tarifas ni Correo: no se cobra ni se pide CP (comportamiento
@@ -679,6 +691,50 @@ class EnvioService {
             'plazo_max_dias'          => null,
             'cotizacion_valida_hasta' => null,
             'descripcion'             => null,
+        ];
+    }
+
+    /** Retiro en punto de encuentro: gratis, sin CP ni domicilio. Se revalida
+     *  server-side que siga activo (pudo haberse desactivado desde que el
+     *  cliente cargo el checkout). */
+    private function resolverRetiroPuntoEncuentro(): array {
+        $cfg = (new ConfigService())->getAll();
+        if (($cfg['retiro_punto_encuentro_activo'] ?? '0') !== '1') {
+            throw new InvalidArgumentException('El retiro en punto de encuentro ya no está disponible. Elegí otra forma de entrega.');
+        }
+        $info = trim($cfg['retiro_punto_encuentro_info'] ?? '');
+        if ($info === '') {
+            throw new InvalidArgumentException('El retiro en punto de encuentro ya no está disponible. Elegí otra forma de entrega.');
+        }
+
+        return [
+            'proveedor'               => 'retiro',
+            'tipo_entrega'            => 'retiro',
+            'producto'                => null,
+            'producto_nombre'         => 'Retiro en punto de encuentro',
+            'cp_origen'               => null,
+            // cp_destino es NOT NULL en la tabla; '0' es el mismo placeholder
+            // que ya usa filaSinCosto() cuando no hay CP real.
+            'cp_destino'              => '0',
+            'provincia_codigo'        => null,
+            'sucursal_codigo'         => null,
+            'sucursal_nombre'         => null,
+            'dest_calle'              => null,
+            'dest_numero'             => null,
+            'dest_piso_depto'         => null,
+            'dest_ciudad'             => null,
+            'dest_provincia'          => null,
+            'peso_gramos'             => 0,
+            'alto_cm'                 => 0,
+            'ancho_cm'                => 0,
+            'largo_cm'                => 0,
+            'costo_cotizado'          => 0.0,
+            'costo_cobrado'           => 0.0,
+            'bonificado'              => 1,
+            'plazo_min_dias'          => null,
+            'plazo_max_dias'          => null,
+            'cotizacion_valida_hasta' => null,
+            'descripcion'             => 'Retiro en punto de encuentro: ' . $info,
         ];
     }
 
