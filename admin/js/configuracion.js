@@ -44,6 +44,22 @@ async function fetchConfig() {
     document.getElementById('f-instagram').value       = cfg.instagram_usuario || '';
     document.getElementById('f-direccion').value       = cfg.direccion         || '';
 
+    // Banner de detalles: JSON array que se convierte a saltos de línea en el textarea.
+    const bannerDetalles = cfg.banner_detalles || '';
+    if (bannerDetalles) {
+      try {
+        const arr = JSON.parse(bannerDetalles);
+        if (Array.isArray(arr)) {
+          document.getElementById('f-banner-detalles').value = arr.join('\n');
+        }
+      } catch (e) {
+        // Si no es JSON válido, mostrar tal cual.
+        document.getElementById('f-banner-detalles').value = bannerDetalles;
+      }
+    } else {
+      document.getElementById('f-banner-detalles').value = '';
+    }
+
     renderEstado(cfg);
   } catch (err) {
     showToast(err.message, 'error');
@@ -107,6 +123,15 @@ async function guardarConfig() {
     instagram_usuario:  document.getElementById('f-instagram').value.trim(),
     direccion:          document.getElementById('f-direccion').value.trim(),
   };
+
+  // Banner de detalles: convertir saltos de línea a JSON array.
+  const bannerTextarea = document.getElementById('f-banner-detalles').value.trim();
+  if (bannerTextarea !== '') {
+    const lineas = bannerTextarea.split('\n').map(l => l.trim()).filter(l => l !== '');
+    payload.banner_detalles = JSON.stringify(lineas);
+  } else {
+    payload.banner_detalles = '';
+  }
 
   try {
     const res  = await fetch(API_URL + '/configuracion', {

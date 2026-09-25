@@ -90,16 +90,20 @@ function renderCheckoutSummary() {
 
   container.innerHTML = `
     <div class="order-summary">
-      <div class="order-summary__title">Tu pedido</div>
+      <div class="order-summary__title">RESUMEN DEL PEDIDO</div>
       ${itemsHTML}
       <div class="order-summary__divider"></div>
       <div class="order-summary__row">
+        <span>Subtotal</span>
+        <span>${fmt(subtotal)}</span>
+      </div>
+      <div class="order-summary__row" style="padding:0.5rem 0;">
         <span>Envío</span>
         <span>${envio ? (envio.bonificado ? 'Gratis' : fmt(envioTotal)) : 'Completá el CP'}</span>
       </div>
       ${envioDetalle}
       ${descuento > 0 ? `
-      <div class="order-summary__row" style="color:#3a7a3a;">
+      <div class="order-summary__row" style="color:#3a7a3a;padding:0.5rem 0;">
         <span>Descuento por transferencia (${PAGO_CONFIG.transferencia.descuento}%)</span>
         <span>&minus; ${fmt(descuento)}</span>
       </div>` : ''}
@@ -109,6 +113,10 @@ function renderCheckoutSummary() {
         <span>${fmt(total)}</span>
       </div>
       <div id="checkout-cuotas" class="order-summary__cuotas"></div>
+      ${PAGO_CONFIG.transferencia.activa && PAGO_CONFIG.transferencia.descuento > 0 ? `
+      <div style="font-size:0.7rem;color:#8B7966;margin-top:0.8rem;padding-top:0.8rem;border-top:1px solid #E0D5C0;">
+        ${PAGO_CONFIG.transferencia.descuento}% de descuento en transferencia
+      </div>` : ''}
     </div>
   `;
 

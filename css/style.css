@@ -5057,3 +5057,31 @@ body.page-producto { background: var(--blanco); }
 @media (max-width: 860px) {
   .otros-productos__grid { grid-template-columns: repeat(2, 1fr); gap: 0.8rem; }
 }
+
+/* ---- Banner de detalles animado ---- */
+#banner-detalles {
+  background: #1C3A4F;
+  color: #F5F1E8;
+  font-family: var(--font-secondary);
+  font-size: 0.7rem;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  overflow: hidden;
+  padding: 0.8rem 0;
+}
+
+.banner-scroll {
+  display: flex;
+  animation: scrollBanner 30s linear infinite;
+}
+
+.banner-content {
+  flex-shrink: 0;
+  padding: 0 2rem;
+  white-space: nowrap;
+}
+
+@keyframes scrollBanner {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}

@@ -53,6 +53,9 @@ class ConfigService {
         'transferencia_alias'       => '',
         'transferencia_cuit'        => '',
         'transferencia_instrucciones' => 'Envianos el comprobante por WhatsApp o respondiendo el mail del pedido y lo confirmamos a la brevedad.',
+        // Banner de detalles: JSON con array de strings que se muestran en el
+        // ticker animado del sitio. Por defecto vacio (no se muestra banner).
+        'banner_detalles'           => '',
     ];
 
     public const ENVIO_MODOS      = ['tabla', 'correo'];

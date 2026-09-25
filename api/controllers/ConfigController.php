@@ -174,7 +174,35 @@ class ConfigController {
             $body['instagram_usuario'] = ltrim(trim((string)$body['instagram_usuario']), '@');
         }
 
+        // Banner de detalles: JSON con array de strings.
+        if (isset($body['banner_detalles'])) {
+            $valor = $body['banner_detalles'];
+            // Si llega un array, se serializa a JSON.
+            if (is_array($valor)) {
+                $valor = json_encode($valor, JSON_UNESCAPED_UNICODE);
+            } elseif (is_string($valor)) {
+                $valor = trim($valor);
+                // Si es una string no vacía, debe ser JSON válido.
+                if ($valor !== '' && json_decode($valor, true) === null) {
+                    http_response_code(400);
+                    echo json_encode(['success' => false, 'message' => 'banner_detalles debe ser un JSON válido o un array.']);
+                    return;
+                }
+            }
+            $body['banner_detalles'] = $valor;
+        }
+
         $config = $this->service->saveMany($body);
         echo json_encode(['success' => true, 'data' => $config, 'message' => 'Configuración guardada.']);
+    }
+
+    /** Publico: obtener los detalles del banner animado. */
+    public function bannerDetalles(): void {
+        $detalles = $this->service->get('banner_detalles', '');
+        $arr = [];
+        if ($detalles !== '') {
+            $arr = json_decode($detalles, true) ?: [];
+        }
+        echo json_encode(['success' => true, 'detalles' => is_array($arr) ? $arr : []]);
     }
 }

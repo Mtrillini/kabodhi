@@ -218,6 +218,23 @@ if ($seg0 === 'banners') {
 }
 
 // --- CONFIGURACION ---
+if ($seg0 === 'config') {
+    require_once __DIR__ . '/controllers/ConfigController.php';
+    $ctrl = new ConfigController();
+    if ($seg1 === 'banner-detalles' && $method === 'GET') {
+        $ctrl->bannerDetalles();
+    } elseif (!$seg1 && $method === 'GET') {
+        $ctrl->index();
+    } elseif (!$seg1 && $method === 'PUT') {
+        $ctrl->update();
+    } else {
+        http_response_code(405);
+        echo json_encode(['success' => false, 'message' => 'Método no permitido.']);
+    }
+    exit;
+}
+
+// Fallback por compatibilidad: /configuracion redirige a /config
 if ($seg0 === 'configuracion') {
     require_once __DIR__ . '/controllers/ConfigController.php';
     $ctrl = new ConfigController();
